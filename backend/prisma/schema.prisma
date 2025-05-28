@@ -1,0 +1,28 @@
+// schema.prisma - Prisma schema for Ride model
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Ride {
+  id           Int      @id @default(autoincrement())
+  name         String
+  phone        String
+  email        String?
+  note         String?
+  pickup       String
+  pickupLat    Float
+  pickupLng    Float
+  dropoff      String
+  dropoffLat   Float
+  dropoffLng   Float
+  rideDate     DateTime
+  vehicleType  String
+  fare         Float
+  fareType     String
+  createdAt    DateTime @default(now())
+}
