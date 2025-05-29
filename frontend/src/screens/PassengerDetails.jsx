@@ -1,6 +1,18 @@
 import React, { useState } from 'react';
 
-const PassengerDetails = ({ setStep, onSubmitPassengerDetails }) => {
+const PassengerDetails = ({
+  setStep,
+  pickupAddress,
+  pickupLoc,
+  dropoffAddress,
+  dropoffLoc,
+  bookingType,
+  scheduledDateTime,
+  passengerCount,
+  selectedVehicle,
+  fare,
+  fareType
+}) => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -8,10 +20,60 @@ const PassengerDetails = ({ setStep, onSubmitPassengerDetails }) => {
 
   const isValid = name.trim() && phone.trim();
 
-  const handleNext = () => {
+  const handleBookRide = async () => {
     if (!isValid) return;
-    onSubmitPassengerDetails({ name, phone, email, note });
+    if (!pickupLoc || !dropoffLoc) {
+      alert('Pickup or Dropoff location is missing. Please go back and enter them.');
+      return;
+    }
+
+    const rideDate =
+      bookingType === 'later' ? new Date(scheduledDateTime) : new Date();
+
+    const payload = {
+      name,
+      phone,
+      email,
+      note,
+      pickup: pickupAddress,
+      pickupLat: pickupLoc?.lat?.() ?? null,
+      pickupLng: pickupLoc?.lng?.() ?? null,
+      dropoff: dropoffAddress,
+      dropoffLat: dropoffLoc?.lat?.() ?? null,
+      dropoffLng: dropoffLoc?.lng?.() ?? null,
+      rideDate,
+      vehicleType: selectedVehicle?.id ?? null,
+      fare: fare ?? null,
+      fareType,
+      passengerCount,
+    };
+
+
+    console.log('Payload being sent:', payload);
+
+    try {
+      console.log('📤 Sending booking request...');
+      const response = await fetch('http://localhost:3000/api/rides/book-ride', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      console.log('📥 Server responded:', response);
+      const result = await response.json();
+      console.log('✅ Response JSON:', result);
+
+      if (response.ok) {
+        alert('✅ Ride booked successfully!');
+        // Reset or redirect here
+      } else {
+        alert(`❌ Booking failed: ${result.error}`);
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      alert('❌ An error occurred while booking the ride.');
+    }
   };
+
 
   return (
     <div className="p-4 space-y-4">
@@ -69,13 +131,12 @@ const PassengerDetails = ({ setStep, onSubmitPassengerDetails }) => {
           ← Back
         </button>
         <button
-          onClick={handleNext}
+          onClick={handleBookRide}
           disabled={!isValid}
-          className={`px-6 py-2 rounded text-white font-semibold ${
-            isValid ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'
-          }`}
+          className={`px-6 py-2 rounded text-white font-semibold ${isValid ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'
+            }`}
         >
-          Next
+          Book Ride
         </button>
       </div>
     </div>

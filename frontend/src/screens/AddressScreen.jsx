@@ -11,6 +11,8 @@ const AddressScreen = () => {
   const [map, setMap] = useState(null);
   const [pickupLoc, setPickupLoc] = useState(null);
   const [dropoffLoc, setDropoffLoc] = useState(null);
+  const [pickupAddress, setPickupAddress] = useState('');
+  const [dropoffAddress, setDropoffAddress] = useState('');
   const directionsRenderer = useRef(null);
   const [bookingType, setBookingType] = useState('now');
   const [passengerCount, setPassengerCount] = useState(1);
@@ -18,6 +20,9 @@ const AddressScreen = () => {
   const [showBookingOptions, setShowBookingOptions] = useState(false);
   const [step, setStep] = useState(1);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [fare, setFare] = useState(null);
+  const [fareType, setFareType] = useState('');
+
   const [passengerDetails, setPassengerDetails] = useState(null);
 
   useEffect(() => {
@@ -39,6 +44,7 @@ const AddressScreen = () => {
       if (place.geometry) {
         const location = place.geometry.location;
         setPickupLoc(location);
+        setPickupAddress(place.formatted_address || place.name);
         new window.google.maps.Marker({ position: location, map: gMap, label: 'P' });
         gMap.setCenter(location);
       }
@@ -53,6 +59,7 @@ const AddressScreen = () => {
       if (place.geometry) {
         const location = place.geometry.location;
         setDropoffLoc(location);
+        setDropoffAddress(place.formatted_address || place.name);
         new window.google.maps.Marker({
           position: location,
           map: gMap,
@@ -176,11 +183,10 @@ const AddressScreen = () => {
               <div className="pt-2">
                 <button
                   onClick={() => setStep(2)}
-                  className={`w-full py-2 px-4 rounded text-white font-semibold ${
-                    (bookingType === 'now' || (bookingType === 'later' && scheduledDateTime)) && passengerCount
-                      ? 'bg-blue-600 hover:bg-blue-700'
-                      : 'bg-gray-400 cursor-not-allowed'
-                  }`}
+                  className={`w-full py-2 px-4 rounded text-white font-semibold ${(bookingType === 'now' || (bookingType === 'later' && scheduledDateTime)) && passengerCount
+                    ? 'bg-blue-600 hover:bg-blue-700'
+                    : 'bg-gray-400 cursor-not-allowed'
+                    }`}
                   disabled={
                     !pickupLoc ||
                     !dropoffLoc ||
@@ -208,6 +214,8 @@ const AddressScreen = () => {
           scheduledDateTime={scheduledDateTime}
           setStep={setStep}
           setSelectedVehicle={setSelectedVehicle}
+          setFare={setFare}
+          setFareType={setFareType}
         />
       </div>
 
@@ -215,7 +223,17 @@ const AddressScreen = () => {
         <PassengerDetails
           setStep={setStep}
           onSubmitPassengerDetails={handlePassengerSubmit}
+          pickupLoc={pickupLoc}
+          dropoffLoc={dropoffLoc}
+          pickupAddress={pickupAddress}
+          dropoffAddress={dropoffAddress}
+          selectedVehicle={selectedVehicle}
+          passengerCount={passengerCount}
+          fare={fare}
+          fareType={fareType}
+          scheduledDateTime={scheduledDateTime}
         />
+
       </div>
     </div>
   );

@@ -31,7 +31,9 @@ const VehicleSelection = ({
   bookingType,
   scheduledDateTime,
   setStep,
-  setSelectedVehicle
+  setSelectedVehicle,
+  setFare,
+  setFareType
 }) => {
   const [distanceKm, setDistanceKm] = useState(null);
   const [fares, setFares] = useState({});
@@ -62,20 +64,40 @@ const VehicleSelection = ({
   useEffect(() => {
     if (!distanceKm) return;
 
-    const timeString = bookingType === 'now'
-      ? new Date().toTimeString().slice(0, 5)
-      : new Date(scheduledDateTime).toTimeString().slice(0, 5);
+    const timeString =
+      bookingType === 'now'
+        ? new Date().toTimeString().slice(0, 5)
+        : new Date(scheduledDateTime).toTimeString().slice(0, 5);
 
     const { flagfall, rate } = getFareRateForTime(timeString);
 
     const newFares = {};
     for (const v of VEHICLES) {
-      let total = flagfall + (distanceKm * rate) + GOVERNMENT_LEVY + BOOKING_FEE;
-      if (passengerCount > 4 && v.seats > 4) total += HIGH_OCCUPANCY_FEE;
+      let total = flagfall + distanceKm * rate + GOVERNMENT_LEVY + BOOKING_FEE;
+
+      // Only add high occupancy fee for vehicles that can actually take >4 passengers
+      if (passengerCount > 4 && v.seats > 4) {
+        total += HIGH_OCCUPANCY_FEE;
+      }
+
       newFares[v.id] = total.toFixed(2);
     }
+
     setFares(newFares);
-  }, [distanceKm, passengerCount, bookingType, scheduledDateTime]);
+
+    // ✅ Also update selected vehicle fare and fareType if one is already selected
+    if (selectedId && newFares[selectedId]) {
+      if (typeof setFare === 'function') {
+        setFare(parseFloat(newFares[selectedId]));
+      }
+      if (typeof setFareType === 'function') {
+        const selectedVehicle = VEHICLES.find((v) => v.id === selectedId);
+        const highOccupancyApplies = passengerCount > 4 && selectedVehicle.seats > 4;
+        setFareType(highOccupancyApplies ? 'High Occupancy' : 'Standard');
+      }
+    }
+  }, [distanceKm, passengerCount, bookingType, scheduledDateTime, selectedId]);
+
 
   const handleSelect = (vehicle) => {
     setSelectedId(vehicle.id);
@@ -93,13 +115,12 @@ const VehicleSelection = ({
         return (
           <div
             key={vehicle.id}
-            className={`flex items-center justify-between p-4 rounded border shadow transition-all duration-200 ${
-              disabled
-                ? 'bg-gray-200 opacity-60'
-                : isSelected
+            className={`flex items-center justify-between p-4 rounded border shadow transition-all duration-200 ${disabled
+              ? 'bg-gray-200 opacity-60'
+              : isSelected
                 ? 'bg-blue-100 border-blue-500'
                 : 'bg-white'
-            }`}
+              }`}
           >
             <div className="flex items-center gap-4">
               <span className="text-2xl">{vehicle.icon}</span>
@@ -113,9 +134,8 @@ const VehicleSelection = ({
               <button
                 disabled={disabled}
                 onClick={() => handleSelect(vehicle)}
-                className={`mt-2 px-4 py-1 rounded text-white font-medium ${
-                  disabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-                }`}
+                className={`mt-2 px-4 py-1 rounded text-white font-medium ${disabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                  }`}
               >
                 Select
               </button>
@@ -134,9 +154,8 @@ const VehicleSelection = ({
         <button
           onClick={() => setStep(3)}
           disabled={!selectedId}
-          className={`px-6 py-2 rounded text-white font-semibold ${
-            selectedId ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'
-          }`}
+          className={`px-6 py-2 rounded text-white font-semibold ${selectedId ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'
+            }`}
         >
           Next
         </button>

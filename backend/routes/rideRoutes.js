@@ -4,6 +4,6 @@ const express = require('express');
 const router = express.Router();
 const { bookRide } = require('../controllers/rideController');
 
-router.post('/book-ride', bookRide);
+router.post('/rides/book-ride', bookRide);
 
 module.exports = router;

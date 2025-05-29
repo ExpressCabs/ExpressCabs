@@ -9,20 +9,21 @@ datasource db {
 }
 
 model Ride {
-  id           Int      @id @default(autoincrement())
-  name         String
-  phone        String
-  email        String?
-  note         String?
-  pickup       String
-  pickupLat    Float
-  pickupLng    Float
-  dropoff      String
-  dropoffLat   Float
-  dropoffLng   Float
-  rideDate     DateTime
-  vehicleType  String
-  fare         Float
-  fareType     String
-  createdAt    DateTime @default(now())
+  id             Int      @id @default(autoincrement())
+  name           String
+  phone          String
+  email          String?
+  note           String?
+  pickup         String
+  pickupLat      Float
+  pickupLng      Float
+  dropoff        String
+  dropoffLat     Float
+  dropoffLng     Float
+  rideDate       DateTime
+  passengerCount Int
+  vehicleType    String
+  fare           Float
+  fareType       String
+  createdAt      DateTime @default(now())
 }
