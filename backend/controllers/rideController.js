@@ -58,4 +58,86 @@ const bookRide = async (req, res) => {
   }
 };
 
-module.exports = { bookRide };
+const getUnassignedRides = async (req, res) => {
+  try {
+    const rides = await prisma.ride.findMany({
+      where: {
+        driverId: null,
+        rideDate: {
+          gte: new Date(),
+        },
+      },
+      orderBy: {
+        rideDate: 'asc',
+      },
+    });
+
+    res.json(rides);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch unassigned rides.' });
+  }
+};
+
+const assignRideToDriver = async (req, res) => {
+  const rideId = parseInt(req.params.id);
+  const { driverId } = req.body;
+
+  if (!driverId) {
+    return res.status(400).json({ error: 'Driver ID is required.' });
+  }
+
+  try {
+    const ride = await prisma.ride.findUnique({ where: { id: rideId } });
+
+    if (!ride) {
+      return res.status(404).json({ error: 'Ride not found.' });
+    }
+
+    if (ride.driverId) {
+      return res.status(409).json({ error: 'Ride is already assigned.' });
+    }
+
+    const updatedRide = await prisma.ride.update({
+      where: { id: rideId },
+      data: { driverId },
+    });
+
+    res.json({ message: 'Ride assigned successfully.', ride: updatedRide });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to assign ride.' });
+  }
+};
+
+const unassignRideFromDriver = async (req, res) => {
+  const rideId = parseInt(req.params.id);
+  const { driverId } = req.body;
+
+  try {
+    const ride = await prisma.ride.findUnique({ where: { id: rideId } });
+
+    if (!ride || ride.driverId !== driverId) {
+      return res.status(403).json({ error: 'You are not allowed to unassign this ride.' });
+    }
+
+    const updated = await prisma.ride.update({
+      where: { id: rideId },
+      data: { driverId: null },
+    });
+
+    res.json({ message: 'Ride unassigned successfully.', ride: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to unassign ride.' });
+  }
+};
+
+
+
+module.exports = {
+  bookRide,
+  getUnassignedRides,
+  assignRideToDriver,
+  unassignRideFromDriver
+};

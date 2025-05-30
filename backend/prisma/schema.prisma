@@ -8,6 +8,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Driver {
+  id       Int    @id @default(autoincrement())
+  name     String
+  email    String @unique
+  phone    String
+  password String
+  dcNumber String @unique // Safe Transport Victoria ID
+  taxiReg  String
+  carModel String
+
+  rides Ride[] @relation("DriverRides")
+}
+
 model Ride {
   id             Int      @id @default(autoincrement())
   name           String
@@ -26,4 +39,7 @@ model Ride {
   fare           Float
   fareType       String
   createdAt      DateTime @default(now())
+
+  driverId Int? // FK to Driver
+  driver   Driver? @relation("DriverRides", fields: [driverId], references: [id])
 }
