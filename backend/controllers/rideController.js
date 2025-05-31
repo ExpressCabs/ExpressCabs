@@ -58,14 +58,19 @@ const bookRide = async (req, res) => {
   }
 };
 
-const getUnassignedRides = async (req, res) => {
+
+// Controller to get assigned rides for a specific driver
+const getAssignedRides = async (req, res) => {
+  const { driverId } = req.query;
+
+  if (!driverId) {
+    return res.status(400).json({ error: 'driverId is required' });
+  }
+
   try {
     const rides = await prisma.ride.findMany({
       where: {
-        driverId: null,
-        rideDate: {
-          gte: new Date(),
-        },
+        driverId: parseInt(driverId),
       },
       orderBy: {
         rideDate: 'asc',
@@ -73,11 +78,31 @@ const getUnassignedRides = async (req, res) => {
     });
 
     res.json(rides);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to fetch unassigned rides.' });
+  } catch (error) {
+    console.error('❌ Error fetching assigned rides:', error);
+    res.status(500).json({ error: 'Failed to fetch assigned rides' });
   }
 };
+
+const getUnassignedRides = async (req, res) => {
+  try {
+    const rides = await prisma.ride.findMany({
+      where: {
+        driverId: null, // fetch only unassigned
+      },
+      orderBy: {
+        rideDate: 'asc',
+      },
+    });
+
+    console.log('✅ Unassigned rides fetched:', rides.length); // Debug line
+    res.json(rides);
+  } catch (error) {
+    console.error('❌ Failed to fetch unassigned rides:', error);
+    res.status(500).json({ error: 'Failed to fetch unassigned rides' });
+  }
+};
+
 
 const assignRideToDriver = async (req, res) => {
   const rideId = parseInt(req.params.id);
@@ -137,6 +162,7 @@ const unassignRideFromDriver = async (req, res) => {
 
 module.exports = {
   bookRide,
+  getAssignedRides,
   getUnassignedRides,
   assignRideToDriver,
   unassignRideFromDriver

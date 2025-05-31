@@ -174,8 +174,19 @@ const AddressScreen = () => {
                   <input
                     type="datetime-local"
                     value={scheduledDateTime}
-                    onChange={(e) => setScheduledDateTime(e.target.value)}
+                    onChange={(e) => {
+                      const selected = new Date(e.target.value);
+                      const now = new Date();
+
+                      if (selected < now) {
+                        alert("❌ Cannot select a past time.");
+                        return;
+                      }
+
+                      setScheduledDateTime(e.target.value);
+                    }}
                     className="w-full p-2 border rounded"
+                    min={new Date().toISOString().slice(0, 16)}
                   />
                 </div>
               )}
