@@ -12,7 +12,7 @@ const DriverLoginScreen = ({ onLogin }) => {
         setError('');
 
         try {
-            const res = await axios.post('http://localhost:3000/api/driver/login', {
+            const res = await axios.post('/api/driver/login', {
                 email,
                 password,
             });

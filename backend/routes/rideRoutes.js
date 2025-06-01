@@ -7,13 +7,18 @@ const {
     getUnassignedRides,
     assignRideToDriver,
     unassignRideFromDriver,
-    getAssignedRides
+    getAssignedRides,
+    getRidesForUser,
+    markRideCompleted,
 } = require('../controllers/rideController');
 
-router.post('/rides/book-ride', bookRide);
-router.get('/rides/assigned', getAssignedRides);
-router.get('/rides/unassigned', getUnassignedRides);
-router.post('/rides/:id/assign', assignRideToDriver);
-router.post('/rides/:id/unassign', unassignRideFromDriver);
+router.post('/book-ride', bookRide);
+router.get('/assigned', getAssignedRides);
+router.get('/unassigned', getUnassignedRides);
+router.post('/:id/assign', assignRideToDriver);
+router.post('/:id/unassign', unassignRideFromDriver);
+router.get('/user/:userId', getRidesForUser);
+router.post('/:id/complete', markRideCompleted);
+
 
 module.exports = router;

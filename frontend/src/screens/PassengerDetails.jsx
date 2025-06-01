@@ -1,3 +1,4 @@
+// PassengerDetails.jsx
 import React, { useState } from 'react';
 
 const PassengerDetails = ({
@@ -11,7 +12,8 @@ const PassengerDetails = ({
   passengerCount,
   selectedVehicle,
   fare,
-  fareType
+  fareType,
+  loggedInUser, // ✅ added here
 }) => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -46,25 +48,25 @@ const PassengerDetails = ({
       fare: fare ?? null,
       fareType,
       passengerCount,
+      userId: loggedInUser?.id ?? null, // ✅ safely added
     };
-
 
     console.log('Payload being sent:', payload);
 
     try {
       console.log('📤 Sending booking request...');
-      const response = await fetch('http://localhost:3000/api/rides/book-ride', {
+      const response = await fetch('/api/rides/book-ride', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      console.log('📥 Server responded:', response);
+
       const result = await response.json();
       console.log('✅ Response JSON:', result);
 
       if (response.ok) {
         alert('✅ Ride booked successfully!');
-        // Reset or redirect here
+        // Optionally reset or redirect
       } else {
         alert(`❌ Booking failed: ${result.error}`);
       }
@@ -73,7 +75,6 @@ const PassengerDetails = ({
       alert('❌ An error occurred while booking the ride.');
     }
   };
-
 
   return (
     <div className="p-4 space-y-4">

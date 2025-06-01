@@ -22,7 +22,7 @@ const DriverDashboard = ({ driver, onLogout }) => {
     const fetchUnassignedRides = async () => {
         setLoading(true);
         try {
-            const res = await axios.get('http://localhost:3000/api/rides/unassigned');
+            const res = await axios.get('/api/rides/unassigned');
             setUnassignedRides(res.data);
         } catch (err) {
             console.error('Error fetching unassigned rides:', err);
@@ -34,7 +34,7 @@ const DriverDashboard = ({ driver, onLogout }) => {
     const fetchMyRides = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`http://localhost:3000/api/rides/assigned?driverId=${driver.id}`);
+            const res = await axios.get(`/api/rides/assigned?driverId=${driver.id}`);
             setMyRides(res.data);
         } catch (err) {
             console.error('Error fetching assigned rides:', err);
@@ -47,7 +47,7 @@ const DriverDashboard = ({ driver, onLogout }) => {
     const handleAssign = async (rideId) => {
         setAssigning(rideId);
         try {
-            const res = await axios.post(`http://localhost:3000/api/rides/${rideId}/assign`, {
+            const res = await axios.post(`/api/rides/${rideId}/assign`, {
                 driverId: driver.id,
             });
 
@@ -71,7 +71,7 @@ const DriverDashboard = ({ driver, onLogout }) => {
 
     const handleUnassign = async (rideId) => {
         try {
-            const res = await axios.post(`http://localhost:3000/api/rides/${rideId}/unassign`, {
+            const res = await axios.post(`/api/rides/${rideId}/unassign`, {
                 driverId: driver.id,
             });
 
@@ -147,20 +147,44 @@ const DriverDashboard = ({ driver, onLogout }) => {
                     <p>You have no assigned rides yet.</p>
                 ) : (
                     <ul className="space-y-4">
-                        {myRides.map((ride) => (
-                            <li key={ride.id} className="p-4 border rounded shadow bg-green-50">
-                                <p><strong>Pickup:</strong> {ride.pickup}</p>
-                                <p><strong>Dropoff:</strong> {ride.dropoff}</p>
-                                <p><strong>Time:</strong> {new Date(ride.rideDate).toLocaleString()}</p>
-                                <button
-                                    onClick={() => handleUnassign(ride.id)}
-                                    className="mt-2 px-4 py-2 bg-red-600 text-white rounded disabled:opacity-50"
-                                >
-                                    Unassign
-                                </button>
+                        {myRides
+                            .filter((r) => r.status !== 'completed')
+                            .map((ride) => (
+                                <li key={ride.id} className="p-4 border rounded shadow bg-green-50">
+                                    <p><strong>Pickup:</strong> {ride.pickup}</p>
+                                    <p><strong>Dropoff:</strong> {ride.dropoff}</p>
+                                    <p><strong>Time:</strong> {new Date(ride.rideDate).toLocaleString()}</p>
+                                    <button
+                                        onClick={() => handleUnassign(ride.id)}
+                                        className="mt-2 px-4 py-2 bg-red-600 text-white rounded disabled:opacity-50"
+                                    >
+                                        Unassign
+                                    </button>
+                                    <button
+                                        onClick={async () => {
+                                            const confirm = window.confirm("Mark this ride as completed?");
+                                            if (!confirm) return;
 
-                            </li>
-                        ))}
+                                            const res = await fetch(`/api/rides/${ride.id}/complete`, {
+                                                method: 'POST'
+                                            });
+
+                                            if (res.ok) {
+                                                alert('✅ Ride marked as completed.');
+                                                fetchMyRides(); // re-fetch rides after update
+                                            } else {
+                                                const error = await res.json();
+                                                alert('❌ ' + error?.error || 'Failed to update.');
+                                            }
+                                        }}
+                                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded"
+                                    >
+                                        ✅ Complete
+                                    </button>
+
+
+                                </li>
+                            ))}
                     </ul>
                 )
             )}

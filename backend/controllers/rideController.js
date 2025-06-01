@@ -19,7 +19,8 @@ const bookRide = async (req, res) => {
       passengerCount,
       vehicleType,
       fare,
-      fareType
+      fareType,
+      userId
     } = req.body;
 
     if (
@@ -29,7 +30,6 @@ const bookRide = async (req, res) => {
     ) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
-
 
     const ride = await prisma.ride.create({
       data: {
@@ -47,7 +47,8 @@ const bookRide = async (req, res) => {
         passengerCount,
         vehicleType,
         fare,
-        fareType
+        fareType,
+        userId: userId || null,
       }
     });
 
@@ -158,6 +159,52 @@ const unassignRideFromDriver = async (req, res) => {
   }
 };
 
+const getRidesForUser = async (req, res) => {
+  const { userId } = req.params;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'userId is required' });
+  }
+
+  try {
+    const rides = await prisma.ride.findMany({
+      where: {
+        userId: parseInt(userId),
+      },
+      orderBy: {
+        rideDate: 'desc',
+      },
+    });
+
+    res.json(rides);
+  } catch (error) {
+    console.error('❌ Failed to fetch user rides:', error);
+    res.status(500).json({ error: 'Failed to fetch user rides' });
+  }
+};
+
+const markRideCompleted = async (req, res) => {
+  const rideId = parseInt(req.params.id);
+  console.log('👉 markRideCompleted hit for rideId:', rideId);
+  try {
+    const ride = await prisma.ride.findUnique({ where: { id: rideId } });
+
+    if (!ride) {
+      return res.status(404).json({ error: 'Ride not found.' });
+    }
+
+    const updatedRide = await prisma.ride.update({
+      where: { id: rideId },
+      data: { status: 'completed' },
+    });
+
+    res.json({ message: 'Ride marked as completed.', ride: updatedRide });
+  } catch (err) {
+    console.error('❌ Failed to mark ride completed:', err);
+    res.status(500).json({ error: 'Failed to mark ride as completed.' });
+  }
+};
+
 
 
 module.exports = {
@@ -165,5 +212,7 @@ module.exports = {
   getAssignedRides,
   getUnassignedRides,
   assignRideToDriver,
-  unassignRideFromDriver
+  unassignRideFromDriver,
+  getRidesForUser,
+  markRideCompleted,
 };

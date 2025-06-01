@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import HeaderFooter from '../components/HeaderFooter';
 import VehicleSelection from './VehicleSelection';
 import PassengerDetails from './PassengerDetails';
 
-const AddressScreen = () => {
+const AddressScreen = ({ loggedInUser }) => {
   const mapRef = useRef(null);
   const pickupInputRef = useRef(null);
   const dropoffInputRef = useRef(null);
@@ -107,8 +106,6 @@ const AddressScreen = () => {
 
   return (
     <div className="relative flex flex-col h-screen">
-      <HeaderFooter />
-
       <div className={step === 1 ? '' : 'hidden'}>
         <div className="pt-2 px-2 pb-4 bg-white shadow z-10">
           <h1 className="text-xl font-bold mb-3">Enter Pickup & Dropoff</h1>
@@ -243,6 +240,7 @@ const AddressScreen = () => {
           fare={fare}
           fareType={fareType}
           scheduledDateTime={scheduledDateTime}
+          loggedInUser={loggedInUser}
         />
 
       </div>
