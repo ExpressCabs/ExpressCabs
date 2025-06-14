@@ -1,10 +1,16 @@
+// VehicleSelection.jsx — Slightly lighter background for better icon contrast
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
+import sedanImg from '../../assets/vehicles/sedan-modern.png';
+import suvImg from '../../assets/vehicles/suv-modern.png';
+import vanImg from '../../assets/vehicles/van-modern.png';
+import luxuryImg from '../../assets/vehicles/luxury-modern.png';
 
 const VEHICLES = [
-  { id: 'sedan', name: 'Sedan', seats: 4, icon: '🚗' },
-  { id: 'luxury', name: 'Luxury', seats: 4, icon: '🚘' },
-  { id: 'suv', name: 'SUV', seats: 6, icon: '🚙' },
-  { id: 'van', name: 'Van', seats: 11, icon: '🚐' },
+  { id: 'sedan', name: 'Sedan', seats: 4, image: sedanImg },
+  { id: 'luxury', name: 'Luxury', seats: 4, image: luxuryImg },
+  { id: 'suv', name: 'SUV', seats: 6, image: suvImg },
+  { id: 'van', name: 'Van', seats: 11, image: vanImg },
 ];
 
 const RATES = [
@@ -75,9 +81,12 @@ const VehicleSelection = ({
     for (const v of VEHICLES) {
       let total = flagfall + distanceKm * rate + GOVERNMENT_LEVY + BOOKING_FEE;
 
-      // Only add high occupancy fee for vehicles that can actually take >4 passengers
       if (passengerCount > 4 && v.seats > 4) {
         total += HIGH_OCCUPANCY_FEE;
+      }
+
+      if (v.id === 'luxury') {
+        total += 11.00;
       }
 
       newFares[v.id] = total.toFixed(2);
@@ -85,7 +94,6 @@ const VehicleSelection = ({
 
     setFares(newFares);
 
-    // ✅ Also update selected vehicle fare and fareType if one is already selected
     if (selectedId && newFares[selectedId]) {
       if (typeof setFare === 'function') {
         setFare(parseFloat(newFares[selectedId]));
@@ -98,69 +106,85 @@ const VehicleSelection = ({
     }
   }, [distanceKm, passengerCount, bookingType, scheduledDateTime, selectedId]);
 
-
   const handleSelect = (vehicle) => {
     setSelectedId(vehicle.id);
     if (setSelectedVehicle) setSelectedVehicle(vehicle);
   };
 
   return (
-    <div className="p-4 space-y-4">
-      <h2 className="text-xl font-bold mb-2">Select a Vehicle</h2>
+    <motion.div
+      className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 p-4 space-y-4 text-gray-900 pt-12 px-4"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <h2 className="text-2xl font-bold mb-4 text-center">Select a Vehicle</h2>
 
-      {VEHICLES.map((vehicle) => {
-        const disabled = passengerCount > 4 && vehicle.seats <= 4;
+      {VEHICLES.map((vehicle, index) => {
+        const disabled =
+          (passengerCount > 4 && vehicle.seats <= 4) ||
+          (vehicle.id === 'suv' && passengerCount > 6);
         const isSelected = selectedId === vehicle.id;
 
         return (
-          <div
+          <motion.div
             key={vehicle.id}
-            className={`flex items-center justify-between p-4 rounded border shadow transition-all duration-200 ${disabled
-              ? 'bg-gray-200 opacity-60'
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 * index }}
+            className={`flex items-center justify-between p-4 rounded-xl border shadow-lg backdrop-blur-md transition-all duration-200 ${disabled
+              ? 'bg-gray-200 opacity-50 cursor-not-allowed'
               : isSelected
-                ? 'bg-blue-100 border-blue-500'
-                : 'bg-white'
+                ? 'ring-2 ring-blue-400 border-blue-500 bg-white'
+                : 'bg-white hover:ring-1 hover:ring-gray-400'
               }`}
           >
             <div className="flex items-center gap-4">
-              <span className="text-2xl">{vehicle.icon}</span>
+              <img src={vehicle.image} alt={vehicle.name} className="w-16 h-16 object-contain" />
               <div>
-                <div className="font-semibold">{vehicle.name}</div>
+                <div className="font-semibold text-lg">{vehicle.name}</div>
                 <div className="text-sm text-gray-500">Seats: {vehicle.seats}</div>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-lg font-bold">${fares[vehicle.id] || '--'}</div>
+              <div className="text-lg font-bold text-black">
+                ${fares[vehicle.id] || '--'}
+              </div>
               <button
                 disabled={disabled}
                 onClick={() => handleSelect(vehicle)}
-                className={`mt-2 px-4 py-1 rounded text-white font-medium ${disabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
+                className={`mt-2 px-4 py-1 rounded text-white font-medium transition-all duration-150 ${disabled
+                  ? 'bg-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 hover:bg-blue-700 active:scale-95'
                   }`}
               >
                 Select
               </button>
             </div>
-          </div>
+          </motion.div>
         );
       })}
 
       <div className="flex justify-between pt-6">
-        <button
+        <motion.button
+          whileTap={{ scale: 0.95 }}
           onClick={() => setStep(1)}
           className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
         >
           ← Back
-        </button>
-        <button
+        </motion.button>
+
+        <motion.button
+          whileTap={{ scale: 0.95 }}
           onClick={() => setStep(3)}
           disabled={!selectedId}
-          className={`px-6 py-2 rounded text-white font-semibold ${selectedId ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'
+          className={`px-6 py-2 rounded text-white font-semibold transition-all ${selectedId ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'
             }`}
         >
           Next
-        </button>
+        </motion.button>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

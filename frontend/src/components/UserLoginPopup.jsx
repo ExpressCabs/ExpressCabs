@@ -1,19 +1,31 @@
 // src/components/UserLoginPopup.jsx
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const UserLoginPopup = ({ onLogin, onClose }) => {
     const [phone, setPhone] = useState('');
-    const [name, setName] = useState('');
+    const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const navigate = useNavigate();
 
-    const handleLogin = () => {
-        if (!phone || !name) {
-            alert('Please enter name and phone');
+    const handleLogin = async () => {
+        if (!phone || !password) {
+            setError('Please enter both phone and password');
             return;
         }
 
-        const user = { name, phone };
-        onLogin(user);
-        onClose(); // close popup after login
+        try {
+            const res = await axios.post('/api/users/login', { phone, password });
+            if (res.data.user) {
+                onLogin(res.data.user);
+                onClose(); // Close popup on success
+            } else {
+                setError('Login failed. Please try again.');
+            }
+        } catch (err) {
+            setError(err.response?.data?.message || 'Login failed.');
+        }
     };
 
     return (
@@ -25,21 +37,22 @@ const UserLoginPopup = ({ onLogin, onClose }) => {
                 >
                     ×
                 </button>
-                <h2 className="text-xl font-bold mb-4">Welcome to Express Cabs</h2>
-                <p className="mb-3 text-sm text-gray-600">Log in to view past rides and driver info. Or continue as guest.</p>
 
-                <input
-                    type="text"
-                    placeholder="Your name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full mb-2 p-2 border rounded"
-                />
+                <h2 className="text-xl font-bold mb-4">User Login</h2>
+                {error && <p className="text-red-600 text-sm mb-2">{error}</p>}
+
                 <input
                     type="tel"
                     placeholder="Phone number"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
+                    className="w-full mb-3 p-2 border rounded"
+                />
+                <input
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     className="w-full mb-4 p-2 border rounded"
                 />
 
@@ -51,8 +64,18 @@ const UserLoginPopup = ({ onLogin, onClose }) => {
                 </button>
 
                 <button
+                    onClick={() => {
+                        onClose();
+                        navigate('/register');
+                    }}
+                    className="w-full mt-3 text-sm text-blue-600 underline"
+                >
+                    Don't have an account? Register
+                </button>
+
+                <button
                     onClick={onClose}
-                    className="w-full mt-3 text-gray-600 underline text-sm"
+                    className="w-full mt-2 text-gray-600 underline text-sm"
                 >
                     Maybe later
                 </button>

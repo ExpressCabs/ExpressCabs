@@ -1,6 +1,8 @@
+// AddressScreen.jsx (Final polish — grey map, no satellite/fullscreen controls, clean overlay)
 import React, { useEffect, useRef, useState } from 'react';
 import VehicleSelection from './VehicleSelection';
 import PassengerDetails from './PassengerDetails';
+import { motion } from 'framer-motion';
 
 const AddressScreen = ({ loggedInUser }) => {
   const mapRef = useRef(null);
@@ -27,12 +29,48 @@ const AddressScreen = ({ loggedInUser }) => {
   useEffect(() => {
     if (!mapRef.current || map) return;
 
+    const greyMapStyle = [
+      { elementType: 'geometry', stylers: [{ color: '#4b4f56' }] },
+      { elementType: 'labels.text.fill', stylers: [{ color: '#e0e0e0' }] },
+      { elementType: 'labels.text.stroke', stylers: [{ color: '#1a1a1a' }] },
+      {
+        featureType: 'poi',
+        elementType: 'labels.text.fill',
+        stylers: [{ color: '#6b7280' }],
+      },
+      {
+        featureType: 'road',
+        elementType: 'geometry',
+        stylers: [{ color: '#5a5f66' }],
+      },
+      {
+        featureType: 'water',
+        elementType: 'geometry',
+        stylers: [{ color: '#374151' }],
+      },
+    ];
+
     const gMap = new window.google.maps.Map(mapRef.current, {
       center: { lat: -37.8136, lng: 144.9631 },
       zoom: 13,
+      disableDefaultUI: true,
+      zoomControl: true,
+      styles: greyMapStyle,
     });
+
     setMap(gMap);
-    directionsRenderer.current = new window.google.maps.DirectionsRenderer({ map: gMap });
+    directionsRenderer.current = new window.google.maps.DirectionsRenderer({
+      map: gMap,
+      suppressMarkers: false,
+      suppressInfoWindows: true,
+      polylineOptions: {
+        strokeColor: '#2563eb',
+        strokeOpacity: 0.9,
+        strokeWeight: 5,
+      },
+      preserveViewport: true,
+      panel: null,
+    });
 
     const pickupAutocomplete = new window.google.maps.places.Autocomplete(pickupInputRef.current, {
       componentRestrictions: { country: 'au' },
@@ -83,7 +121,21 @@ const AddressScreen = ({ loggedInUser }) => {
         (result, status) => {
           if (status === 'OK') {
             directionsRenderer.current.setDirections(result);
-          } else {
+            const bounds = new window.google.maps.LatLngBounds();
+            const route = result.routes[0];
+            route.legs.forEach((leg) => {
+              bounds.extend(leg.start_location);
+              bounds.extend(leg.end_location);
+            });
+            map.fitBounds(bounds);
+            setTimeout(() => {
+              const currentZoom = map.getZoom();
+              map.setZoom(currentZoom - 1); // Optional: slight zoom out
+              map.panBy(0, -100); // Move map upward visually, so route appears lower
+            }, 500);
+
+          }
+          else {
             console.error('Directions request failed:', status);
           }
         }
@@ -93,127 +145,114 @@ const AddressScreen = ({ loggedInUser }) => {
 
   const handlePassengerSubmit = (details) => {
     setPassengerDetails(details);
-    console.log('Ready to submit full booking:', {
-      pickupLoc,
-      dropoffLoc,
-      passengerCount,
-      bookingType,
-      scheduledDateTime,
-      selectedVehicle,
-      passengerDetails: details,
-    });
   };
 
   return (
     <div className="relative flex flex-col h-screen">
-      <div className={step === 1 ? '' : 'hidden'}>
-        <div className="pt-2 px-2 pb-4 bg-white shadow z-10">
-          <h1 className="text-xl font-bold mb-3">Enter Pickup & Dropoff</h1>
-          <input
-            type="text"
-            placeholder="Pickup address"
-            ref={pickupInputRef}
-            className="w-full p-2 mb-2 border rounded"
-          />
-          <input
-            type="text"
-            placeholder="Dropoff address"
-            ref={dropoffInputRef}
-            className="w-full p-2 mb-2 border rounded"
-          />
+      {step === 1 && (
+        <div className="relative min-h-screen bg-gray-900 text-white">
+          <motion.div
+            className="relative z-20 pt-16 px-4 w-full max-w-md mx-auto"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <input
+              type="text"
+              placeholder="Pickup address"
+              ref={pickupInputRef}
+              className="w-full p-2 mb-3 border rounded bg-white text-black focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="text"
+              placeholder="Dropoff address"
+              ref={dropoffInputRef}
+              className="w-full p-2 mb-3 border rounded bg-white text-black focus:ring-2 focus:ring-blue-500"
+            />
 
-          {showBookingOptions && (
-            <div className="mt-4 bg-gray-50 p-4 rounded shadow space-y-4">
-              <div>
-                <label className="block font-medium mb-1">Book for:</label>
-                <div className="flex gap-4">
-                  <label>
-                    <input
-                      type="radio"
-                      name="bookingType"
-                      value="now"
-                      checked={bookingType === 'now'}
-                      onChange={() => {
-                        setBookingType('now');
-                        setScheduledDateTime('');
-                      }}
-                    />{' '}
-                    Now
-                  </label>
-                  <label>
-                    <input
-                      type="radio"
-                      name="bookingType"
-                      value="later"
-                      checked={bookingType === 'later'}
-                      onChange={() => setBookingType('later')}
-                    />{' '}
-                    Later
-                  </label>
-                </div>
-              </div>
-
-              <div>
-                <label className="block font-medium mb-1">Number of Passengers:</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="11"
-                  value={passengerCount}
-                  onChange={(e) => setPassengerCount(parseInt(e.target.value))}
-                  className="w-full p-2 border rounded"
-                />
-              </div>
-
-              {bookingType === 'later' && (
+            {showBookingOptions && (
+              <motion.div
+                className="bg-white/90 backdrop-blur-md p-4 rounded-xl text-black space-y-4 shadow-xl mt-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
                 <div>
-                  <label className="block font-medium mb-1">Select Date & Time:</label>
+                  <label className="block font-medium text-sm mb-1">Book for:</label>
+                  <div className="flex gap-4">
+                    <label>
+                      <input
+                        type="radio"
+                        name="bookingType"
+                        value="now"
+                        checked={bookingType === 'now'}
+                        onChange={() => {
+                          setBookingType('now');
+                          setScheduledDateTime('');
+                        }}
+                      />{' '}Now
+                    </label>
+                    <label>
+                      <input
+                        type="radio"
+                        name="bookingType"
+                        value="later"
+                        checked={bookingType === 'later'}
+                        onChange={() => setBookingType('later')}
+                      />{' '}Later
+                    </label>
+                  </div>
+                </div>
+
+                {bookingType === 'later' && (
+                  <div>
+                    <label className="block font-medium text-sm mb-1">Select Date & Time:</label>
+                    <input
+                      type="datetime-local"
+                      value={scheduledDateTime}
+                      onChange={(e) => {
+                        const selected = new Date(e.target.value);
+                        const now = new Date();
+                        if (selected < now) {
+                          alert("❌ Cannot select a past time.");
+                          return;
+                        }
+                        setScheduledDateTime(e.target.value);
+                      }}
+                      className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
+                      min={new Date().toISOString().slice(0, 16)}
+                    />
+                  </div>
+                )}
+
+                <div>
+                  <label className="block font-medium text-sm mb-1">Number of Passengers:</label>
                   <input
-                    type="datetime-local"
-                    value={scheduledDateTime}
-                    onChange={(e) => {
-                      const selected = new Date(e.target.value);
-                      const now = new Date();
-
-                      if (selected < now) {
-                        alert("❌ Cannot select a past time.");
-                        return;
-                      }
-
-                      setScheduledDateTime(e.target.value);
-                    }}
-                    className="w-full p-2 border rounded"
-                    min={new Date().toISOString().slice(0, 16)}
+                    type="number"
+                    min="1"
+                    max="11"
+                    value={passengerCount}
+                    onChange={(e) => setPassengerCount(parseInt(e.target.value))}
+                    className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
-              )}
 
-              <div className="pt-2">
                 <button
                   onClick={() => setStep(2)}
-                  className={`w-full py-2 px-4 rounded text-white font-semibold ${(bookingType === 'now' || (bookingType === 'later' && scheduledDateTime)) && passengerCount
-                    ? 'bg-blue-600 hover:bg-blue-700'
-                    : 'bg-gray-400 cursor-not-allowed'
-                    }`}
-                  disabled={
-                    !pickupLoc ||
-                    !dropoffLoc ||
-                    !passengerCount ||
-                    (bookingType === 'later' && !scheduledDateTime)
-                  }
+                  className="w-full bg-blue-600 text-white py-2 rounded font-semibold hover:bg-blue-700 transition"
+                  disabled={!pickupLoc || !dropoffLoc || (bookingType === 'later' && !scheduledDateTime)}
                 >
                   Next
                 </button>
-              </div>
-            </div>
-          )}
+              </motion.div>
+            )}
+          </motion.div>
+
+          <div ref={mapRef} id="map" className="absolute inset-0 z-0" />
         </div>
+      )}
 
-        <div ref={mapRef} id="map" className="flex-1 z-0 min-h-[500px]" />
-        <div className="h-20" />
-      </div>
-
-      <div className={step === 2 ? '' : 'hidden'}>
+      {step === 2 && (
         <VehicleSelection
           pickupLoc={pickupLoc}
           dropoffLoc={dropoffLoc}
@@ -225,9 +264,9 @@ const AddressScreen = ({ loggedInUser }) => {
           setFare={setFare}
           setFareType={setFareType}
         />
-      </div>
+      )}
 
-      <div className={step === 3 ? '' : 'hidden'}>
+      {step === 3 && (
         <PassengerDetails
           setStep={setStep}
           onSubmitPassengerDetails={handlePassengerSubmit}
@@ -242,8 +281,7 @@ const AddressScreen = ({ loggedInUser }) => {
           scheduledDateTime={scheduledDateTime}
           loggedInUser={loggedInUser}
         />
-
-      </div>
+      )}
     </div>
   );
 };

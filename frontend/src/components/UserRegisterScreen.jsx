@@ -1,10 +1,16 @@
 // src/components/UserRegisterScreen.jsx
 import React, { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const UserRegisterScreen = ({ onBackToLogin }) => {
-    const [name, setName] = useState('');
-    const [phone, setPhone] = useState('');
-    const [email, setEmail] = useState('');
+    const location = useLocation();
+    const initialName = location.state?.name || '';
+    const initialPhone = location.state?.phone || '';
+    const initialEmail = location.state?.email || '';
+
+    const [name, setName] = useState(initialName);
+    const [phone, setPhone] = useState(initialPhone);
+    const [email, setEmail] = useState(initialEmail);
     const [password, setPassword] = useState('');
     const [success, setSuccess] = useState(false);
 

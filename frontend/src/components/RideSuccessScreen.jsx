@@ -1,0 +1,57 @@
+import React, { useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
+
+const RideSuccessScreen = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const isGuest = location.state?.isGuest ?? false;
+
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            navigate('/', {
+                state: { nextMode: isGuest ? 'passenger' : 'myrides' },
+            });
+        }, 3000); // wait 3 seconds before redirect
+
+        return () => clearTimeout(timeout);
+    }, [isGuest, navigate]);
+
+    return (
+        <motion.div
+            className="h-screen flex flex-col items-center justify-center text-center p-6"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+        >
+            <motion.div
+                initial={{ rotate: -10 }}
+                animate={{ rotate: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-6xl mb-4"
+            >
+                ✅
+            </motion.div>
+
+            <motion.h1
+                className="text-2xl font-bold mb-2"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+            >
+                Ride Booked Successfully!
+            </motion.h1>
+
+            <motion.p
+                className="text-gray-600"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+            >
+                Redirecting you shortly...
+            </motion.p>
+        </motion.div>
+    );
+};
+
+export default RideSuccessScreen;
