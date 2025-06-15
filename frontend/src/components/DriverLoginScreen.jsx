@@ -12,7 +12,7 @@ const DriverLoginScreen = ({ onLogin }) => {
         setError('');
 
         try {
-            const res = await axios.post('/api/driver/login', {
+            const res = await axios.post('${import.meta.env.VITE_API_BASE_URL}/api/driver/login', {
                 email,
                 password,
             });

@@ -17,7 +17,7 @@ const DriverDashboard = ({ driver, onLogout }) => {
     const fetchUnassignedRides = async () => {
         setLoading(true);
         try {
-            const res = await axios.get('/api/rides/unassigned');
+            const res = await axios.get('${import.meta.env.VITE_API_BASE_URL}/api/rides/unassigned');
             setUnassignedRides(res.data);
         } catch (err) {
             console.error('Error fetching unassigned rides:', err);
@@ -29,7 +29,7 @@ const DriverDashboard = ({ driver, onLogout }) => {
     const fetchMyRides = async () => {
         setLoading(true);
         try {
-            const res = await axios.get(`/api/rides/assigned?driverId=${driver.id}`);
+            const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/rides/assigned?driverId=${driver.id}`);
             setMyRides(res.data);
         } catch (err) {
             console.error('Error fetching assigned rides:', err);
@@ -41,7 +41,7 @@ const DriverDashboard = ({ driver, onLogout }) => {
     const handleAssign = async (rideId) => {
         setAssigning(rideId);
         try {
-            const res = await axios.post(`/api/rides/${rideId}/assign`, { driverId: driver.id });
+            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/rides/${rideId}/assign`, { driverId: driver.id });
             if (res.status === 200 || res.status === 204) {
                 alert('✅ Ride assigned successfully!');
                 setUnassignedRides(prev => prev.filter(r => r.id !== rideId));
@@ -59,7 +59,7 @@ const DriverDashboard = ({ driver, onLogout }) => {
 
     const handleUnassign = async (rideId) => {
         try {
-            const res = await axios.post(`/api/rides/${rideId}/unassign`, { driverId: driver.id });
+            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/rides/${rideId}/unassign`, { driverId: driver.id });
             if (res.status === 200) {
                 alert('✅ Ride unassigned successfully!');
                 setMyRides(prev => prev.filter(r => r.id !== rideId));
@@ -162,7 +162,7 @@ const DriverDashboard = ({ driver, onLogout }) => {
                                     <button
                                         onClick={async () => {
                                             if (!window.confirm("Mark this ride as completed?")) return;
-                                            const res = await fetch(`/api/rides/${ride.id}/complete`, { method: 'POST' });
+                                            const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/rides/${ride.id}/complete`, { method: 'POST' });
                                             if (res.ok) {
                                                 alert('✅ Ride marked as completed.');
                                                 fetchMyRides();

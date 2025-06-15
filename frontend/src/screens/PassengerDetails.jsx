@@ -57,7 +57,7 @@ const PassengerDetails = ({
 
     try {
       console.log('📤 Sending booking request...');
-      const response = await fetch('/api/rides/book-ride', {
+      const response = await fetch('${import.meta.env.VITE_API_BASE_URL}/api/rides/book-ride', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
