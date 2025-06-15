@@ -17,7 +17,7 @@ const DriverDashboard = ({ driver, onLogout }) => {
     const fetchUnassignedRides = async () => {
         setLoading(true);
         try {
-            const res = await axios.get('${import.meta.env.VITE_API_BASE_URL}/api/rides/unassigned');
+            const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/rides/unassigned`);
             setUnassignedRides(res.data);
         } catch (err) {
             console.error('Error fetching unassigned rides:', err);

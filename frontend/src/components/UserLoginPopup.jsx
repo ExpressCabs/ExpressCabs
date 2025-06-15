@@ -16,7 +16,7 @@ const UserLoginPopup = ({ onLogin, onClose }) => {
         }
 
         try {
-            const res = await axios.post('${import.meta.env.VITE_API_BASE_URL}/api/users/login', { phone, password });
+            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/users/login`, { phone, password });
             if (res.data.user) {
                 onLogin(res.data.user);
                 onClose(); // Close popup on success
