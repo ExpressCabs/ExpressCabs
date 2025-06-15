@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { Helmet } from 'react-helmet-async';
 
 const UserRidesScreen = ({ user, onLogout, setMode }) => {
     const [rides, setRides] = useState([]);
@@ -42,6 +43,13 @@ const UserRidesScreen = ({ user, onLogout, setMode }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
         >
+            <Helmet>
+                <title>My Rides | Express Cabs Melbourne</title>
+                <meta name="description" content="View and manage your upcoming and past taxi rides with Express Cabs. Stay updated on your scheduled trips." />
+                <link rel="canonical" href="https://expresscabs.com.au/my-rides" />
+                <meta name="robots" content="index, follow" />
+            </Helmet>
+
             {/* Logout Button */}
             <motion.button
                 whileTap={{ scale: 0.95 }}

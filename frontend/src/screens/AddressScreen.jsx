@@ -1,8 +1,8 @@
-// AddressScreen.jsx (Final polish — grey map, no satellite/fullscreen controls, clean overlay)
 import React, { useEffect, useRef, useState } from 'react';
 import VehicleSelection from './VehicleSelection';
 import PassengerDetails from './PassengerDetails';
 import { motion } from 'framer-motion';
+import { Helmet } from 'react-helmet-async';
 
 const AddressScreen = ({ loggedInUser }) => {
   const mapRef = useRef(null);
@@ -130,12 +130,10 @@ const AddressScreen = ({ loggedInUser }) => {
             map.fitBounds(bounds);
             setTimeout(() => {
               const currentZoom = map.getZoom();
-              map.setZoom(currentZoom - 1); // Optional: slight zoom out
-              map.panBy(0, -100); // Move map upward visually, so route appears lower
+              map.setZoom(currentZoom - 1);
+              map.panBy(0, -100);
             }, 500);
-
-          }
-          else {
+          } else {
             console.error('Directions request failed:', status);
           }
         }
@@ -163,6 +161,36 @@ const AddressScreen = ({ loggedInUser }) => {
               ref={pickupInputRef}
               className="w-full p-2 mb-3 border rounded bg-white text-black focus:ring-2 focus:ring-blue-500"
             />
+            <Helmet>
+              <title>Book Taxi Online | Prime Cabs Melbourne</title>
+              <meta name="description" content="Easily book your ride online with Prime Cabs. Reliable airport transfers and Melbourne-wide taxi services 24/7." />
+              <link rel="canonical" href="https://primecabsmelbourne.com.au/book" />
+              <meta name="robots" content="index, follow" />
+              <script type="application/ld+json">
+                {JSON.stringify({
+                  "@context": "https://schema.org",
+                  "@type": "TaxiService",
+                  "name": "Prime Cabs Melbourne",
+                  "image": "https://primecabsmelbourne.com.au/logo.png",
+                  "url": "https://primecabsmelbourne.com.au",
+                  "telephone": "+61482038902",
+                  "address": {
+                    "@type": "PostalAddress",
+                    "streetAddress": "29 Bayswater Rd",
+                    "addressLocality": "Croydon",
+                    "addressRegion": "VIC",
+                    "postalCode": "3136",
+                    "addressCountry": "AU"
+                  },
+                  "priceRange": "$$",
+                  "areaServed": {
+                    "@type": "Place",
+                    "name": "Melbourne Metropolitan Area"
+                  },
+                  "description": "24/7 airport taxi and cab booking service in Melbourne. Instant fare estimate, online booking, and professional drivers.",
+                })}
+              </script>
+            </Helmet>
             <input
               type="text"
               placeholder="Dropoff address"

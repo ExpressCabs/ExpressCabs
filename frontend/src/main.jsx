@@ -11,7 +11,7 @@ import {
   useNavigate,
 } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
-
+import AirportTaxiMelbourne from './screens/AirportTaxiMelbourne';
 import AddressScreen from './screens/AddressScreen';
 import ContactUs from './screens/ContactUs';
 import OurServices from './screens/OurServices';
@@ -146,6 +146,7 @@ const App = () => {
         <Route path="/contact" element={<Home />} />
         <Route path="/services" element={<Home />} />
         <Route path="/ride-success" element={<RideSuccessScreen />} />
+        <Route path="/airport-taxi-melbourne" element={<AirportTaxiMelbourne loggedInUser={loggedInUser} />} />
 
         <Route
           path="/driver"

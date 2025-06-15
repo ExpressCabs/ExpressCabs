@@ -31,7 +31,7 @@ const HeaderFooter = ({ mode, setMode, loggedInDriver, loggedInUser, setShowUser
         transition={{ duration: 0.5 }}
         className="w-full bg-white shadow-md p-4 fixed top-0 z-50 flex justify-between items-center"
       >
-        <div className="text-xl font-bold tracking-wide text-blue-700">Express Cabs</div>
+        <div className="text-xl font-bold tracking-wide text-blue-700">Prime Cabs</div>
 
         {/* Desktop Menu */}
         <nav className="hidden sm:flex gap-6 font-medium text-gray-700">

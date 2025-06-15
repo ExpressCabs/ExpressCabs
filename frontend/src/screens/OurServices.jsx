@@ -29,11 +29,33 @@ export default function OurServices() {
     return (
         <div className="min-h-screen bg-gradient-to-br from-white via-gray-100 to-gray-200 px-4 py-10">
             <Helmet>
-                <title>Melbourne Airport Taxi Services – Express Cabs</title>
-                <meta
-                    name="description"
-                    content="Express Cabs offers reliable airport transfers to Melbourne Tullamarine and Avalon. Book your ride online for prompt, 24/7 service."
-                />
+                <title>Our Taxi Services | Prime Cabs Melbourne</title>
+                <meta name="description" content="Explore our Melbourne taxi services – airport transfers, hotel pickups, business rides, and long-distance travel. Professional drivers & fixed pricing." />
+                <link rel="canonical" href="https://primecabsmelbourne.com.au/services" />
+                <meta name="robots" content="index, follow" />
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "Service",
+                        "serviceType": "Airport Taxi",
+                        "provider": {
+                            "@type": "LocalBusiness",
+                            "name": "Prime Cabs Melbourne",
+                            "url": "https://primecabsmelbourne.com.au",
+                            "telephone": "+61482038902",
+                            "address": {
+                                "@type": "PostalAddress",
+                                "streetAddress": "29 Bayswater Rd",
+                                "addressLocality": "Croydon",
+                                "addressRegion": "VIC",
+                                "postalCode": "3136",
+                                "addressCountry": "AU"
+                            }
+                        },
+                        "areaServed": "Melbourne, Australia",
+                        "description": "Reliable Melbourne airport taxi transfers to and from Tullamarine and Avalon airports."
+                    })}
+                </script>
             </Helmet>
 
             <h1 className="text-3xl font-bold text-center text-blue-800 mb-6">

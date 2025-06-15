@@ -1,6 +1,8 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { Helmet } from 'react-helmet-async';
+
 
 const RideSuccessScreen = () => {
     const location = useLocation();
@@ -24,6 +26,11 @@ const RideSuccessScreen = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5 }}
         >
+            <Helmet>
+                <title>Thank You – Ride Booked | Express Cabs</title>
+                <meta name="description" content="Your ride has been successfully booked with Express Cabs. We'll be in touch shortly with driver details." />
+                <meta name="robots" content="noindex, nofollow" />
+            </Helmet>
             <motion.div
                 initial={{ rotate: -10 }}
                 animate={{ rotate: 0 }}
