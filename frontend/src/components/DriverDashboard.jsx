@@ -149,9 +149,13 @@ const DriverDashboard = ({ driver, onLogout }) => {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: 0.3 }}
                             >
+                                <p><strong>Name:</strong> {ride.name}</p>
+                                <p><strong>Phone:</strong> {ride.phone}</p>
                                 <p><strong>Pickup:</strong> {ride.pickup}</p>
                                 <p><strong>Dropoff:</strong> {ride.dropoff}</p>
                                 <p><strong>Time:</strong> {new Date(ride.rideDate).toLocaleString()}</p>
+                                <p><strong>Fare:</strong> ${ride.fare?.toFixed(2)}</p>
+
                                 <div className="flex gap-2 mt-3">
                                     <button
                                         onClick={() => handleUnassign(ride.id)}

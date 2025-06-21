@@ -1,3 +1,4 @@
+// UserRidesScreen.jsx — shows upcoming and past rides with driver details if assigned
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
@@ -8,7 +9,7 @@ const UserRidesScreen = ({ user, onLogout, setMode }) => {
     useEffect(() => {
         const fetchRides = async () => {
             try {
-                const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/rides/user/${user.id}`);
+                const res = await fetch(`/api/rides/user/${user.id}`);
                 const data = await res.json();
                 setRides(data);
             } catch (error) {
@@ -28,13 +29,35 @@ const UserRidesScreen = ({ user, onLogout, setMode }) => {
     rides.forEach((ride) => {
         const rideTime = new Date(ride.rideDate);
         const minutesFromNow = (rideTime - now) / 60000;
-
         if (ride.status === 'completed') {
             pastRides.push(ride);
         } else if (minutesFromNow >= -60) {
             myRides.push(ride);
         }
     });
+
+    const RideCard = ({ ride }) => (
+        <motion.li
+            className="bg-white p-4 rounded-lg shadow border text-sm"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+        >
+            <p><strong>Name:</strong> {ride.name}</p>
+            <p><strong>Phone:</strong> {ride.phone}</p>
+            <p><strong>From:</strong> {ride.pickup}</p>
+            <p><strong>To:</strong> {ride.dropoff}</p>
+            <p><strong>Time:</strong> {new Date(ride.rideDate).toLocaleString()}</p>
+            <p><strong>Fare:</strong> ${ride.fare?.toFixed(2)}</p>
+            {ride.driver && (
+                <div className="mt-2 text-blue-800">
+                    <p><strong>Driver:</strong> {ride.driver.name}</p>
+                    <p><strong>Phone:</strong> {ride.driver.phone}</p>
+                    <p><strong>Vehicle:</strong> {ride.driver.carModel} ({ride.driver.taxiRegistration})</p>
+                </div>
+            )}
+        </motion.li>
+    );
 
     return (
         <motion.div
@@ -47,10 +70,8 @@ const UserRidesScreen = ({ user, onLogout, setMode }) => {
                 <title>My Rides | Express Cabs Melbourne</title>
                 <meta name="description" content="View and manage your upcoming and past taxi rides with Express Cabs. Stay updated on your scheduled trips." />
                 <link rel="canonical" href="https://expresscabs.com.au/my-rides" />
-                <meta name="robots" content="index, follow" />
             </Helmet>
 
-            {/* Logout Button */}
             <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={() => {
@@ -70,20 +91,8 @@ const UserRidesScreen = ({ user, onLogout, setMode }) => {
             <div className="mb-8">
                 <h3 className="text-lg font-semibold text-green-700 mb-2">Upcoming Rides</h3>
                 {myRides.length > 0 ? (
-                    <ul className="space-y-3 text-sm">
-                        {myRides.map((ride) => (
-                            <motion.li
-                                key={ride.id}
-                                className="bg-white p-4 rounded-lg shadow border"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                <p><strong>From:</strong> {ride.pickup}</p>
-                                <p><strong>To:</strong> {ride.dropoff}</p>
-                                <p><strong>Time:</strong> {new Date(ride.rideDate).toLocaleString()}</p>
-                            </motion.li>
-                        ))}
+                    <ul className="space-y-3">
+                        {myRides.map((ride) => <RideCard key={ride.id} ride={ride} />)}
                     </ul>
                 ) : (
                     <div className="text-gray-500 text-sm">No upcoming rides.</div>
@@ -93,20 +102,8 @@ const UserRidesScreen = ({ user, onLogout, setMode }) => {
             <div>
                 <h3 className="text-lg font-semibold text-gray-700 mb-2">Past Rides</h3>
                 {pastRides.length > 0 ? (
-                    <ul className="space-y-3 text-sm">
-                        {pastRides.map((ride) => (
-                            <motion.li
-                                key={ride.id}
-                                className="bg-gray-100 p-4 rounded-lg shadow border"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.3 }}
-                            >
-                                <p><strong>From:</strong> {ride.pickup}</p>
-                                <p><strong>To:</strong> {ride.dropoff}</p>
-                                <p><strong>Time:</strong> {new Date(ride.rideDate).toLocaleString()}</p>
-                            </motion.li>
-                        ))}
+                    <ul className="space-y-3">
+                        {pastRides.map((ride) => <RideCard key={ride.id} ride={ride} />)}
                     </ul>
                 ) : (
                     <div className="text-gray-500 text-sm">No past rides.</div>

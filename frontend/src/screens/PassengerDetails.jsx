@@ -1,7 +1,8 @@
-// PassengerDetails.jsx — Enhanced with modern UI and motion transitions
+// PassengerDetails.jsx — Updated for OTP flow with parent data handoff
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+
+const OTP_ENABLED = import.meta.env.VITE_OTP_VERIFICATION_ENABLED === 'true';
 
 const PassengerDetails = ({
   setStep,
@@ -16,149 +17,72 @@ const PassengerDetails = ({
   fare,
   fareType,
   loggedInUser,
+  onSubmitPassengerDetails,
 }) => {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [note, setNote] = useState('');
-
-  const navigate = useNavigate();
+  const [isBooking, setIsBooking] = useState(false);
   const isValid = name.trim() && phone.trim();
 
-  const handleBookRide = async () => {
+  const handleSendOtp = async () => {
     if (!isValid) return;
-    if (!pickupLoc || !dropoffLoc) {
-      alert('Pickup or Dropoff location is missing. Please go back and enter them.');
-      return;
-    }
-
-    const rideDate = bookingType === 'later' ? new Date(scheduledDateTime) : new Date();
-
-    const payload = {
-      name,
-      phone,
-      email,
-      note,
-      pickup: pickupAddress,
-      pickupLat: pickupLoc?.lat?.() ?? null,
-      pickupLng: pickupLoc?.lng?.() ?? null,
-      dropoff: dropoffAddress,
-      dropoffLat: dropoffLoc?.lat?.() ?? null,
-      dropoffLng: dropoffLoc?.lng?.() ?? null,
-      rideDate,
-      vehicleType: selectedVehicle?.id ?? null,
-      fare: fare ?? null,
-      fareType,
-      passengerCount,
-      userId: loggedInUser?.id ?? null,
-    };
-
-    console.log('Payload being sent:', payload);
 
     try {
-      console.log('📤 Sending booking request...');
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/rides/book-ride`, {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/otp/send`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ phone }),
       });
 
-      const result = await response.json();
-      console.log('✅ Response JSON:', result);
+      const result = await res.json();
 
-      if (response.ok) {
-        setName('');
-        setPhone('');
-        setEmail('');
-        setNote('');
-        navigate('/ride-success', { state: { isGuest: !loggedInUser } });
+      if (res.ok && result.success) {
+        onSubmitPassengerDetails({ name, phone, email, note });
+        setStep(4);
       } else {
-        alert(`❌ Booking failed: ${result.error}`);
+        alert(`❌ Failed to send OTP: ${result.error || 'Unknown error'}`);
       }
     } catch (err) {
-      console.error('Error:', err);
-      alert('❌ An error occurred while booking the ride.');
+      console.error('OTP send error:', err);
+      alert('❌ Could not send OTP. Please try again.');
     }
   };
 
   return (
-    <motion.div
-      className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 flex items-center justify-center px-4 py-12"
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
+    <motion.div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 flex items-center justify-center px-4 py-12" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
       <div className="w-full max-w-md bg-white p-6 rounded-xl shadow-lg backdrop-blur-md">
         <h2 className="text-2xl font-bold text-center mb-6">Passenger Details</h2>
-
         <form className="space-y-4">
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.1 }}>
+          <motion.div>
             <label className="block font-medium">Full Name *</label>
-            <input
-              type="text"
-              className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
-            />
+            <input type="text" className="w-full px-4 py-2 border rounded" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter your name" />
           </motion.div>
-
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+          <motion.div>
             <label className="block font-medium">Phone Number *</label>
-            <input
-              type="tel"
-              className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="e.g. 0412345678"
-            />
+            <input type="tel" className="w-full px-4 py-2 border rounded" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 0412345678" />
+            <small className="text-xs text-gray-500">An OTP will be sent to this number for verification before booking.</small>
           </motion.div>
-
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
+          <motion.div>
             <label className="block font-medium">Email (optional)</label>
-            <input
-              type="email"
-              className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-            />
+            <input type="email" className="w-full px-4 py-2 border rounded" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
           </motion.div>
-
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
+          <motion.div>
             <label className="block font-medium">Driver Note (optional)</label>
-            <textarea
-              className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
-              rows="3"
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Any instructions for driver"
-            ></textarea>
+            <textarea className="w-full px-4 py-2 border rounded" rows="3" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Any instructions for driver"></textarea>
           </motion.div>
-
-          <motion.div
-            className="flex justify-between pt-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-          >
-            <motion.button
-              whileTap={{ scale: 0.95 }}
-              type="button"
-              onClick={() => setStep(2)}
-              className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
-            >
+          <motion.div className="flex justify-between pt-6">
+            <motion.button type="button" onClick={() => setStep(2)} className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">
               ← Back
             </motion.button>
             <motion.button
-              whileTap={{ scale: 0.95 }}
               type="button"
-              onClick={handleBookRide}
-              disabled={!isValid}
-              className={`px-6 py-2 rounded text-white font-semibold transition-all ${isValid ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'
-                }`}
+              onClick={OTP_ENABLED ? handleSendOtp : () => { }}
+              disabled={!isValid || isBooking}
+              className={`px-6 py-2 rounded text-white font-semibold ${isValid && !isBooking ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}`}
             >
-              Book Ride
+              {isBooking ? 'Booking...' : 'Book Ride'}
             </motion.button>
           </motion.div>
         </form>

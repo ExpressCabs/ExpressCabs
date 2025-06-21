@@ -39,7 +39,8 @@ const VehicleSelection = ({
   setStep,
   setSelectedVehicle,
   setFare,
-  setFareType
+  setFareType,
+  setMap
 }) => {
   const [distanceKm, setDistanceKm] = useState(null);
   const [fares, setFares] = useState({});
@@ -168,7 +169,10 @@ const VehicleSelection = ({
       <div className="flex justify-between pt-6">
         <motion.button
           whileTap={{ scale: 0.95 }}
-          onClick={() => setStep(1)}
+          onClick={() => {
+            setMap(null); // <- pass setMap via props
+            setStep(1);
+          }}
           className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
         >
           ← Back

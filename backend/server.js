@@ -6,6 +6,7 @@ const rideRoutes = require('./routes/rideRoutes');
 const driverRoutes = require('./routes/driverRoutes');
 const userRoutes = require('./routes/userRoutes');
 const contactRoutes = require('./routes/contactRoutes');
+const otpRoutes = require('./routes/otpRoutes');
 
 const app = express();
 app.use(cors());
@@ -15,6 +16,7 @@ app.use('/api/rides', rideRoutes);
 app.use('/api/driver', driverRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/contact', contactRoutes);
+app.use('/api/otp', otpRoutes);
 
 
 const PORT = process.env.PORT || 3000;
