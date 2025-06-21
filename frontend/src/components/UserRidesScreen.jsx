@@ -9,7 +9,7 @@ const UserRidesScreen = ({ user, onLogout, setMode }) => {
     useEffect(() => {
         const fetchRides = async () => {
             try {
-                const res = await fetch(`/api/rides/user/${user.id}`);
+                const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/rides/user/${user.id}`);
                 const data = await res.json();
                 setRides(data);
             } catch (error) {
