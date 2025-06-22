@@ -187,7 +187,21 @@ const AddressScreen = ({ loggedInUser }) => {
               <meta name="description" content="Easily book your ride online with Prime Cabs. Reliable airport transfers and Melbourne-wide taxi services 24/7." />
               <link rel="canonical" href="https://primecabsmelbourne.com.au/book" />
               <meta name="robots" content="index, follow" />
+
+              {/* External gtag script */}
+              <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17249057389"></script>
+
+              {/* Inline gtag config */}
+              <script type="text/javascript">
+                {`
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'AW-17249057389');
+    `}
+              </script>
             </Helmet>
+
             <input
               type="text"
               placeholder="Dropoff address"

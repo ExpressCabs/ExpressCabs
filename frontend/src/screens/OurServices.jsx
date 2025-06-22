@@ -33,6 +33,17 @@ export default function OurServices() {
                 <meta name="description" content="Explore our Melbourne taxi services – airport transfers, hotel pickups, business rides, and long-distance travel. Professional drivers & fixed pricing." />
                 <link rel="canonical" href="https://primecabsmelbourne.com.au/services" />
                 <meta name="robots" content="index, follow" />
+                {/*  gtag script */}
+                <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17249057389"></script>
+
+                <script type="text/javascript">
+                    {`
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', 'AW-17249057389');
+                `}
+                </script>
                 <script type="application/ld+json">
                     {JSON.stringify({
                         "@context": "https://schema.org",

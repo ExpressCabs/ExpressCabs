@@ -53,6 +53,17 @@ export default function ContactUs() {
                 <title>Contact Prime Cabs Melbourne | 24/7 Airport Taxi Booking & Support</title>
                 <meta name="description" content="Contact Prime Cabs for reliable Melbourne airport taxi bookings. 24/7 support for Tullamarine, Avalon, and Melbourne suburbs. Fast response and affordable fixed fare quotes." />
                 <link rel="canonical" href="https://primecabsmelbourne.com.au/contact" />
+                {/*  gtag script */}
+                <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17249057389"></script>
+
+                <script type="text/javascript">
+                    {`
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', 'AW-17249057389');
+                `}
+                </script>
             </Helmet>
 
             <motion.h1 className="text-4xl font-bold text-center text-blue-900 mb-4" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>

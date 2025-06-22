@@ -24,6 +24,17 @@ const AirportTaxiMelbourne = ({ loggedInUser }) => {
                 <meta name="description" content="Book affordable, fast and professional airport taxis in Melbourne. Fixed fares, 24/7 service to Tullamarine & Avalon Airport. Fleet includes sedans, SUVs, and vans." />
                 <link rel="canonical" href="https://primecabsmelbourne.com.au/airport-taxi-melbourne" />
                 <meta name="robots" content="index, follow" />
+                {/*  gtag script */}
+                <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17249057389"></script>
+
+                <script type="text/javascript">
+                    {`
+                  window.dataLayer = window.dataLayer || [];
+                  function gtag(){dataLayer.push(arguments);}
+                  gtag('js', new Date());
+                  gtag('config', 'AW-17249057389');
+                `}
+                </script>
                 <script type="application/ld+json">
                     {JSON.stringify({
                         "@context": "https://schema.org",
