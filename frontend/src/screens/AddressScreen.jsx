@@ -1,13 +1,30 @@
-// AddressScreen.jsx – Fully Integrated with OTP and Booking
+// AddressScreen.jsx – Unified layout: all booking steps share hero background and structure
 import React, { useEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import VehicleSelection from './VehicleSelection';
 import PassengerDetails from './PassengerDetails';
 import OTPVerification from './OTPVerification';
-import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
+import ContactUs from './ContactUs';
+import OurServices from './OurServices';
+
+const heroImages = ['../../assets/images/prime_cabs_landscape.png', '../../assets/images/prime_cabs_landscape2.png', '../../assets/images/prime_cabs_landscape3.png', '../../assets/images/prime_cabs_landscape4.png'];
+const fleet = [
+  { name: 'Sedan', seats: 4, image: '../../assets/vehicles/sedan-modern.png' },
+  { name: 'Luxury', seats: 4, image: '../../assets/vehicles/luxury-modern.png' },
+  { name: 'SUV', seats: 6, image: '../../assets/vehicles/suv-modern.png' },
+  { name: 'Van', seats: 11, image: '../../assets/vehicles/van-modern.png' },
+];
 
 const AddressScreen = ({ loggedInUser }) => {
+  useEffect(() => {
+    const fleetTimer = setInterval(() => {
+      setFleetIndex((prev) => (prev + 1) % fleet.length);
+    }, 2000);
+    return () => clearInterval(fleetTimer);
+  }, []);
+
   const OTP_ENABLED = import.meta.env.VITE_OTP_VERIFICATION_ENABLED === 'true';
   const navigate = useNavigate();
   const mapRef = useRef(null);
@@ -31,6 +48,22 @@ const AddressScreen = ({ loggedInUser }) => {
   const [fare, setFare] = useState(null);
   const [fareType, setFareType] = useState('');
   const [passengerDetails, setPassengerDetails] = useState(null);
+  const [heroIndex, setHeroIndex] = useState(0);
+  const [fleetIndex, setFleetIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHeroIndex((prev) => (prev + 1) % heroImages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHeroIndex((prev) => (prev + 1) % heroImages.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (step !== 1 || !mapRef.current) return;
@@ -39,27 +72,9 @@ const AddressScreen = ({ loggedInUser }) => {
       zoom: 13,
       disableDefaultUI: true,
       zoomControl: true,
-      styles: [
-        { elementType: 'geometry', stylers: [{ color: '#4b4f56' }] },
-        { elementType: 'labels.text.fill', stylers: [{ color: '#e0e0e0' }] },
-        { elementType: 'labels.text.stroke', stylers: [{ color: '#1a1a1a' }] },
-        { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#6b7280' }] },
-        { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#5a5f66' }] },
-        { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#374151' }] },
-      ],
     });
-
     setMap(gMap);
-    directionsRenderer.current = new window.google.maps.DirectionsRenderer({
-      map: gMap,
-      suppressMarkers: false,
-      suppressInfoWindows: true,
-      polylineOptions: {
-        strokeColor: '#2563eb',
-        strokeOpacity: 0.9,
-        strokeWeight: 5,
-      },
-    });
+    directionsRenderer.current = new window.google.maps.DirectionsRenderer({ map: gMap });
 
     const pickupAutocomplete = new window.google.maps.places.Autocomplete(pickupInputRef.current, { componentRestrictions: { country: 'au' } });
     pickupAutocomplete.addListener('place_changed', () => {
@@ -80,7 +95,7 @@ const AddressScreen = ({ loggedInUser }) => {
       if (place.geometry) {
         const location = place.geometry.location;
         if (dropoffMarker.current) dropoffMarker.current.setMap(null);
-        dropoffMarker.current = new window.google.maps.Marker({ position: location, map: gMap, label: 'D', icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png' });
+        dropoffMarker.current = new window.google.maps.Marker({ position: location, map: gMap, label: 'D' });
         setDropoffLoc(location);
         setDropoffAddress(place.formatted_address || place.name);
         gMap.setCenter(location);
@@ -99,17 +114,7 @@ const AddressScreen = ({ loggedInUser }) => {
       }, (result, status) => {
         if (status === 'OK') {
           directionsRenderer.current.setDirections(result);
-          const bounds = new window.google.maps.LatLngBounds();
-          result.routes[0].legs.forEach((leg) => {
-            bounds.extend(leg.start_location);
-            bounds.extend(leg.end_location);
-          });
-          map.fitBounds(bounds);
-          setTimeout(() => {
-            const currentZoom = map.getZoom();
-            map.setZoom(currentZoom - 1);
-            map.panBy(0, -100);
-          }, 500);
+          map.fitBounds(result.routes[0].bounds);
         }
       });
     }
@@ -122,7 +127,6 @@ const AddressScreen = ({ loggedInUser }) => {
 
   const handleBookRide = async () => {
     if (!pickupLoc || !dropoffLoc || !passengerDetails) return;
-
     const rideDate = bookingType === 'later' ? new Date(scheduledDateTime) : new Date();
     const payload = {
       name: passengerDetails.name,
@@ -165,169 +169,86 @@ const AddressScreen = ({ loggedInUser }) => {
   const phone = passengerDetails?.phone ?? '';
 
   return (
-    <div className="relative flex flex-col h-screen">
-      {step === 1 && (
-        <div className="relative min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-white">
+      <Helmet>
+        <title>Prime Cabs Melbourne | Book Airport Taxi</title>
+        <meta name="description" content="24/7 Melbourne airport transfers, fixed fare taxi bookings. Book online with Prime Cabs." />
+      </Helmet>
+
+      {/* HERO + BOOKING FLOW */}
+      <div className="relative min-h-[100vh] bg-cover bg-center text-white flex items-center justify-center" style={{ backgroundImage: `url(${heroImages[heroIndex]})` }}>
+
+        <AnimatePresence mode="wait">
           <motion.div
-            className="relative z-20 pt-16 px-4 w-full max-w-md mx-auto"
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-          >
-            <input
-              type="text"
-              placeholder="Pickup address"
-              ref={pickupInputRef}
-              value={pickupAddress}
-              onChange={(e) => setPickupAddress(e.target.value)}
-              className="w-full p-2 mb-3 border rounded bg-white text-black focus:ring-2 focus:ring-blue-500"
-            />
-            <Helmet>
-              <title>Book Taxi Online | Prime Cabs Melbourne</title>
-              <meta name="description" content="Easily book your ride online with Prime Cabs. Reliable airport transfers and Melbourne-wide taxi services 24/7." />
-              <link rel="canonical" href="https://primecabsmelbourne.com.au/book" />
-              <meta name="robots" content="index, follow" />
+            key={heroIndex}
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${heroImages[heroIndex]})` }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.5 }}
+          />
+        </AnimatePresence>
+        <div className="absolute inset-0 bg-black/50" />
 
-              {/* External gtag script */}
-              <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17249057389"></script>
-
-              {/* Inline gtag config */}
-              <script type="text/javascript">
-                {`
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'AW-17249057389');
-    `}
-              </script>
-            </Helmet>
-
-            <input
-              type="text"
-              placeholder="Dropoff address"
-              ref={dropoffInputRef}
-              value={dropoffAddress}
-              onChange={(e) => setDropoffAddress(e.target.value)}
-              className="w-full p-2 mb-3 border rounded bg-white text-black focus:ring-2 focus:ring-blue-500"
-            />
-            {showBookingOptions && (
-              <motion.div
-                className="bg-white/90 backdrop-blur-md p-4 rounded-xl text-black space-y-4 shadow-xl mt-2"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                <div>
-                  <label className="block font-medium text-sm mb-1">Book for:</label>
-                  <div className="flex gap-4">
-                    <label>
-                      <input
-                        type="radio"
-                        name="bookingType"
-                        value="now"
-                        checked={bookingType === 'now'}
-                        onChange={() => {
-                          setBookingType('now');
-                          setScheduledDateTime('');
-                        }}
-                      />{' '}Now
-                    </label>
-                    <label>
-                      <input
-                        type="radio"
-                        name="bookingType"
-                        value="later"
-                        checked={bookingType === 'later'}
-                        onChange={() => setBookingType('later')}
-                      />{' '}Later
-                    </label>
-                  </div>
-                </div>
-                {bookingType === 'later' && (
-                  <div>
-                    <label className="block font-medium text-sm mb-1">Select Date & Time:</label>
-                    <input
-                      type="datetime-local"
-                      value={scheduledDateTime}
-                      onChange={(e) => {
-                        const selected = new Date(e.target.value);
-                        const now = new Date();
-                        if (selected < now) {
-                          alert("❌ Cannot select a past time.");
-                          return;
-                        }
-                        setScheduledDateTime(e.target.value);
-                      }}
-                      className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-                      min={new Date().toISOString().slice(0, 16)}
-                    />
+        <div className="relative z-10 w-full max-w-xl mx-auto px-4">
+          <div className="relative z-20 w-full p-6 bg-white rounded-xl shadow-lg">
+            {step === 1 && (
+              <>
+                <h2 className="text-xl font-semibold mb-4 text-gray-800">Book Your Ride</h2>
+                <input ref={pickupInputRef} type="text" placeholder="Pickup address" value={pickupAddress} onChange={(e) => setPickupAddress(e.target.value)} className="w-full mb-3 p-2 border rounded text-black" />
+                <input ref={dropoffInputRef} type="text" placeholder="Dropoff address" value={dropoffAddress} onChange={(e) => setDropoffAddress(e.target.value)} className="w-full mb-3 p-2 border rounded text-black" />
+                {showBookingOptions && (
+                  <div className="bg-gray-100 p-3 rounded mb-3 text-black">
+                    <div className="mb-2">
+                      <label className="block text-sm font-medium mb-1">Book for:</label>
+                      <div className="flex gap-4">
+                        <label><input type="radio" name="bookingType" value="now" checked={bookingType === 'now'} onChange={() => { setBookingType('now'); setScheduledDateTime(''); }} /> Now</label>
+                        <label><input type="radio" name="bookingType" value="later" checked={bookingType === 'later'} onChange={() => setBookingType('later')} /> Later</label>
+                      </div>
+                    </div>
+                    {bookingType === 'later' && (
+                      <input type="datetime-local" value={scheduledDateTime} onChange={(e) => setScheduledDateTime(e.target.value)} className="w-full p-2 border rounded text-black mb-2 bg-white" />
+                    )}
+                    <input type="number" min="1" max="11" value={passengerCount} onChange={(e) => setPassengerCount(parseInt(e.target.value))} className="w-full p-2 border rounded text-black bg-white" placeholder="Number of passengers" />
                   </div>
                 )}
-                <div>
-                  <label className="block font-medium text-sm mb-1">Number of Passengers:</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="11"
-                    value={passengerCount}
-                    onChange={(e) => setPassengerCount(parseInt(e.target.value))}
-                    className="w-full p-2 border rounded focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <button
-                  onClick={() => setStep(2)}
-                  className="w-full bg-blue-600 text-white py-2 rounded font-semibold hover:bg-blue-700 transition"
-                  disabled={!pickupLoc || !dropoffLoc || (bookingType === 'later' && !scheduledDateTime)}
-                >
-                  Next
-                </button>
-              </motion.div>
+                <button onClick={() => setStep(2)} className="w-full bg-blue-600 text-white py-2 rounded font-semibold">Next</button>
+                <div ref={mapRef} className="h-64 mt-4 rounded overflow-hidden" />
+              </>
             )}
-          </motion.div>
-          <div ref={mapRef} id="map" className="absolute inset-0 z-0" />
+            {step === 2 && (
+              <VehicleSelection {...{ pickupLoc, dropoffLoc, passengerCount, bookingType, scheduledDateTime, setStep, setSelectedVehicle, setFare, setFareType, setMap }} />
+            )}
+            {step === 3 && <PassengerDetails {...{ setStep, onSubmitPassengerDetails: handlePassengerSubmit, pickupLoc, dropoffLoc, pickupAddress, dropoffAddress, selectedVehicle, passengerCount, fare, fareType, scheduledDateTime, loggedInUser }} />}
+            {OTP_ENABLED && step === 4 && <OTPVerification {...{ setStep, phone, onSuccess: handleBookRide, onBack: () => setStep(3) }} />}
+          </div>
         </div>
-      )}
-      {step === 2 && (
-        <VehicleSelection
-          pickupLoc={pickupLoc}
-          dropoffLoc={dropoffLoc}
-          passengerCount={passengerCount}
-          bookingType={bookingType}
-          scheduledDateTime={scheduledDateTime}
-          setStep={setStep}
-          setSelectedVehicle={setSelectedVehicle}
-          setFare={setFare}
-          setFareType={setFareType}
-          setMap={setMap}
-        />
-      )}
-      {step === 3 && (
-        <PassengerDetails
-          setStep={setStep}
-          onSubmitPassengerDetails={handlePassengerSubmit}
-          pickupLoc={pickupLoc}
-          dropoffLoc={dropoffLoc}
-          pickupAddress={pickupAddress}
-          dropoffAddress={dropoffAddress}
-          selectedVehicle={selectedVehicle}
-          passengerCount={passengerCount}
-          fare={fare}
-          fareType={fareType}
-          scheduledDateTime={scheduledDateTime}
-          loggedInUser={loggedInUser}
-        />
-      )}
+      </div>
 
-      {OTP_ENABLED && step === 4 && (
-        <OTPVerification
-          setStep={setStep}
-          phone={phone}
-          onSuccess={handleBookRide}  // <- your existing ride booking function
-          onBack={() => setStep(3)}
-        />
-      )}
+      {/* FLEET SECTION */}
+      <section className="py-16 px-4 bg-gray-50 text-center">
+        <h2 className="text-3xl font-bold mb-6">Our Fleet</h2>
+        <div className="w-full max-w-6xl mx-auto">
+          <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-6">
+            {fleet.map((car, index) => (
+              <div key={index} className="bg-white p-6 rounded-xl shadow-xl">
+                <img src={car.image} alt={car.name} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }} className="mx-auto h-40 object-contain mb-4" />
+                <h3 className="text-xl font-semibold">{car.name}</h3>
+                <p className="text-sm text-gray-600">Seats up to {car.seats} passengers</p>
+              </div>
+            ))}
+          </div>
+          <div className="block md:hidden bg-white p-6 rounded-xl shadow-xl max-w-md mx-auto transition-all duration-500">
+            <motion.img key={fleetIndex} src={fleet[fleetIndex].image} alt={fleet[fleetIndex].name} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.8 }} className="mx-auto h-40 object-contain mb-4" />
+            <h3 className="text-xl font-semibold">{fleet[fleetIndex].name}</h3>
+            <p className="text-sm text-gray-600">Seats up to {fleet[fleetIndex].seats} passengers</p>
+          </div>
+        </div>
+      </section>
 
-
+      <OurServices />
+      <ContactUs />
     </div>
   );
 };

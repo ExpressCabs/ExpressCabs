@@ -1,4 +1,3 @@
-// PassengerDetails.jsx — Updated for OTP flow with parent data handoff
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 
@@ -51,43 +50,80 @@ const PassengerDetails = ({
   };
 
   return (
-    <motion.div className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 flex items-center justify-center px-4 py-12" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
-      <div className="w-full max-w-md bg-white p-6 rounded-xl shadow-lg backdrop-blur-md">
-        <h2 className="text-2xl font-bold text-center mb-6">Passenger Details</h2>
-        <form className="space-y-4">
-          <motion.div>
-            <label className="block font-medium">Full Name *</label>
-            <input type="text" className="w-full px-4 py-2 border rounded" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter your name" />
-          </motion.div>
-          <motion.div>
-            <label className="block font-medium">Phone Number *</label>
-            <input type="tel" className="w-full px-4 py-2 border rounded" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="e.g. 0412345678" />
-            <small className="text-xs text-gray-500">An OTP will be sent to this number for verification before booking.</small>
-          </motion.div>
-          <motion.div>
-            <label className="block font-medium">Email (optional)</label>
-            <input type="email" className="w-full px-4 py-2 border rounded" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" />
-          </motion.div>
-          <motion.div>
-            <label className="block font-medium">Driver Note (optional)</label>
-            <textarea className="w-full px-4 py-2 border rounded" rows="3" value={note} onChange={(e) => setNote(e.target.value)} placeholder="Any instructions for driver"></textarea>
-          </motion.div>
-          <motion.div className="flex justify-between pt-6">
-            <motion.button type="button" onClick={() => setStep(2)} className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">
-              ← Back
-            </motion.button>
-            <motion.button
-              type="button"
-              onClick={OTP_ENABLED ? handleSendOtp : () => { }}
-              disabled={!isValid || isBooking}
-              className={`px-6 py-2 rounded text-white font-semibold ${isValid && !isBooking ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'}`}
-            >
-              {isBooking ? 'Booking...' : 'Book Ride'}
-            </motion.button>
-          </motion.div>
-        </form>
-      </div>
-    </motion.div>
+    <>
+      <h2 className="text-2xl font-bold text-gray-800 text-center mb-4">Passenger Details</h2>
+
+      <form className="space-y-4">
+        <div>
+          <label className="block font-medium text-gray-800">Full Name *</label>
+          <input
+            type="text"
+            className="w-full px-4 py-2 border rounded text-black"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Enter your name"
+          />
+        </div>
+
+        <div>
+          <label className="block font-medium text-gray-800">Phone Number *</label>
+          <input
+            type="tel"
+            className="w-full px-4 py-2 border rounded text-black"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="e.g. 0412345678"
+          />
+          <small className="mt-1 text-sm text-gray-700">
+            An OTP will be sent to this number for verification before booking.
+          </small>
+        </div>
+
+        <div>
+          <label className="block font-medium text-gray-800">Email (optional)</label>
+          <input
+            type="email"
+            className="w-full px-4 py-2 border rounded text-black"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+          />
+        </div>
+
+        <div>
+          <label className="block font-medium text-gray-800">Driver Note (optional)</label>
+          <textarea
+            className="w-full px-4 py-2 border rounded text-black"
+            rows="3"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="Any instructions for driver"
+          ></textarea>
+        </div>
+
+        <div className="flex justify-between pt-6">
+          <button
+            type="button"
+            onClick={() => setStep(2)}
+            className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
+          >
+            ← Back
+          </button>
+
+          <button
+            type="button"
+            onClick={OTP_ENABLED ? handleSendOtp : () => { }}
+            disabled={!isValid || isBooking}
+            className={`px-6 py-2 rounded text-white font-semibold ${isValid && !isBooking
+              ? 'bg-green-600 hover:bg-green-700'
+              : 'bg-gray-400 cursor-not-allowed'
+              }`}
+          >
+            {isBooking ? 'Booking...' : 'Book Ride'}
+          </button>
+        </div>
+      </form>
+    </>
   );
 };
 

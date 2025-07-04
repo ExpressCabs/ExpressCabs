@@ -1,4 +1,3 @@
-// VehicleSelection.jsx — Slightly lighter background for better icon contrast
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import sedanImg from '../../assets/vehicles/sedan-modern.png';
@@ -40,7 +39,7 @@ const VehicleSelection = ({
   setSelectedVehicle,
   setFare,
   setFareType,
-  setMap
+  setMap,
 }) => {
   const [distanceKm, setDistanceKm] = useState(null);
   const [fares, setFares] = useState({});
@@ -48,7 +47,6 @@ const VehicleSelection = ({
 
   useEffect(() => {
     if (!pickupLoc || !dropoffLoc) return;
-
     const service = new window.google.maps.DirectionsService();
     service.route(
       {
@@ -70,31 +68,19 @@ const VehicleSelection = ({
 
   useEffect(() => {
     if (!distanceKm) return;
-
     const timeString =
       bookingType === 'now'
         ? new Date().toTimeString().slice(0, 5)
         : new Date(scheduledDateTime).toTimeString().slice(0, 5);
-
     const { flagfall, rate } = getFareRateForTime(timeString);
-
     const newFares = {};
     for (const v of VEHICLES) {
       let total = flagfall + distanceKm * rate + GOVERNMENT_LEVY + BOOKING_FEE;
-
-      if (passengerCount > 4 && v.seats > 4) {
-        total += HIGH_OCCUPANCY_FEE;
-      }
-
-      if (v.id === 'luxury') {
-        total += 11.00;
-      }
-
+      if (passengerCount > 4 && v.seats > 4) total += HIGH_OCCUPANCY_FEE;
+      if (v.id === 'luxury') total += 11.0;
       newFares[v.id] = total.toFixed(2);
     }
-
     setFares(newFares);
-
     if (selectedId && newFares[selectedId]) {
       if (typeof setFare === 'function') {
         setFare(parseFloat(newFares[selectedId]));
@@ -113,13 +99,8 @@ const VehicleSelection = ({
   };
 
   return (
-    <motion.div
-      className="min-h-screen bg-gradient-to-br from-gray-100 via-gray-200 to-gray-300 p-4 space-y-4 text-gray-900 pt-12 px-4"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <h2 className="text-2xl font-bold mb-4 text-center">Select a Vehicle</h2>
+    <>
+      <h2 className="text-2xl font-semibold text-gray-800 text-center mb-4">Select Your Vehicle</h2>
 
       {VEHICLES.map((vehicle, index) => {
         const disabled =
@@ -130,37 +111,30 @@ const VehicleSelection = ({
         return (
           <motion.div
             key={vehicle.id}
+            onClick={() => !disabled && handleSelect(vehicle)}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 * index }}
-            className={`flex items-center justify-between p-4 rounded-xl border shadow-lg backdrop-blur-md transition-all duration-200 ${disabled
-              ? 'bg-gray-200 opacity-50 cursor-not-allowed'
-              : isSelected
-                ? 'ring-2 ring-blue-400 border-blue-500 bg-white'
-                : 'bg-white hover:ring-1 hover:ring-gray-400'
+            className={`mb-4 flex items-center justify-between p-4 rounded-xl border shadow-sm transition-all duration-200 ${disabled
+                ? 'bg-gray-200 opacity-50 cursor-not-allowed'
+                : isSelected
+                  ? 'ring-2 ring-blue-400 border-blue-500 bg-white cursor-pointer'
+                  : 'bg-white hover:ring-1 hover:ring-gray-400 cursor-pointer'
               }`}
           >
             <div className="flex items-center gap-4">
-              <img src={vehicle.image} alt={vehicle.name} className="w-16 h-16 object-contain" />
+              <img
+                src={vehicle.image}
+                alt={vehicle.name}
+                className="w-16 h-16 object-contain"
+              />
               <div>
                 <div className="font-semibold text-lg">{vehicle.name}</div>
                 <div className="text-sm text-gray-500">Seats: {vehicle.seats}</div>
               </div>
             </div>
-            <div className="text-right">
-              <div className="text-lg font-bold text-black">
-                ${fares[vehicle.id] || '--'}
-              </div>
-              <button
-                disabled={disabled}
-                onClick={() => handleSelect(vehicle)}
-                className={`mt-2 px-4 py-1 rounded text-white font-medium transition-all duration-150 ${disabled
-                  ? 'bg-gray-400 cursor-not-allowed'
-                  : 'bg-blue-600 hover:bg-blue-700 active:scale-95'
-                  }`}
-              >
-                Select
-              </button>
+            <div className="text-lg font-bold text-black">
+              ${fares[vehicle.id] || '--'}
             </div>
           </motion.div>
         );
@@ -170,7 +144,7 @@ const VehicleSelection = ({
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={() => {
-            setMap(null); // <- pass setMap via props
+            setMap(null);
             setStep(1);
           }}
           className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
@@ -182,13 +156,15 @@ const VehicleSelection = ({
           whileTap={{ scale: 0.95 }}
           onClick={() => setStep(3)}
           disabled={!selectedId}
-          className={`px-6 py-2 rounded text-white font-semibold transition-all ${selectedId ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'
+          className={`px-6 py-2 rounded text-white font-semibold transition-all ${selectedId
+              ? 'bg-green-600 hover:bg-green-700'
+              : 'bg-gray-400 cursor-not-allowed'
             }`}
         >
           Next
         </motion.button>
       </div>
-    </motion.div>
+    </>
   );
 };
 
