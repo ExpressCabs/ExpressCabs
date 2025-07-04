@@ -9,12 +9,12 @@ import { Helmet } from 'react-helmet-async';
 import ContactUs from './ContactUs';
 import OurServices from './OurServices';
 
-const heroImages = ['../../assets/images/prime_cabs_landscape.png', '../../assets/images/prime_cabs_landscape2.png', '../../assets/images/prime_cabs_landscape3.png', '../../assets/images/prime_cabs_landscape4.png'];
+const heroImages = ['/assets/images/prime_cabs_landscape.png', '/assets/images/prime_cabs_landscape2.png', '/assets/images/prime_cabs_landscape3.png', '/assets/images/prime_cabs_landscape4.png'];
 const fleet = [
-  { name: 'Sedan', seats: 4, image: '../../assets/vehicles/sedan-modern.png' },
-  { name: 'Luxury', seats: 4, image: '../../assets/vehicles/luxury-modern.png' },
-  { name: 'SUV', seats: 6, image: '../../assets/vehicles/suv-modern.png' },
-  { name: 'Van', seats: 11, image: '../../assets/vehicles/van-modern.png' },
+  { name: 'Sedan', seats: 4, image: '/assets/vehicles/sedan-modern.png' },
+  { name: 'Luxury', seats: 4, image: '/assets/vehicles/luxury-modern.png' },
+  { name: 'SUV', seats: 6, image: '/assets/vehicles/suv-modern.png' },
+  { name: 'Van', seats: 11, image: '/assets/vehicles/van-modern.png' },
 ];
 
 const AddressScreen = ({ loggedInUser }) => {
@@ -173,6 +173,86 @@ const AddressScreen = ({ loggedInUser }) => {
       <Helmet>
         <title>Prime Cabs Melbourne | Book Airport Taxi</title>
         <meta name="description" content="24/7 Melbourne airport transfers, fixed fare taxi bookings. Book online with Prime Cabs." />
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Service",
+            "serviceType": "Airport Transfer Taxi",
+            "name": "Melbourne Airport Taxi Transfers - Prime Cabs",
+            "provider": {
+              "@type": "LocalBusiness",
+              "name": "Prime Cabs Melbourne",
+              "url": "https://primecabsmelbourne.com.au",
+              "image": "https://primecabsmelbourne.com.au/logo.png",
+              "telephone": "+61482038902",
+              "address": {
+                "@type": "PostalAddress",
+                "streetAddress": "29 Bayswater Rd",
+                "addressLocality": "Croydon",
+                "addressRegion": "VIC",
+                "postalCode": "3136",
+                "addressCountry": "AU"
+              }
+            },
+            "areaServed": [
+              {
+                "@type": "Place",
+                "name": "Melbourne"
+              },
+              {
+                "@type": "Place",
+                "name": "Tullamarine Airport"
+              },
+              {
+                "@type": "Place",
+                "name": "Avalon Airport"
+              }
+            ],
+            "description": "24/7 airport transfer taxi service in Melbourne. Reliable pickups and drop-offs to and from Tullamarine and Avalon Airport. Choose from Sedans, SUVs, Vans and Luxury Cabs.",
+            "availableChannel": {
+              "@type": "ServiceChannel",
+              "serviceUrl": "https://primecabsmelbourne.com.au/airport-taxi-melbourne"
+            },
+            "hasOfferCatalog": {
+              "@type": "OfferCatalog",
+              "name": "Fleet Options",
+              "itemListElement": [
+                {
+                  "@type": "Offer",
+                  "itemOffered": {
+                    "@type": "Product",
+                    "name": "Sedan",
+                    "description": "Standard 4-seater for airport transfers."
+                  }
+                },
+                {
+                  "@type": "Offer",
+                  "itemOffered": {
+                    "@type": "Product",
+                    "name": "Luxury",
+                    "description": "Premium ride experience with luxury vehicle."
+                  }
+                },
+                {
+                  "@type": "Offer",
+                  "itemOffered": {
+                    "@type": "Product",
+                    "name": "SUV",
+                    "description": "Spacious SUV, ideal for families or groups."
+                  }
+                },
+                {
+                  "@type": "Offer",
+                  "itemOffered": {
+                    "@type": "Product",
+                    "name": "Van",
+                    "description": "High-capacity van for group transfers, up to 11 passengers."
+                  }
+                }
+              ]
+            }
+          })}
+        </script>
       </Helmet>
 
       {/* HERO + BOOKING FLOW */}

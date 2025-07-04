@@ -2,11 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import sedanImg from '../../assets/vehicles/sedan-modern.png';
-import suvImg from '../../assets/vehicles/suv-modern.png';
-import vanImg from '../../assets/vehicles/van-modern.png';
-import luxuryImg from '../../assets/vehicles/luxury-modern.png';
-import bgHero from '../../assets/images/airport-hero.webp';
+import sedanImg from '/assets/vehicles/sedan-modern.png';
+import suvImg from '/assets/vehicles/suv-modern.png';
+import vanImg from '/assets/vehicles/van-modern.png';
+import luxuryImg from '/assets/vehicles/luxury-modern.png';
+import bgHero from '/assets/images/airport-hero.webp';
 import AddressScreen from '../screens/AddressScreen';
 
 const fleet = [

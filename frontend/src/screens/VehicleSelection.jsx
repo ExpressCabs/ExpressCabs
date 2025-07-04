@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import sedanImg from '../../assets/vehicles/sedan-modern.png';
-import suvImg from '../../assets/vehicles/suv-modern.png';
-import vanImg from '../../assets/vehicles/van-modern.png';
-import luxuryImg from '../../assets/vehicles/luxury-modern.png';
+import sedanImg from '/assets/vehicles/sedan-modern.png';
+import suvImg from '/assets/vehicles/suv-modern.png';
+import vanImg from '/assets/vehicles/van-modern.png';
+import luxuryImg from '/assets/vehicles/luxury-modern.png';
 
 const VEHICLES = [
   { id: 'sedan', name: 'Sedan', seats: 4, image: sedanImg },
@@ -116,10 +116,10 @@ const VehicleSelection = ({
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 * index }}
             className={`mb-4 flex items-center justify-between p-4 rounded-xl border shadow-sm transition-all duration-200 ${disabled
-                ? 'bg-gray-200 opacity-50 cursor-not-allowed'
-                : isSelected
-                  ? 'ring-2 ring-blue-400 border-blue-500 bg-white cursor-pointer'
-                  : 'bg-white hover:ring-1 hover:ring-gray-400 cursor-pointer'
+              ? 'bg-gray-200 opacity-50 cursor-not-allowed'
+              : isSelected
+                ? 'ring-2 ring-blue-400 border-blue-500 bg-white cursor-pointer'
+                : 'bg-white hover:ring-1 hover:ring-gray-400 cursor-pointer'
               }`}
           >
             <div className="flex items-center gap-4">
@@ -157,8 +157,8 @@ const VehicleSelection = ({
           onClick={() => setStep(3)}
           disabled={!selectedId}
           className={`px-6 py-2 rounded text-white font-semibold transition-all ${selectedId
-              ? 'bg-green-600 hover:bg-green-700'
-              : 'bg-gray-400 cursor-not-allowed'
+            ? 'bg-green-600 hover:bg-green-700'
+            : 'bg-gray-400 cursor-not-allowed'
             }`}
         >
           Next

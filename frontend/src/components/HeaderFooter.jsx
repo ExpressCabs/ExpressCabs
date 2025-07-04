@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaPhoneAlt, FaWhatsapp } from 'react-icons/fa';
-import logo from '../../assets/images/logo.png';
+import logo from '/assets/images/logo.png';
 
 const HeaderFooter = ({ mode, setMode, loggedInDriver, loggedInUser, setShowUserPopup }) => {
   const [menuOpen, setMenuOpen] = useState(false);
