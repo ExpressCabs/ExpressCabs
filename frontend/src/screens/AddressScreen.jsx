@@ -169,7 +169,7 @@ const AddressScreen = ({ loggedInUser }) => {
   const phone = passengerDetails?.phone ?? '';
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen p-1 bg-white">
       <Helmet>
         <title>Prime Cabs Melbourne | Book Airport Taxi</title>
         <meta name="description" content="24/7 Melbourne airport transfers, fixed fare taxi bookings. Book online with Prime Cabs." />

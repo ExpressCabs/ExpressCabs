@@ -174,9 +174,6 @@ const HeaderFooter = ({ mode, setMode, loggedInDriver, loggedInUser, setShowUser
           </motion.a>
         </div>
       </motion.footer>
-
-      {/* Spacer */}
-      <div className="h-20" />
     </>
   );
 };

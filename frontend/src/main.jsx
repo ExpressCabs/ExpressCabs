@@ -71,7 +71,7 @@ const App = () => {
   });
 
   const Home = () => (
-    <div className="pt-16 p-4">
+    <div className="pt-2 p-1 ">
       {showUserPopup && (
         <UserLoginPopup
           onLogin={handleUserLogin}
@@ -82,7 +82,7 @@ const App = () => {
         />
       )}
 
-      <div className="min-h-screen border rounded p-4 shadow">
+      <div className="min-h-screen border rounded shadow">
         {mode === 'myrides' ? (
           <UserRidesScreen
             user={loggedInUser}
