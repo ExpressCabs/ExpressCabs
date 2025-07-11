@@ -169,7 +169,7 @@ const AddressScreen = ({ loggedInUser }) => {
   const phone = passengerDetails?.phone ?? '';
 
   return (
-    <div className="min-h-screen p-1 bg-white">
+    <div className="min-h-screen bg-white">
       <Helmet>
         <title>Prime Cabs Melbourne | Book Airport Taxi</title>
         <meta name="description" content="24/7 Melbourne airport transfers, fixed fare taxi bookings. Book online with Prime Cabs." />
@@ -276,26 +276,94 @@ const AddressScreen = ({ loggedInUser }) => {
             {step === 1 && (
               <>
                 <h2 className="text-xl font-semibold mb-4 text-gray-800">Book Your Ride</h2>
-                <input ref={pickupInputRef} type="text" placeholder="Pickup address" value={pickupAddress} onChange={(e) => setPickupAddress(e.target.value)} className="w-full mb-3 p-2 border rounded text-black" />
-                <input ref={dropoffInputRef} type="text" placeholder="Dropoff address" value={dropoffAddress} onChange={(e) => setDropoffAddress(e.target.value)} className="w-full mb-3 p-2 border rounded text-black" />
+                <input
+                  ref={pickupInputRef}
+                  type="text"
+                  placeholder="Pickup address"
+                  value={pickupAddress}
+                  onChange={(e) => setPickupAddress(e.target.value)}
+                  className="w-full mb-3 p-2 border rounded text-black"
+                />
+                <input
+                  ref={dropoffInputRef}
+                  type="text"
+                  placeholder="Dropoff address"
+                  value={dropoffAddress}
+                  onChange={(e) => setDropoffAddress(e.target.value)}
+                  className="w-full mb-3 p-2 border rounded text-black"
+                />
                 {showBookingOptions && (
                   <div className="bg-gray-100 p-3 rounded mb-3 text-black">
                     <div className="mb-2">
                       <label className="block text-sm font-medium mb-1">Book for:</label>
                       <div className="flex gap-4">
-                        <label><input type="radio" name="bookingType" value="now" checked={bookingType === 'now'} onChange={() => { setBookingType('now'); setScheduledDateTime(''); }} /> Now</label>
-                        <label><input type="radio" name="bookingType" value="later" checked={bookingType === 'later'} onChange={() => setBookingType('later')} /> Later</label>
+                        <label>
+                          <input
+                            type="radio"
+                            name="bookingType"
+                            value="now"
+                            checked={bookingType === 'now'}
+                            onChange={() => {
+                              setBookingType('now');
+                              setScheduledDateTime('');
+                            }}
+                          />{' '}
+                          Now
+                        </label>
+                        <label>
+                          <input
+                            type="radio"
+                            name="bookingType"
+                            value="later"
+                            checked={bookingType === 'later'}
+                            onChange={() => setBookingType('later')}
+                          />{' '}
+                          Later
+                        </label>
                       </div>
                     </div>
                     {bookingType === 'later' && (
-                      <input type="datetime-local" value={scheduledDateTime} onChange={(e) => setScheduledDateTime(e.target.value)} className="w-full p-2 border rounded text-black mb-2 bg-white" />
+                      <div className="flex flex-col gap-2">
+                        <input
+                          type="date"
+                          value={scheduledDateTime.split('T')[0]}
+                          onChange={(e) => {
+                            const time = scheduledDateTime.split('T')[1] || '00:00';
+                            setScheduledDateTime(`${e.target.value}T${time}`);
+                          }}
+                          className="w-full p-2 border rounded text-black bg-white"
+                        />
+                        <input
+                          type="time"
+                          value={scheduledDateTime.split('T')[1] || ''}
+                          onChange={(e) => {
+                            const date = scheduledDateTime.split('T')[0] || new Date().toISOString().split('T')[0];
+                            setScheduledDateTime(`${date}T${e.target.value}`);
+                          }}
+                          className="w-full p-2 border rounded text-black bg-white"
+                        />
+                      </div>
                     )}
-                    <input type="number" min="1" max="11" value={passengerCount} onChange={(e) => setPassengerCount(parseInt(e.target.value))} className="w-full p-2 border rounded text-black bg-white" placeholder="Number of passengers" />
+                    <input
+                      type="number"
+                      min="1"
+                      max="11"
+                      value={passengerCount === 1 ? '' : passengerCount}
+                      onChange={(e) => setPassengerCount(parseInt(e.target.value) || 1)}
+                      className="w-full p-2 border rounded text-black bg-white mt-2"
+                      placeholder="Number of passengers"
+                    />
                   </div>
                 )}
-                <button onClick={() => setStep(2)} className="w-full bg-blue-600 text-white py-2 rounded font-semibold">Next</button>
+                <button
+                  onClick={() => setStep(2)}
+                  className="w-full bg-blue-600 text-white py-2 rounded font-semibold"
+                >
+                  Next
+                </button>
                 <div ref={mapRef} className="h-64 mt-4 rounded overflow-hidden" />
               </>
+
             )}
             {step === 2 && (
               <VehicleSelection {...{ pickupLoc, dropoffLoc, passengerCount, bookingType, scheduledDateTime, setStep, setSelectedVehicle, setFare, setFareType, setMap }} />
