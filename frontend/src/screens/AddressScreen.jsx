@@ -328,26 +328,31 @@ const AddressScreen = ({ loggedInUser }) => {
 
                     {/* Date/Time Picker */}
                     {bookingType === 'later' && (
-                      <div
-                        className="relative mb-3"
-                        onClick={() => {
-                          const input = document.getElementById('scheduledDateTime');
-                          if (input) input.showPicker?.() || input.focus(); // open picker or fallback to focus
-                        }}
-                      >
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-5 flex justify-center items-center h-full pointer-events-none">
-                          <MdCalendarToday size={18} />
-                        </span>
-                        <input
-                          id="scheduledDateTime"
-                          type="datetime-local"
-                          value={scheduledDateTime}
-                          onChange={(e) => setScheduledDateTime(e.target.value)}
-                          className="w-full h-11 p-2 pl-10 border rounded text-black bg-white text-sm placeholder-gray-500"
-                          placeholder="Select date and time"
-                        />
+                      <div className="mb-3">
+                        <label
+                          htmlFor="scheduledDateTime"
+                          className="block w-full cursor-pointer"
+                          onClick={() => {
+                            const input = document.getElementById('scheduledDateTime');
+                            if (input) input.showPicker?.() || input.focus();
+                          }}
+                        >
+                          <div className="flex items-center gap-2 mb-1 text-gray-700 text-sm">
+                            <MdCalendarToday className="text-gray-600 pointer-events-none" size={18} />
+                            <span className="font-medium pointer-events-none">Date & Time:</span>
+                          </div>
+                          <input
+                            id="scheduledDateTime"
+                            type="datetime-local"
+                            value={scheduledDateTime}
+                            onChange={(e) => setScheduledDateTime(e.target.value)}
+                            className="w-full h-11 px-3 border rounded text-black bg-white text-sm placeholder-gray-500"
+                            placeholder="Select date and time"
+                          />
+                        </label>
                       </div>
                     )}
+
 
 
                     {/* Passenger Count */}
