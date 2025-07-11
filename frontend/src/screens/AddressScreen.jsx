@@ -324,7 +324,8 @@ const AddressScreen = ({ loggedInUser }) => {
                     </div>
                     {bookingType === 'later' && (
                       <div className="flex flex-col gap-2">
-                        <input type="datetime-local" value={scheduledDateTime} onChange={(e) => setScheduledDateTime(e.target.value)} className="w-full p-2 border rounded text-black mb-2 bg-white" placeholder="dd/mm/yy   --|--" />
+                        <input type="datetime-local" value={scheduledDateTime} onChange={(e) => setScheduledDateTime(e.target.value)} className="w-full p-2 border rounded text-black mb-2 bg-white" />
+                        <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500">📅</span>
                       </div>
                     )}
                     <input
