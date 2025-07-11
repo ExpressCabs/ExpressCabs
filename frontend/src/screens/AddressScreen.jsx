@@ -42,7 +42,7 @@ const AddressScreen = ({ loggedInUser }) => {
   const [dropoffAddress, setDropoffAddress] = useState('');
   const directionsRenderer = useRef(null);
   const [bookingType, setBookingType] = useState('now');
-  const [passengerCount, setPassengerCount] = useState(1);
+  const [passengerCount, setPassengerCount] = useState('');
   const [scheduledDateTime, setScheduledDateTime] = useState('');
   const [showBookingOptions, setShowBookingOptions] = useState(false);
   const [step, setStep] = useState(1);
@@ -296,10 +296,11 @@ const AddressScreen = ({ loggedInUser }) => {
                 />
                 {showBookingOptions && (
                   <div className="bg-gray-100 p-3 rounded mb-3 text-black">
-                    <div className="mb-2">
+                    {/* Book for Now or Later */}
+                    <div className="mb-3">
                       <label className="block text-sm font-medium mb-1">Book for:</label>
                       <div className="flex gap-4">
-                        <label>
+                        <label className="flex items-center gap-1">
                           <input
                             type="radio"
                             name="bookingType"
@@ -309,46 +310,63 @@ const AddressScreen = ({ loggedInUser }) => {
                               setBookingType('now');
                               setScheduledDateTime('');
                             }}
-                          />{' '}
+                          />
                           Now
                         </label>
-                        <label>
+                        <label className="flex items-center gap-1">
                           <input
                             type="radio"
                             name="bookingType"
                             value="later"
                             checked={bookingType === 'later'}
                             onChange={() => setBookingType('later')}
-                          />{' '}
+                          />
                           Later
                         </label>
                       </div>
                     </div>
+
+                    {/* Date/Time Picker */}
                     {bookingType === 'later' && (
-                      <div className="relative mb-2">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-5 flex justify-center items-center h-full">
+                      <div
+                        className="relative mb-3"
+                        onClick={() => {
+                          const input = document.getElementById('scheduledDateTime');
+                          if (input) input.showPicker?.() || input.focus(); // open picker or fallback to focus
+                        }}
+                      >
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-5 flex justify-center items-center h-full pointer-events-none">
                           <MdCalendarToday size={18} />
                         </span>
                         <input
+                          id="scheduledDateTime"
                           type="datetime-local"
                           value={scheduledDateTime}
                           onChange={(e) => setScheduledDateTime(e.target.value)}
-                          className="w-full h-11 p-2 pl-10 border rounded text-black bg-white placeholder-gray-500"
+                          className="w-full h-11 p-2 pl-10 border rounded text-black bg-white text-sm placeholder-gray-500"
                           placeholder="Select date and time"
                         />
                       </div>
                     )}
-                    <input
-                      type="number"
-                      min="1"
-                      max="11"
-                      value={passengerCount === 1 ? '' : passengerCount}
-                      onChange={(e) => setPassengerCount(parseInt(e.target.value) || 1)}
-                      className="w-full p-2 border rounded text-black bg-white mt-2"
-                      placeholder="Number of passengers"
-                    />
+
+
+                    {/* Passenger Count */}
+                    <div>
+                      <input
+                        type="number"
+                        min="1"
+                        value={passengerCount || ''}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          setPassengerCount(isNaN(value) ? '' : value);
+                        }}
+                        className="w-full h-11 p-2 border rounded text-black bg-white text-sm placeholder-gray-500"
+                        placeholder="Number of passengers"
+                      />
+                    </div>
                   </div>
                 )}
+
                 <button
                   onClick={() => setStep(2)}
                   className="w-full bg-blue-600 text-white py-2 rounded font-semibold"
