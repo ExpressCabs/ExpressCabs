@@ -326,19 +326,18 @@ const AddressScreen = ({ loggedInUser }) => {
                     </div>
                     {bookingType === 'later' && (
                       <div className="relative mb-2">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-5 flex justify-center">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 w-5 flex justify-center items-center h-full">
                           <MdCalendarToday size={18} />
                         </span>
                         <input
                           type="datetime-local"
                           value={scheduledDateTime}
                           onChange={(e) => setScheduledDateTime(e.target.value)}
-                          className="w-full p-2 pl-10 border rounded text-black bg-white placeholder-gray-500 appearance-none"
+                          className="w-full h-11 p-2 pl-10 border rounded text-black bg-white placeholder-gray-500"
                           placeholder="Select date and time"
                         />
                       </div>
                     )}
-
                     <input
                       type="number"
                       min="1"
