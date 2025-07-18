@@ -11,10 +11,9 @@ const AdminLogin = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         try {
-            const res = await fetch('/api/admin/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
+            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/admin/login`, {
+                email,
+                password,
             });
 
             const data = await res.json();
