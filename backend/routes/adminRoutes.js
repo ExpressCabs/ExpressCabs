@@ -10,20 +10,15 @@ router.post('/login', async (req, res) => {
 
     try {
         const admin = await prisma.admin.findUnique({ where: { email } });
-
-        if (!admin) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
+        if (!admin) return res.status(401).json({ error: 'Invalid credentials' });
 
         const isValid = await bcrypt.compare(password, admin.password);
-        if (!isValid) {
-            return res.status(401).json({ error: 'Invalid credentials' });
-        }
+        if (!isValid) return res.status(401).json({ error: 'Invalid credentials' });
 
         const { id, name } = admin;
-        res.json({ user: { id, email, name, role: 'admin' } });
+        return res.json({ user: { id, email, name, role: 'admin' } });
     } catch (err) {
-        console.error('Login error:', err);
+        console.error('Admin login error:', err);
         res.status(500).json({ error: 'Server error' });
     }
 });

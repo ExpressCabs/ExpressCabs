@@ -17,16 +17,12 @@ const AdminLogin = () => {
                 password,
             });
 
-            const data = res.data;
-            if (res.ok) {
-                localStorage.setItem('user', JSON.stringify(data.user));
-                navigate(redirectTo, { replace: true });
-            } else {
-                alert(data.error || 'Login failed');
-            }
+            const user = res.data.user;
+            localStorage.setItem('user', JSON.stringify(user));
+            navigate(redirectTo, { replace: true });
         } catch (err) {
-            alert('Server error');
-            console.error(err);
+            console.error('Login error:', err);
+            alert(err.response?.data?.error || 'Login failed');
         }
     };
 
