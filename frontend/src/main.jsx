@@ -85,7 +85,7 @@ const App = () => {
 
   const Home = () => (
     <div className="pt-2 p-1 ">
-      {showUserPopup && (
+      {/*{showUserPopup && (
         <UserLoginPopup
           onLogin={handleUserLogin}
           onClose={() => {
@@ -93,7 +93,7 @@ const App = () => {
             sessionStorage.setItem('seenUserPopup', 'true');
           }}
         />
-      )}
+      )}*/}
 
       <div className="min-h-screen border rounded shadow">
         {mode === 'myrides' ? (

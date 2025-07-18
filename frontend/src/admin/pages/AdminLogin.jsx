@@ -16,7 +16,7 @@ const AdminLogin = () => {
                 password,
             });
 
-            const data = await res.json();
+            const data = res.data;
             if (res.ok) {
                 localStorage.setItem('user', JSON.stringify(data.user));
                 navigate(redirectTo, { replace: true });
