@@ -9,6 +9,7 @@ import { Helmet } from 'react-helmet-async';
 import ContactUs from './ContactUs';
 import OurServices from './OurServices';
 import { MdCalendarToday } from 'react-icons/md';
+import BlogPreviewCarousel from '../components/BlogPreviewCarousel';
 
 
 const heroImages = ['/assets/images/prime_cabs_landscape.png', '/assets/images/prime_cabs_landscape2.png', '/assets/images/prime_cabs_landscape3.png', '/assets/images/prime_cabs_landscape4.png'];
@@ -411,7 +412,7 @@ const AddressScreen = ({ loggedInUser }) => {
           </div>
         </div>
       </section>
-
+      <BlogPreviewCarousel />
       <OurServices />
       <ContactUs />
     </div>

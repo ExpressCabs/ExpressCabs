@@ -1,4 +1,3 @@
-// schema.prisma - Prisma schema for Ride model
 generator client {
   provider = "prisma-client-js"
 }
@@ -9,16 +8,17 @@ datasource db {
 }
 
 model Driver {
-  id       Int    @id @default(autoincrement())
-  name     String
-  email    String @unique
-  phone    String
-  password String
-  dcNumber String @unique // Safe Transport Victoria ID
-  taxiReg  String
-  carModel String
-
-  rides Ride[] @relation("DriverRides")
+  id               Int       @id @default(autoincrement())
+  name             String
+  email            String    @unique
+  phone            String
+  password         String
+  dcNumber         String    @unique
+  taxiReg          String
+  carModel         String
+  rides            Ride[]    @relation("DriverRides")
+  resetToken       String?
+  resetTokenExpiry DateTime?
 }
 
 model Ride {
@@ -39,20 +39,56 @@ model Ride {
   fare           Float
   fareType       String
   createdAt      DateTime @default(now())
-
-  status   String  @default("upcoming") // New field: upcoming | completed
-  driverId Int? // FK to Driver
-  driver   Driver? @relation("DriverRides", fields: [driverId], references: [id])
-  user     User?   @relation(fields: [userId], references: [id])
-  userId   Int?
+  driverId       Int?
+  userId         Int?
+  status         String   @default("upcoming")
+  driver         Driver?  @relation("DriverRides", fields: [driverId], references: [id])
+  user           User?    @relation(fields: [userId], references: [id])
 }
 
 model User {
+  id           Int       @id @default(autoincrement())
+  name         String
+  phone        String    @unique
+  email        String?
+  password     String
+  createdAt    DateTime  @default(now())
+  rides        Ride[]
+  otpCode      String?
+  otpExpiresAt DateTime?
+}
+
+model DriverInvite {
   id        Int      @id @default(autoincrement())
-  name      String
-  phone     String   @unique
-  email     String?
+  email     String   @unique
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Blog {
+  id         Int      @id @default(autoincrement())
+  slug       String   @unique
+  title      String
+  subtitle   String?
+  template   String
+  image1     String
+  image1Alt  String
+  image2     String?
+  image2Alt  String?
+  image3     String?
+  image3Alt  String?
+  body1      String
+  body2      String
+  conclusion String
+  createdAt  DateTime @default(now())
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
   password  String
-  rides     Ride[] // assuming you’ll relate rides to users
+  name      String
   createdAt DateTime @default(now())
 }

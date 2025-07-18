@@ -23,7 +23,20 @@ import UserRegisterScreen from './components/UserRegisterScreen';
 import UserLoginPopup from './components/UserLoginPopup';
 import UserRidesScreen from './components/UserRidesScreen';
 import RideSuccessScreen from './components/RideSuccessScreen';
+import DriverRegister from './screens/DriverRegister';
+import DriverForgotPassword from './components/DriverForgetPassword';
+import UserForgotPassword from './components/UserForgotPassword';
+import DriverResetPassword from './components/DriverResetPassword';
+// Admin panel imports
+import RequireAdmin from './admin/components/RequireAdmin';
+import AdminDashboard from './admin/pages/dashboard';
+import InviteDriver from './admin/pages/inviteDriver';
+import BlogNew from './admin/pages/blogNew';
+import BlogList from './admin/pages/blogList';
+import EmailSender from './admin/pages/emailSender';
+import AdminLogin from './admin/pages/AdminLogin';
 
+import BlogSlug from './screens/blogslug';
 
 const App = () => {
   const navigate = useNavigate();
@@ -147,6 +160,11 @@ const App = () => {
         <Route path="/services" element={<OurServices />} />
         <Route path="/ride-success" element={<RideSuccessScreen />} />
         <Route path="/airport-taxi-melbourne" element={<AirportTaxiMelbourne loggedInUser={loggedInUser} />} />
+        <Route path="/driver-register" element={<DriverRegister />} />
+        <Route path="/driver-forgot-password" element={<DriverForgotPassword />} />
+        <Route path="/user-forgot-password" element={<UserForgotPassword />} />
+        <Route path="/reset-password" element={<DriverResetPassword />} />
+
 
         <Route
           path="/driver"
@@ -175,6 +193,23 @@ const App = () => {
             />
           }
         />
+
+        <Route path="/admin/login" element={<AdminLogin />} />
+
+        <Route
+          path="/admin"
+          element={
+            <RequireAdmin>
+              <AdminDashboard />
+            </RequireAdmin>
+          }
+        >
+          <Route path="invite-driver" element={<InviteDriver />} />
+          <Route path="blogs" element={<BlogList />} />
+          <Route path="blogs/new" element={<BlogNew />} />
+          <Route path="email" element={<EmailSender />} />
+        </Route>
+        <Route path="/blog/:slug" element={<BlogSlug />} />
       </Routes>
     </>
   );

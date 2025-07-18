@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 const UserLoginScreen = ({ onLogin, onRegisterClick }) => {
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleLogin = async () => {
         if (!phone || !password) {
@@ -42,25 +43,43 @@ const UserLoginScreen = ({ onLogin, onRegisterClick }) => {
                 onChange={(e) => setPhone(e.target.value)}
                 className="w-full mb-3 p-2 border rounded"
             />
-            <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full mb-4 p-2 border rounded"
-            />
+
+            <div className="relative mb-4">
+                <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full p-2 border rounded"
+                />
+                <button
+                    type="button"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-blue-600"
+                >
+                    {showPassword ? 'Hide' : 'Show'}
+                </button>
+            </div>
+
             <button
                 onClick={handleLogin}
                 className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
             >
                 Login
             </button>
+
             <p className="mt-4 text-sm text-center">
                 Don’t have an account?{' '}
                 <button onClick={onRegisterClick} className="text-blue-600 underline">
                     Register
                 </button>
             </p>
+            <p className="text-sm text-center mt-2">
+                <a href="/user-forgot-password" className="text-blue-600 underline">
+                    Forgot Password?
+                </a>
+            </p>
+
         </div>
     );
 };

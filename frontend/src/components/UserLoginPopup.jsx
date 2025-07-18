@@ -6,6 +6,7 @@ import axios from 'axios';
 const UserLoginPopup = ({ onLogin, onClose }) => {
     const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
 
@@ -48,13 +49,23 @@ const UserLoginPopup = ({ onLogin, onClose }) => {
                     onChange={(e) => setPhone(e.target.value)}
                     className="w-full mb-3 p-2 border rounded"
                 />
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full mb-4 p-2 border rounded"
-                />
+
+                <div className="relative mb-4">
+                    <input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full p-2 border rounded"
+                    />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-sm text-blue-600"
+                    >
+                        {showPassword ? 'Hide' : 'Show'}
+                    </button>
+                </div>
 
                 <button
                     onClick={handleLogin}
@@ -72,6 +83,17 @@ const UserLoginPopup = ({ onLogin, onClose }) => {
                 >
                     Don't have an account? Register
                 </button>
+
+                <button
+                    onClick={() => {
+                        onClose();
+                        navigate('/user-forgot-password');
+                    }}
+                    className="w-full mt-2 text-sm text-blue-600 underline"
+                >
+                    Forgot Password?
+                </button>
+
 
                 <button
                     onClick={onClose}

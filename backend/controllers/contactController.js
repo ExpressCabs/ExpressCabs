@@ -16,18 +16,19 @@ exports.handleContactForm = async (req, res) => {
 
         const mailOptions = {
             from: `"Express Cabs Contact" <${process.env.EMAIL_USER}>`,
-            to: 'chouhanexpo96@gmail.com', // your recipient
+            to: `"Express Cabs Contact" <${process.env.EMAIL_USER}>`,
             subject: `New Contact Form: ${type}`,
-            text: `
-Name: ${name}
-Email: ${email}
-Phone: ${phone}
-Type: ${type}
-Callback Requested: ${callback ? 'Yes' : 'No'}
+            text:
+                `
+                Name: ${name}
+                Email: ${email}
+                Phone: ${phone}
+                Type: ${type}
+                Callback Requested: ${callback ? 'Yes' : 'No'}
 
-Message:
-${message}
-      `,
+                Message:
+                    ${message}
+             `,
             replyTo: email, // optional: so replies go to sender
         };
 

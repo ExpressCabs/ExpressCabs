@@ -5,6 +5,7 @@ import axios from 'axios';
 const DriverLoginScreen = ({ onLogin }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
 
     const handleLogin = async (e) => {
@@ -43,15 +44,22 @@ const DriverLoginScreen = ({ onLogin }) => {
                     />
                 </div>
 
-                <div>
+                <div className="relative">
                     <label className="block mb-1">Password</label>
                     <input
-                        type="password"
+                        type={showPassword ? 'text' : 'password'}
                         className="w-full border p-2 rounded"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         required
                     />
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                        className="absolute right-2 top-9 text-sm text-blue-600"
+                    >
+                        {showPassword ? 'Hide' : 'Show'}
+                    </button>
                 </div>
 
                 {error && <p className="text-red-600 text-sm">{error}</p>}
@@ -62,6 +70,15 @@ const DriverLoginScreen = ({ onLogin }) => {
                 >
                     Login
                 </button>
+                <p className="text-sm text-center mt-2">
+                    <a
+                        href="/driver-forgot-password"
+                        className="text-blue-600 underline"
+                    >
+                        Forgot Password?
+                    </a>
+                </p>
+
             </form>
         </div>
     );
