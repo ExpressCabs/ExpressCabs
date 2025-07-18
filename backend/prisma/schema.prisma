@@ -16,9 +16,9 @@ model Driver {
   dcNumber         String    @unique
   taxiReg          String
   carModel         String
-  rides            Ride[]    @relation("DriverRides")
   resetToken       String?
   resetTokenExpiry DateTime?
+  rides            Ride[]    @relation("DriverRides")
 }
 
 model Ride {
@@ -53,9 +53,9 @@ model User {
   email        String?
   password     String
   createdAt    DateTime  @default(now())
-  rides        Ride[]
   otpCode      String?
   otpExpiresAt DateTime?
+  rides        Ride[]
 }
 
 model DriverInvite {
