@@ -5,7 +5,6 @@ export default function AdminSidebar() {
 
     const handleLogout = () => {
         localStorage.removeItem('admin');
-        setAdmin(null);
         navigate('/admin/login');
     };
 
