@@ -3,6 +3,8 @@ const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const bcrypt = require('bcrypt');
 
+console.log('Available models in Prisma:', Object.keys(prisma));
+
 exports.adminLogin = async (req, res) => {
     const { email, password } = req.body;
 
