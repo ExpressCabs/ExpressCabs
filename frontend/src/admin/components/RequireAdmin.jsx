@@ -1,14 +1,12 @@
+
 import { Navigate, useLocation } from 'react-router-dom';
 
-const RequireAdmin = ({ children }) => {
+export default function RequireAdmin({ children, admin }) {
     const location = useLocation();
-    const user = JSON.parse(localStorage.getItem('user'));
 
-    if (!user || user.role !== 'admin') {
+    if (!admin) {
         return <Navigate to="/admin/login" state={{ from: location }} replace />;
     }
 
     return children;
-};
-
-export default RequireAdmin;
+}

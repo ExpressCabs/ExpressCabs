@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
-const AdminLogin = () => {
+const AdminLogin = ({ onLogin }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
+    const location = useLocation();
+    const redirectTo = location.state?.from?.pathname || '/admin/invite-driver';
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -15,11 +17,13 @@ const AdminLogin = () => {
                 password,
             });
 
-            localStorage.setItem('admin', JSON.stringify(res.data.user));
-            navigate('/admin/invite-driver');
+            const admin = res.data.user;
+            localStorage.setItem('admin', JSON.stringify(admin));
+            if (onLogin) onLogin(admin);
+            navigate(redirectTo, { replace: true });
         } catch (err) {
             console.error('Login error:', err);
-            alert(err?.response?.data?.message || 'Login failed');
+            alert(err?.response?.data?.error || 'Login failed');
         }
     };
 

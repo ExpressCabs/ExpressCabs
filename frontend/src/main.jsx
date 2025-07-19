@@ -64,6 +64,12 @@ const App = () => {
     return stored ? JSON.parse(stored) : null;
   });
 
+  const [loggedInAdmin, setLoggedInAdmin] = useState(() => {
+    const stored = localStorage.getItem('admin');
+    return stored ? JSON.parse(stored) : null;
+  });
+
+
   const handleUserLogin = (user) => {
     setLoggedInUser(user);
     localStorage.setItem('user', JSON.stringify(user));
@@ -77,6 +83,17 @@ const App = () => {
     setMode('passenger');
     navigate('/');
   };
+
+  const handleAdminLogin = (admin) => {
+    setLoggedInAdmin(admin);
+    localStorage.setItem('admin', JSON.stringify(admin));
+  };
+
+  const handleAdminLogout = () => {
+    setLoggedInAdmin(null);
+    localStorage.removeItem('admin');
+  };
+
 
   const [showUserPopup, setShowUserPopup] = useState(() => {
     const alreadySeen = sessionStorage.getItem('seenUserPopup');
@@ -199,8 +216,8 @@ const App = () => {
         <Route
           path="/admin"
           element={
-            <RequireAdmin>
-              <AdminDashboard />
+            <RequireAdmin admin={loggedInAdmin}>
+              <AdminDashboard onLogout={handleAdminLogout} />
             </RequireAdmin>
           }
         >

@@ -4,7 +4,8 @@ export default function AdminSidebar() {
     const navigate = useNavigate();
 
     const handleLogout = () => {
-        localStorage.removeItem('admin'); // or whatever key you used
+        localStorage.removeItem('admin');
+        setAdmin(null);
         navigate('/admin/login');
     };
 
