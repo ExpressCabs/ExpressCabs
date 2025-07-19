@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
@@ -8,6 +8,14 @@ const AdminLogin = ({ onLogin }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const redirectTo = location.state?.from?.pathname || '/admin/invite-driver';
+
+    // If already logged in, redirect away from login page
+    useEffect(() => {
+        const existingAdmin = localStorage.getItem('admin');
+        if (existingAdmin) {
+            navigate(redirectTo, { replace: true });
+        }
+    }, []);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -19,7 +27,8 @@ const AdminLogin = ({ onLogin }) => {
 
             const admin = res.data.user;
             localStorage.setItem('admin', JSON.stringify(admin));
-            if (onLogin) onLogin(admin);
+
+            if (onLogin) onLogin(admin); // 🔥 Immediately update in-memory state
             navigate(redirectTo, { replace: true });
         } catch (err) {
             console.error('Login error:', err);
