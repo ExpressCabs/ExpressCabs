@@ -3,14 +3,14 @@ import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 
 const services = [
-    { title: 'Airport Transfers', img: '/assets/services/service1.png' },
-    { title: 'Hotel Transfers', img: '/assets/services/service2.png' },
-    { title: 'NDIS Providers', img: '/assets/services/service3.png' },
-    { title: 'Wheelchair Accessible Vehicles', img: '/assets/services/service4.png' },
-    { title: 'Private Tours', img: '/assets/services/service5.png' },
-    { title: 'Corporate Account Work', img: '/assets/services/service6.png' },
-    { title: 'Winery Tours', img: '/assets/services/service7.png' },
-    { title: 'Wedding Transfers', img: '/assets/services/service8.png' },
+    { title: 'Airport Transfers', img: '/assets/services/service1.webp' },
+    { title: 'Hotel Transfers', img: '/assets/services/service2.webp' },
+    { title: 'NDIS Providers', img: '/assets/services/service3.webp' },
+    { title: 'Wheelchair Accessible Vehicles', img: '/assets/services/service4.webp' },
+    { title: 'Private Tours', img: '/assets/services/service5.webp' },
+    { title: 'Corporate Account Work', img: '/assets/services/service6.webp' },
+    { title: 'Winery Tours', img: '/assets/services/service7.webp' },
+    { title: 'Wedding Transfers', img: '/assets/services/service8.webp' },
 ];
 
 export default function OurServices() {
