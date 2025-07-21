@@ -58,10 +58,8 @@ export default function BlogNew() {
                 conclusion: form.conclusion
             };
 
-            const res = await axios.post('/api/blogs', payload);
+            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/blogs`, payload);
             const slug = res.data?.blog?.slug || form.title.toLowerCase().replace(/\s+/g, '-');
-
-            await axios.post('/api/sitemap/update', { slug });
 
 
             alert('Blog created and submitted to Google for indexing');
