@@ -15,7 +15,7 @@ export default function BlogSlug() {
     useEffect(() => {
         const fetchBlog = async () => {
             try {
-                const res = await axios.get(`/api/blogs/${slug}`);
+                const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/blogs/${slug}`);
                 if (res.data.success) {
                     setBlog(res.data.blog);
                 } else {
