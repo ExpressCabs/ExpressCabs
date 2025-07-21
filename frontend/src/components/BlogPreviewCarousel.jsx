@@ -12,7 +12,7 @@ export default function BlogPreviewCarousel() {
     useEffect(() => {
         const fetchBlogs = async () => {
             try {
-                const res = await axios.get('/api/blogs');
+                const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/blogs`);
                 if (res.data.success) setBlogs(res.data.blogs);
             } catch (err) {
                 console.error('Failed to fetch blogs', err);
