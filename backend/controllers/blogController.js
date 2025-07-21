@@ -43,7 +43,7 @@ const createBlog = async (req, res) => {
             }
         });
 
-        const pingURL = `https://www.google.com/ping?sitemap=${encodeURIComponent('https://expresscabs.onrender.com/api/sitemap.xml')}`;
+        const pingURL = `https://www.google.com/ping?sitemap=${encodeURIComponent('https://www.primecabsmelbourne.com.au/sitemap.xml')}`;
         https.get(pingURL, (pingRes) => {
             console.log(`✅ Google pinged: ${pingRes.statusCode}`);
         }).on('error', (err) => {
