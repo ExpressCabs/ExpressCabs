@@ -79,7 +79,7 @@ const DriverRegister = () => {
         }
 
         try {
-            const response = await axios.post('/api/drivers/register', {
+            const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/drivers/register`, {
                 ...formData,
                 token,
             });
