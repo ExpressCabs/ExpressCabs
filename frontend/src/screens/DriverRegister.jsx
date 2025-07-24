@@ -29,7 +29,7 @@ const DriverRegister = () => {
         }
 
         axios
-            .get(`/api/drivers/check-invite?token=${token}`)
+            .get(`${import.meta.env.VITE_API_BASE_URL}/api/drivers/check-invite?token=${token}`)
             .then((res) => {
                 if (res.data.success) {
                     setIsValid(true);
