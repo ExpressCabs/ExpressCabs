@@ -17,7 +17,7 @@ export default function InviteDriver() {
 
         setLoading(true);
         try {
-            const res = await axios.post('/api/drivers/generate-invite', { email });
+            const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/drivers/generate-invite`, { email });
             if (res.data.success) {
                 setStatus({ type: 'success', message: 'Invite email sent successfully.' });
                 setEmail('');
@@ -56,8 +56,8 @@ export default function InviteDriver() {
             {status && (
                 <div
                     className={`mt-4 p-3 rounded ${status.type === 'success'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700'
+                        ? 'bg-green-100 text-green-700'
+                        : 'bg-red-100 text-red-700'
                         }`}
                 >
                     {status.message}
