@@ -22,7 +22,7 @@ const AirportTaxiMelbourne = ({ loggedInUser }) => {
             <Helmet>
                 <title>Melbourne Airport Taxi Transfers | Prime Cabs Melbourne</title>
                 <meta name="description" content="Book affordable, fast and professional airport taxis in Melbourne. Fixed fares, 24/7 service to Tullamarine & Avalon Airport. Fleet includes sedans, SUVs, and vans." />
-                <link rel="canonical" href="https://primecabsmelbourne.com.au/airport-taxi-melbourne" />
+                <link rel="canonical" href="https://www.primecabsmelbourne.com.au/airport-taxi-melbourne" />
                 <meta name="robots" content="index, follow" />
                 {/*  gtag script */}
                 <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17249057389"></script>

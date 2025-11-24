@@ -10,13 +10,13 @@ export default function TemplateTwo({ blog }) {
                 <title>{blog.title} | Prime Cabs Melbourne</title>
                 <meta name="description" content={blog.subtitle || 'Reliable Melbourne Airport taxi service by Prime Cabs'} />
                 <meta name="keywords" content="Melbourne Airport Taxi, Airport Transfers, Prime Cabs, Book Taxi Melbourne, Airport Pickup Melbourne, Taxi to Airport" />
-                <link rel="canonical" href={`https://primecabsmelbourne.com.au/blog/${blog.slug}`} />
+                <link rel="canonical" href={`https://www.primecabsmelbourne.com.au/blog/${blog.slug}`} />
 
                 {/* Open Graph for social sharing */}
                 <meta property="og:title" content={blog.title} />
                 <meta property="og:description" content={blog.subtitle} />
                 <meta property="og:image" content={blog.image1} />
-                <meta property="og:url" content={`https://primecabsmelbourne.com.au/blog/${blog.slug}`} />
+                <meta property="og:url" content={`https://www.primecabsmelbourne.com.au/blog/${blog.slug}`} />
                 <meta property="og:type" content="article" />
 
                 {/* BlogPosting Schema */}
@@ -36,10 +36,10 @@ export default function TemplateTwo({ blog }) {
                             "name": "Prime Cabs Melbourne",
                             "logo": {
                                 "@type": "ImageObject",
-                                "url": "https://primecabsmelbourne.com.au/logo.png"
+                                "url": "https://www.primecabsmelbourne.com.au/logo.png"
                             }
                         },
-                        "url": `https://primecabsmelbourne.com.au/blog/${blog.slug}`,
+                        "url": `https://www.primecabsmelbourne.com.au/blog/${blog.slug}`,
                         "datePublished": blog.createdAt || new Date().toISOString()
                     })}
                 </script>

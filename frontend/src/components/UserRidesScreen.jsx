@@ -69,7 +69,7 @@ const UserRidesScreen = ({ user, onLogout, setMode }) => {
             <Helmet>
                 <title>My Rides | Express Cabs Melbourne</title>
                 <meta name="description" content="View and manage your upcoming and past taxi rides with Express Cabs. Stay updated on your scheduled trips." />
-                <link rel="canonical" href="https://expresscabs.com.au/my-rides" />
+
             </Helmet>
 
             <motion.button

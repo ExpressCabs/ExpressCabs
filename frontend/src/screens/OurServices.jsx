@@ -19,7 +19,7 @@ export default function OurServices() {
             <Helmet>
                 <title>Our Taxi Services | Prime Cabs Melbourne</title>
                 <meta name="description" content="Explore our Melbourne taxi services – airport transfers, hotel pickups, business rides, and long-distance travel. Professional drivers & fixed pricing." />
-                <link rel="canonical" href="https://primecabsmelbourne.com.au/services" />
+                <link rel="canonical" href="https://www.primecabsmelbourne.com.au/services" />
                 <meta name="robots" content="index, follow" />
                 {/*  gtag script */}
                 <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17249057389"></script>
