@@ -224,7 +224,7 @@ export default function TemplateThree({ blog }) {
 
         {/* STICKY BOOKING (BookingForm unchanged) + TOC */}
         <aside className="lg:col-span-1">
-          <div className="sticky top-24 space-y-2">
+          <div className="sticky top-24 space-y-6">
             <motion.div
               initial={{ opacity: 0, y: 14 }}
               whileInView={{ opacity: 1, y: 0 }}
