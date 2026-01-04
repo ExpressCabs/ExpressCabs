@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import VehicleSelection from '../screens//VehicleSelection';
+import VehicleSelection from '../screens/VehicleSelection';
 import PassengerDetails from '../screens/PassengerDetails';
 import OTPVerification from '../screens/OTPVerification';
 import { Helmet } from 'react-helmet-async';
