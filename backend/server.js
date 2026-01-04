@@ -10,6 +10,7 @@ const otpRoutes = require('./routes/otpRoutes');
 const blogRoutes = require('./routes/blogRoutes');
 const sitemapRoutes = require('./routes/sitemapRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const airportMetricsRouter = require('./routes/airportMetrics');
 
 const app = express();
 app.use(cors());
@@ -24,6 +25,8 @@ app.use('/api/drivers', driverRoutes);
 app.use('/api/blogs', blogRoutes);
 app.use('/api', sitemapRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api', airportMetricsRouter);
+
 
 
 const PORT = process.env.PORT || 3000;

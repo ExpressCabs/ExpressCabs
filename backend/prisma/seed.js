@@ -7,7 +7,7 @@ async function main() {
 
     await prisma.admin.create({
         data: {
-            email: 'expresscabsmelbourne@gmail.com',
+            email: 'PrimeCabsmelbourne@gmail.com',
             password: hashedPassword,
             name: 'Harwinder Singh',
         },

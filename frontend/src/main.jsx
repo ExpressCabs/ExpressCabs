@@ -27,6 +27,8 @@ import DriverRegister from './screens/DriverRegister';
 import DriverForgotPassword from './components/DriverForgetPassword';
 import UserForgotPassword from './components/UserForgotPassword';
 import DriverResetPassword from './components/DriverResetPassword';
+import AirportTransferSuburb from "./pages/AirportTransferSuburb";
+import AirportTransfersMelbourne from "./pages/AirportTransfersMelbourne";
 // Admin panel imports
 import RequireAdmin from './admin/components/RequireAdmin';
 import AdminDashboard from './admin/pages/dashboard';
@@ -181,7 +183,11 @@ const App = () => {
         <Route path="/driver-forgot-password" element={<DriverForgotPassword />} />
         <Route path="/user-forgot-password" element={<UserForgotPassword />} />
         <Route path="/reset-password" element={<DriverResetPassword />} />
-
+        <Route
+          path="/airport-transfer/melbourne/:suburbSlug"
+           element={<AirportTransferSuburb />}
+        />
+        <Route path="/airport-transfer/melbourne" element={<AirportTransfersMelbourne />} />
 
         <Route
           path="/driver"

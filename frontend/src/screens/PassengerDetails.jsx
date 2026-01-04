@@ -1,129 +1,168 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 
-const OTP_ENABLED = import.meta.env.VITE_OTP_VERIFICATION_ENABLED === 'true';
+const fadeUp = {
+  hidden: { opacity: 0, y: 12 },
+  show: (i = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, delay: 0.06 * i, ease: 'easeOut' },
+  }),
+};
+
+function Pill({ children }) {
+  return (
+    <span className="text-xs px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-700 font-semibold">
+      {children}
+    </span>
+  );
+}
 
 const PassengerDetails = ({
   setStep,
+  onSubmitPassengerDetails,
   pickupAddress,
-  pickupLoc,
   dropoffAddress,
-  dropoffLoc,
-  bookingType,
-  scheduledDateTime,
-  passengerCount,
   selectedVehicle,
+  passengerCount,
   fare,
   fareType,
+  scheduledDateTime,
   loggedInUser,
-  onSubmitPassengerDetails,
 }) => {
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
+  const [name, setName] = useState(loggedInUser?.name || '');
+  const [phone, setPhone] = useState(loggedInUser?.phone || '');
+  const [email, setEmail] = useState(loggedInUser?.email || '');
   const [note, setNote] = useState('');
-  const [isBooking, setIsBooking] = useState(false);
-  const isValid = name.trim() && phone.trim();
 
-  const handleSendOtp = async () => {
-    if (!isValid) return;
+  const tripMeta = useMemo(() => {
+    const when = scheduledDateTime ? new Date(scheduledDateTime).toLocaleString('en-AU') : 'Now';
+    const pax = passengerCount ? `${passengerCount} passengers` : 'Passengers not set';
+    const v = selectedVehicle?.name || selectedVehicle?.title || selectedVehicle?.id || 'Vehicle selected';
+    const f = typeof fare === 'number' ? `$${fare.toFixed(2)}` : fare ? `$${fare}` : '—';
+    const ft = fareType ? `${fareType}` : '';
+    return { when, pax, v, f, ft };
+  }, [scheduledDateTime, passengerCount, selectedVehicle, fare, fareType]);
 
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/otp/send`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone }),
-      });
-
-      const result = await res.json();
-
-      if (res.ok && result.success) {
-        onSubmitPassengerDetails({ name, phone, email, note });
-        setStep(4);
-      } else {
-        alert(`❌ Failed to send OTP: ${result.error || 'Unknown error'}`);
-      }
-    } catch (err) {
-      console.error('OTP send error:', err);
-      alert('❌ Could not send OTP. Please try again.');
+  const submit = () => {
+    if (!name || !phone) {
+      alert('Please enter name and phone');
+      return;
     }
+    onSubmitPassengerDetails({ name, phone, email, note });
   };
 
   return (
-    <>
-      <h2 className="text-2xl font-bold text-gray-800 text-center mb-4">Passenger Details</h2>
-
-      <form className="space-y-4">
+    <motion.div initial="hidden" animate="show" className="text-gray-900">
+      {/* Header */}
+      <motion.div variants={fadeUp} className="flex items-start justify-between gap-4">
         <div>
-          <label className="block font-medium text-gray-800">Full Name *</label>
-          <input
-            type="text"
-            className="w-full px-4 py-2 border rounded text-black"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Enter your name"
-          />
+          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Passenger details</h2>
+          <p className="mt-1 text-sm text-gray-600">
+            Confirm your contact details so the driver can reach you.
+          </p>
+        </div>
+        <div className="hidden md:flex flex-wrap gap-2 justify-end">
+          <Pill>Secure booking</Pill>
+          <Pill>24/7 support</Pill>
+          <Pill>Fast confirmation</Pill>
+        </div>
+      </motion.div>
+
+      {/* Trip summary */}
+      <motion.div
+        variants={fadeUp}
+        custom={1}
+        className="mt-6 rounded-3xl border border-gray-200 bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-5 md:p-6"
+      >
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-indigo-700">Trip summary</p>
+            <p className="mt-2 text-sm text-gray-800">
+              <span className="font-semibold">Pickup:</span> {pickupAddress || '—'}
+            </p>
+            <p className="mt-1 text-sm text-gray-800">
+              <span className="font-semibold">Dropoff:</span> {dropoffAddress || '—'}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <Pill>{tripMeta.when}</Pill>
+            <Pill>{tripMeta.pax}</Pill>
+            <Pill>{tripMeta.v}</Pill>
+            <Pill>{tripMeta.f} {tripMeta.ft}</Pill>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Form */}
+      <motion.div variants={fadeUp} custom={2} className="mt-6 grid gap-4">
+        <div className="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-semibold text-gray-800">Full name *</label>
+            <input
+              type="text"
+              placeholder="Passenger name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="mt-2 w-full h-11 px-3 border border-gray-200 rounded-xl bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/15"
+            />
+          </div>
+
+          <div>
+            <label className="text-sm font-semibold text-gray-800">Phone number *</label>
+            <input
+              type="tel"
+              placeholder="04xx xxx xxx"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="mt-2 w-full h-11 px-3 border border-gray-200 rounded-xl bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/15"
+            />
+          </div>
         </div>
 
         <div>
-          <label className="block font-medium text-gray-800">Phone Number *</label>
-          <input
-            type="tel"
-            className="w-full px-4 py-2 border rounded text-black"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="e.g. 0412345678"
-          />
-          <small className="mt-1 text-sm text-gray-700">
-            An OTP will be sent to this number for verification before booking.
-          </small>
-        </div>
-
-        <div>
-          <label className="block font-medium text-gray-800">Email (optional)</label>
+          <label className="text-sm font-semibold text-gray-800">Email (optional)</label>
           <input
             type="email"
-            className="w-full px-4 py-2 border rounded text-black"
+            placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
+            className="mt-2 w-full h-11 px-3 border border-gray-200 rounded-xl bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/15"
           />
         </div>
 
         <div>
-          <label className="block font-medium text-gray-800">Driver Note (optional)</label>
+          <label className="text-sm font-semibold text-gray-800">Note to driver (optional)</label>
           <textarea
-            className="w-full px-4 py-2 border rounded text-black"
-            rows="3"
+            placeholder="e.g., Flight number, luggage details, child seat, pick-up instructions..."
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            placeholder="Any instructions for driver"
-          ></textarea>
+            className="mt-2 w-full min-h-[120px] px-3 py-3 border border-gray-200 rounded-xl bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/15"
+          />
+          <p className="mt-2 text-xs text-gray-500">
+            Tip: Add terminal info, airline, or special pickup instructions for faster service.
+          </p>
         </div>
 
-        <div className="flex justify-between pt-6">
+        {/* Actions */}
+        <div className="mt-2 grid sm:grid-cols-2 gap-3">
           <button
-            type="button"
             onClick={() => setStep(2)}
-            className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600"
+            className="h-11 rounded-xl border border-gray-200 bg-white text-gray-900 font-semibold hover:bg-gray-50 transition"
           >
-            ← Back
+            Back
           </button>
 
           <button
-            type="button"
-            onClick={OTP_ENABLED ? handleSendOtp : () => { }}
-            disabled={!isValid || isBooking}
-            className={`px-6 py-2 rounded text-white font-semibold ${isValid && !isBooking
-              ? 'bg-green-600 hover:bg-green-700'
-              : 'bg-gray-400 cursor-not-allowed'
-              }`}
+            onClick={submit}
+            className="h-11 rounded-xl bg-gray-900 text-white font-semibold hover:bg-black transition"
           >
-            {isBooking ? 'Booking...' : 'Book Ride'}
+            Continue
           </button>
         </div>
-      </form>
-    </>
+      </motion.div>
+    </motion.div>
   );
 };
 
