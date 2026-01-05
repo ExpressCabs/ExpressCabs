@@ -265,22 +265,161 @@ export default function AirportTransferSuburb() {
   return (
     <>
       <Helmet>
-        <title>
-          {suburb?.seo?.title ||
-            `Airport Transfers ${suburb.name} | Prime Cabs Melbourne`}
-        </title>
+  {(() => {
+    const brand = "Prime Cabs Melbourne";
+    const siteUrl = CANONICAL_BASE;
+    const pageUrl = canonicalUrl;
+
+    // Core SEO text
+    const primaryKeyword = `Melbourne Airport transfers from ${suburb.name}`;
+    const title =
+      suburb?.seo?.title ||
+      `${primaryKeyword} (${suburb.postcode}) | Fixed Price Taxi | ${brand}`;
+
+    const description =
+      suburb?.seo?.metaDescription ||
+      `Book a reliable taxi for Melbourne Airport transfers from ${suburb.name} (${suburb.postcode}). Fixed prices, 24/7 service, flight tracking, professional drivers.`;
+
+    // OG image (use your real image if you have one)
+    const ogImage =
+      suburb?.seo?.ogImage ||
+      `${siteUrl}/images/og/airport-transfer.jpg`;
+
+    // Optional: keywords (not used for ranking by Google, but harmless)
+    const keywords = [
+      `airport transfer ${suburb.name}`,
+      `Melbourne airport taxi ${suburb.name}`,
+      `Tullamarine transfers ${suburb.name}`,
+      `fixed price airport transfers ${suburb.name}`,
+      `taxi to Melbourne Airport from ${suburb.name}`,
+    ].join(", ");
+
+    // JSON-LD schemas
+    const areaServedName = `${suburb.name} VIC ${suburb.postcode}`;
+    const serviceName = `Airport Transfers from ${suburb.name} to Melbourne Airport`;
+
+    // Keep LocalBusiness minimal (don’t invent phone/address)
+    const localBusiness = {
+      "@type": "LocalBusiness",
+      name: brand,
+      url: siteUrl,
+      areaServed: [
+        { "@type": "AdministrativeArea", name: "Melbourne VIC" },
+        { "@type": "Place", name: areaServedName },
+      ],
+    };
+
+    const serviceSchema = {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      name: serviceName,
+      serviceType: "Airport transfer",
+      provider: localBusiness,
+      areaServed: [{ "@type": "Place", name: areaServedName }],
+      availableChannel: {
+        "@type": "ServiceChannel",
+        serviceUrl: pageUrl,
+      },
+    };
+
+    const webPageSchema = {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      name: title,
+      description,
+      url: pageUrl,
+      inLanguage: "en-AU",
+      isPartOf: {
+        "@type": "WebSite",
+        name: brand,
+        url: siteUrl,
+      },
+    };
+
+    const breadcrumbSchema = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        {
+          "@type": "ListItem",
+          position: 1,
+          name: "Home",
+          item: siteUrl,
+        },
+        {
+          "@type": "ListItem",
+          position: 2,
+          name: "Airport Transfers",
+          item: `${siteUrl}/airport-transfer/melbourne`,
+        },
+        {
+          "@type": "ListItem",
+          position: 3,
+          name: `${suburb.name} ${suburb.postcode}`,
+          item: pageUrl,
+        },
+      ],
+    };
+
+    const schemas = [
+      webPageSchema,
+      serviceSchema,
+      breadcrumbSchema,
+      ...(faqSchema ? [faqSchema] : []),
+    ];
+
+    return (
+      <>
+        {/* Core SEO */}
+        <title>{title}</title>
+        <meta name="description" content={description} />
+        <link rel="canonical" href={pageUrl} />
+
+        {/* Indexing / snippets */}
         <meta
-          name="description"
-          content={
-            suburb?.seo?.metaDescription ||
-            `Book a reliable Melbourne Airport transfer from ${suburb.name} (${suburb.postcode}) — 24/7.`
-          }
+          name="robots"
+          content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
         />
-        <link rel="canonical" href={canonicalUrl} />
-        {faqSchema ? (
-          <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
-        ) : null}
-      </Helmet>
+        <meta name="googlebot" content="index,follow" />
+
+        {/* Optional */}
+        <meta name="keywords" content={keywords} />
+        <meta name="theme-color" content="#0b1220" />
+
+        {/* Geo (helps local relevance; harmless) */}
+        <meta name="geo.region" content="AU-VIC" />
+        <meta name="geo.placename" content={`${suburb.name} VIC`} />
+
+        {/* Open Graph */}
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content={brand} />
+        <meta property="og:locale" content="en_AU" />
+        <meta property="og:url" content={pageUrl} />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:image" content={ogImage} />
+        <meta
+          property="og:image:alt"
+          content={`Airport transfers from ${suburb.name} to Melbourne Airport`}
+        />
+
+        {/* Twitter */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={ogImage} />
+
+        {/* JSON-LD */}
+        {schemas.map((schema, idx) => (
+          <script key={idx} type="application/ld+json">
+            {JSON.stringify(schema)}
+          </script>
+        ))}
+      </>
+    );
+  })()}
+</Helmet>
+
 
       {/* HERO / HEADLINE */}
       <section className="relative overflow-hidden">

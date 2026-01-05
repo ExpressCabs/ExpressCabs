@@ -37,7 +37,7 @@ function TrustPill({ children }) {
 
 export default function OurServices() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="app-min-h bg-white">
       <Helmet>
         <title>Our Taxi Services | Prime Cabs Melbourne</title>
         <meta

@@ -638,8 +638,14 @@ const AddressScreen = ({ loggedInUser }) => {
         </div>
       </section>
 
-      <BlogPreviewCarousel />
-      <OurServices />
+      <div className="mt-8">
+       <BlogPreviewCarousel />
+      </div>
+
+      <div className="mt-8">
+        <OurServices />
+      </div> 
+    
       <ContactUs />
     </div>
   );

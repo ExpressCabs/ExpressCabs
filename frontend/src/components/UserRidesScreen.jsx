@@ -187,7 +187,7 @@ const UserRidesScreen = ({ user, onLogout, setMode }) => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="app-min-h bg-white">
       <Helmet>
         <title>My Rides | Express Cabs Melbourne</title>
         <meta

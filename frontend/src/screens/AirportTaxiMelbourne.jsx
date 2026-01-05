@@ -18,7 +18,7 @@ const fleet = [
 
 const AirportTaxiMelbourne = ({ loggedInUser }) => {
     return (
-        <div className="min-h-screen bg-white text-gray-800 pb-32">
+        <div className="app-min-h bg-white text-gray-800 pb-32">
             <Helmet>
                 <title>Melbourne Airport Taxi Transfers | Prime Cabs Melbourne</title>
                 <meta name="description" content="Book affordable, fast and professional airport taxis in Melbourne. Fixed fares, 24/7 service to Tullamarine & Avalon Airport. Fleet includes sedans, SUVs, and vans." />

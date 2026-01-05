@@ -1,3 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* height of visible area minus fixed header + fixed bottom CTA */
+.app-min-h {
+  min-height: calc(100vh - 170px); /* 86 + 84 */
+}
+
+@media (min-width: 640px) {
+  .app-min-h {
+    min-height: calc(100vh - 184px); /* 92 + 92 */
+  }
+}

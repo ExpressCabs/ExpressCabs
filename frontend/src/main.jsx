@@ -29,6 +29,7 @@ import UserForgotPassword from './components/UserForgotPassword';
 import DriverResetPassword from './components/DriverResetPassword';
 import AirportTransferSuburb from "./pages/AirportTransferSuburb";
 import AirportTransfersMelbourne from "./pages/AirportTransfersMelbourne";
+import ScrollToTop from './components/ScrollToTop';
 // Admin panel imports
 import RequireAdmin from './admin/components/RequireAdmin';
 import AdminDashboard from './admin/pages/dashboard';
@@ -52,7 +53,21 @@ const App = () => {
     if (next) {
       setMode(next);
       sessionStorage.removeItem('nextMode');
-    }
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    };
+    const setVh = () => {
+    const vh = window.innerHeight * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+  };
+
+  setVh();
+  window.addEventListener('resize', setVh);
+  window.addEventListener('orientationchange', setVh);
+
+  return () => {
+    window.removeEventListener('resize', setVh);
+    window.removeEventListener('orientationchange', setVh);
+  };
   }, [location.state]);
 
 
@@ -114,7 +129,7 @@ const App = () => {
         />
       )}*/}
 
-      <div className="min-h-screen border rounded shadow">
+      <div className="app-min-h border rounded shadow">
         {mode === 'myrides' ? (
           <UserRidesScreen
             user={loggedInUser}
@@ -241,6 +256,7 @@ const App = () => {
 const AppWrapper = () => (
   <BrowserRouter>
     <HelmetProvider>
+      <ScrollToTop />
       <App />
     </HelmetProvider>
   </BrowserRouter>
