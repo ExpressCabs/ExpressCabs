@@ -252,8 +252,8 @@ const AddressScreen = ({ loggedInUser }) => {
             "provider": {
               "@type": "LocalBusiness",
               "name": "Prime Cabs Melbourne",
-              "url": "https://primecabsmelbourne.com.au",
-              "image": "https://primecabsmelbourne.com.au/logo.png",
+              "url": "https://www.primecabsmelbourne.com.au",
+              "image": "https://www.primecabsmelbourne.com.au/logo.png",
               "telephone": "+61482038902",
               "address": {
                 "@type": "PostalAddress",
@@ -273,18 +273,47 @@ const AddressScreen = ({ loggedInUser }) => {
               "24/7 airport transfer taxi service in Melbourne. Reliable pickups and drop-offs to and from Tullamarine and Avalon Airport. Choose from Sedans, SUVs, Vans and Luxury Cabs.",
             "availableChannel": {
               "@type": "ServiceChannel",
-              "serviceUrl": "https://primecabsmelbourne.com.au/airport-taxi-melbourne"
+              "serviceUrl": "https://www.primecabsmelbourne.com.au/airport-taxi-melbourne"
             },
             "hasOfferCatalog": {
-              "@type": "OfferCatalog",
-              "name": "Fleet Options",
-              "itemListElement": [
-                { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Sedan", "description": "Standard 4-seater for airport transfers." } },
-                { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Luxury", "description": "Premium ride experience with luxury vehicle." } },
-                { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "SUV", "description": "Spacious SUV, ideal for families or groups." } },
-                { "@type": "Offer", "itemOffered": { "@type": "Product", "name": "Van", "description": "High-capacity van for group transfers, up to 11 passengers." } }
-              ]
-            }
+            "@type": "OfferCatalog",
+            "name": "Fleet Options",
+            "itemListElement": [
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "Sedan Airport Transfer",
+                  "description": "Standard 4-seater for airport transfers."
+                }
+              },
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "Luxury Airport Transfer",
+                  "description": "Premium ride experience with a luxury vehicle."
+                }
+              },
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "SUV Airport Transfer",
+                  "description": "Spacious SUV, ideal for families or groups."
+                }
+              },
+              {
+                "@type": "Offer",
+                "itemOffered": {
+                  "@type": "Service",
+                  "name": "Van Airport Transfer",
+                  "description": "High-capacity van for group transfers, up to 11 passengers."
+                }
+              }
+            ]
+          }
+
           })}
         </script>
       </Helmet>

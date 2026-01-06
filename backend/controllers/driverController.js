@@ -94,7 +94,7 @@ exports.driverForgotPassword = async (req, res) => {
             data: { resetToken: token, resetTokenExpiry: expiry },
         });
 
-        const resetLink = `https://primecabsmelbourne.com.au/reset-password?role=driver&token=${token}`;
+        const resetLink = `https://www.primecabsmelbourne.com.au/reset-password?role=driver&token=${token}`;
 
         const transporter = nodemailer.createTransport({
             service: 'gmail',
@@ -170,7 +170,7 @@ exports.generateInviteToken = async (req, res) => {
         });
 
         // Send invite email
-        const inviteLink = `https://primecabsmelbourne.com.au/driver-register?token=${token}`;
+        const inviteLink = `https://www.primecabsmelbourne.com.au/driver-register?token=${token}`;
 
         const transporter = nodemailer.createTransport({
             service: 'gmail', // or Mailgun/SMTP service

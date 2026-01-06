@@ -37,7 +37,7 @@ function TrustPill({ children }) {
 
 export default function OurServices() {
   return (
-    <div className="app-min-h bg-white">
+    <div className="min-h-screen bg-white">
       <Helmet>
         <title>Our Taxi Services | Prime Cabs Melbourne</title>
         <meta
@@ -66,7 +66,7 @@ export default function OurServices() {
             "provider": {
               "@type": "LocalBusiness",
               "name": "Prime Cabs Melbourne",
-              "url": "https://primecabsmelbourne.com.au",
+              "url": "https://www.primecabsmelbourne.com.au",
               "telephone": "+61482038902",
               "address": {
                 "@type": "PostalAddress",

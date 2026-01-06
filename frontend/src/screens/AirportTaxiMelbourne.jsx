@@ -18,7 +18,7 @@ const fleet = [
 
 const AirportTaxiMelbourne = ({ loggedInUser }) => {
     return (
-        <div className="app-min-h bg-white text-gray-800 pb-32">
+        <div className="min-h-screen bg-white text-gray-800 pb-32">
             <Helmet>
                 <title>Melbourne Airport Taxi Transfers | Prime Cabs Melbourne</title>
                 <meta name="description" content="Book affordable, fast and professional airport taxis in Melbourne. Fixed fares, 24/7 service to Tullamarine & Avalon Airport. Fleet includes sedans, SUVs, and vans." />
@@ -44,8 +44,8 @@ const AirportTaxiMelbourne = ({ loggedInUser }) => {
                         "provider": {
                             "@type": "LocalBusiness",
                             "name": "Prime Cabs Melbourne",
-                            "url": "https://primecabsmelbourne.com.au",
-                            "image": "https://primecabsmelbourne.com.au/logo.png",
+                            "url": "https://www.primecabsmelbourne.com.au",
+                            "image": "https://www.primecabsmelbourne.com.au/logo.png",
                             "telephone": "+61482038902",
                             "address": {
                                 "@type": "PostalAddress",
@@ -73,7 +73,7 @@ const AirportTaxiMelbourne = ({ loggedInUser }) => {
                         "description": "24/7 airport transfer taxi service in Melbourne. Reliable pickups and drop-offs to and from Tullamarine and Avalon Airport. Choose from Sedans, SUVs, Vans and Luxury Cabs.",
                         "availableChannel": {
                             "@type": "ServiceChannel",
-                            "serviceUrl": "https://primecabsmelbourne.com.au/airport-taxi-melbourne"
+                            "serviceUrl": "https://www.primecabsmelbourne.com.au/airport-taxi-melbourne"
                         },
                         "hasOfferCatalog": {
                             "@type": "OfferCatalog",
