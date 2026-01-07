@@ -13,10 +13,10 @@ import { MdCalendarToday } from 'react-icons/md';
 import BlogPreviewCarousel from '../components/BlogPreviewCarousel';
 
 const heroImages = [
-  '/assets/images/prime_cabs_landscape.png',
-  '/assets/images/prime_cabs_landscape2.png',
-  '/assets/images/prime_cabs_landscape3.png',
-  '/assets/images/prime_cabs_landscape4.png',
+  '/assets/images/prime_cabs_landscape.avif',
+  '/assets/images/prime_cabs_landscape2.avif',
+  '/assets/images/prime_cabs_landscape3.avif',
+  '/assets/images/prime_cabs_landscape4.avif',
 ];
 
 const fleet = [
@@ -110,6 +110,12 @@ const AddressScreen = ({ loggedInUser }) => {
     }, 5000);
     return () => clearInterval(interval);
   }, []);
+
+    useEffect(() => {
+    const next = heroImages[(heroIndex + 1) % heroImages.length];
+    const img = new Image();
+    img.src = next;
+  }, [heroIndex, heroImages]);
 
   useEffect(() => {
     if (step !== 1 || !mapRef.current) return;
@@ -320,18 +326,25 @@ const AddressScreen = ({ loggedInUser }) => {
 
       {/* HERO + BOOKING FLOW */}
       <section className="relative min-h-[100vh] overflow-hidden">
-        {/* Background slideshow */}
+       {/* Background slideshow */}
         <AnimatePresence mode="wait">
-          <motion.div
+          <motion.img
             key={heroIndex}
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: `url(${heroImages[heroIndex]})` }}
+            src={heroImages[heroIndex]}   // now points to .avif
+            alt=""
+            aria-hidden="true"
+            className="absolute inset-0 w-full h-full object-cover object-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 1.4, ease: 'easeOut' }}
+            transition={{ duration: 1.4, ease: "easeOut" }}
+            // performance helpers:
+            fetchpriority={heroIndex === 0 ? "high" : "auto"}  // prioritize first slide (LCP)
+            loading={heroIndex === 0 ? "eager" : "lazy"}       // eager for first, lazy for others
+            decoding="async"
           />
         </AnimatePresence>
+
 
         {/* Overlays */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-black/35" />
