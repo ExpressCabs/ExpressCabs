@@ -400,7 +400,7 @@ const AddressScreen = ({ loggedInUser }) => {
                 className="relative"
               >
                 <div className="absolute -inset-1 rounded-[28px] bg-gradient-to-r from-white/25 via-white/10 to-white/25 blur-xl" />
-                <div className="relative rounded-[28px] border border-white/20 bg-white/85 backdrop-blur-xl shadow-[0_30px_90px_-30px_rgba(0,0,0,0.6)] p-5 md:p-7">
+                <div className="relative rounded-[28px] border border-white/20 bg-white/85 backdrop-blur-xl shadow-[0_30px_90px_-30px_rgba(0,0,0,0.6)] p-4 md:p-7">
                   {step === 1 && (
                     <>
                       <div className="flex items-start justify-between gap-4">

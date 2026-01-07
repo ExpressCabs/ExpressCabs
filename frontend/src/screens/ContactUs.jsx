@@ -142,7 +142,7 @@ export default function ContactUs() {
       </section>
 
       {/* MAIN CONTENT */}
-      <section className="max-w-7xl mx-auto px-6 -mt-14 md:-mt-16 pb-16">
+      <section className="max-w-7xl mx-auto px-4 -mt-14 md:-mt-16 pb-16">
         <motion.div
           initial="hidden"
           whileInView="show"
@@ -221,7 +221,7 @@ export default function ContactUs() {
               viewport={{ once: true }}
               variants={fadeUp}
             >
-              <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-6 md:p-8">
+              <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-4 md:p-8">
                 <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900">Send us a message</h2>
                 <p className="mt-2 text-gray-600">
                   Tell us what you need and we’ll get back to you as soon as possible.
@@ -238,7 +238,7 @@ export default function ContactUs() {
                         value={formData.name}
                         onChange={handleChange}
                         placeholder="Your Name"
-                        className="mt-2 w-full h-11 border border-gray-200 px-3 rounded-xl bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/15"
+                        className="mt-2 w-full h-11 border border-gray-200 px-2 rounded-xl bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/15"
                         required
                       />
                     </div>
@@ -250,7 +250,7 @@ export default function ContactUs() {
                         value={formData.email}
                         onChange={handleChange}
                         placeholder="Your Email"
-                        className="mt-2 w-full h-11 border border-gray-200 px-3 rounded-xl bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/15"
+                        className="mt-2 w-full h-11 border border-gray-200 px-2 rounded-xl bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/15"
                         required
                       />
                     </div>
@@ -265,7 +265,7 @@ export default function ContactUs() {
                         value={formData.phone}
                         onChange={handleChange}
                         placeholder="Your Phone"
-                        className="mt-2 w-full h-11 border border-gray-200 px-3 rounded-xl bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/15"
+                        className="mt-2 w-full h-11 border border-gray-200 px-2 rounded-xl bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/15"
                         required
                       />
                     </div>
@@ -275,7 +275,7 @@ export default function ContactUs() {
                         name="type"
                         value={formData.type}
                         onChange={handleChange}
-                        className="mt-2 w-full h-11 border border-gray-200 px-3 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/15"
+                        className="mt-2 w-full h-11 border border-gray-200 px-2 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-gray-900/15"
                       >
                         <option>General Inquiry</option>
                         <option>Booking Request</option>
@@ -303,7 +303,7 @@ export default function ContactUs() {
                       value={formData.message}
                       onChange={handleChange}
                       placeholder="Your message..."
-                      className="mt-2 w-full border border-gray-200 px-3 py-3 rounded-xl bg-white text-sm min-h-[140px] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/15"
+                      className="mt-2 w-full border border-gray-200 px-3 py-2 rounded-xl bg-white text-sm min-h-[140px] placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/15"
                       required
                     />
                   </div>
@@ -325,13 +325,13 @@ export default function ContactUs() {
           </div>
 
           {/* Areas we serve */}
-          <section className="max-w-7xl mx-auto px-6 pb-16 pt-20">
+          <section className="max-w-7xl mx-auto px-2 pb-16 pt-20">
         <motion.div
           initial="hidden"
           whileInView="show"
           viewport={{ once: true }}
           variants={softIn}
-          className="rounded-3xl border border-gray-200 bg-white shadow-sm p-6 md:p-10"
+          className="rounded-3xl border border-gray-200 bg-white shadow-sm p-3 md:p-10"
         >
           {/* Areas we serve */}
           <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-6 md:p-8">

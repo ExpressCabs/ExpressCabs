@@ -272,7 +272,7 @@ const BookingForm = ({ loggedInUser }) => {
                 <div className="absolute inset-0 bg-black/50" />
 
                 <div className="relative z-10 w-full max-w-xl mx-auto px-4">
-                    <div className="relative z-20 w-full p-6 bg-white rounded-xl shadow-lg">
+                    <div className="relative z-20 w-full p-3 bg-white rounded-xl shadow-lg">
                         {step === 1 && (
                             <>
                                 <h2 className="text-xl font-semibold mb-4 text-gray-800">Book Your Ride</h2>

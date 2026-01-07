@@ -492,7 +492,7 @@ export default function AirportTransferSuburb() {
           viewport={{ once: true, amount: 0.25 }}
           variants={sectionAnim}
           transition={{ duration: 0.45 }}
-          className="max-w-4xl mx-auto px-6"
+          className="max-w-4xl mx-auto px-4"
         >
           <div className="rounded-3xl border border-slate-200/60 bg-white/80 backdrop-blur shadow-xl shadow-slate-900/10">
             <div className="px-6 pt-6">
@@ -508,7 +508,7 @@ export default function AirportTransferSuburb() {
               </div>
             </div>
 
-            <div className="p-4 sm:p-6">
+            <div className="p-3 sm:p-3">
               <BookingForm />
             </div>
           </div>

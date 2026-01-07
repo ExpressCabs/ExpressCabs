@@ -138,13 +138,13 @@ export default function OurServices() {
       </section>
 
       {/* SERVICES GRID */}
-      <section id="services-grid" className="max-w-7xl mx-auto px-6 -mt-12 md:-mt-16 pb-16">
+      <section id="services-grid" className="max-w-7xl mx-auto px-4 -mt-12 md:-mt-16 pb-16">
         <motion.div
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-80px" }}
           variants={softIn}
-          className="rounded-3xl border border-gray-200 bg-white/90 backdrop-blur shadow-[0_30px_80px_-20px_rgba(0,0,0,0.18)] p-6 md:p-10"
+          className="rounded-3xl border border-gray-200 bg-white/90 backdrop-blur shadow-[0_30px_80px_-20px_rgba(0,0,0,0.18)] p-4 md:p-10"
         >
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
             <div>
