@@ -47,17 +47,6 @@ export default function OurServices() {
         <link rel="canonical" href="https://www.primecabsmelbourne.com.au/services" />
         <meta name="robots" content="index, follow" />
 
-        {/* gtag script (kept) */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17249057389"></script>
-        <script type="text/javascript">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'AW-17249057389');
-          `}
-        </script>
-
         <script type="application/ld+json">
           {JSON.stringify({
             "@context": "https://schema.org",

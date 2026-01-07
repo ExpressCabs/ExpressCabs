@@ -19,7 +19,7 @@ const RideSuccessScreen = () => {
   }, [isGuest, navigate]);
 
   return (
-    <div className="app-min-h bg-white">
+    <div className="min-h-screen bg-white">
       <Helmet>
         <title>Thank You – Ride Booked | Express Cabs</title>
         <meta
@@ -27,24 +27,6 @@ const RideSuccessScreen = () => {
           content="Your ride has been successfully booked with Express Cabs. We'll be in touch shortly with driver details."
         />
         <meta name="robots" content="noindex, nofollow" />
-
-        {/* Global site tag (gtag.js) */}
-        <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17249057389"></script>
-
-        {/* Google Ads conversion event for Booking-Form-Submitted */}
-        <script type="text/javascript">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'AW-17249057389');
-            gtag('event', 'conversion', {
-              send_to: 'AW-17249057389/OwxRCP63nOAaEO30_qBA',
-              value: 1.0,
-              currency: 'AUD'
-            });
-          `}
-        </script>
       </Helmet>
 
       {/* Premium success hero */}
