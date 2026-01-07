@@ -121,9 +121,146 @@ const AddressScreen = ({ loggedInUser }) => {
   return (
     <div className="min-h-screen bg-white">
       <Helmet>
-        <title>Prime Cabs Melbourne | Book Airport Taxi</title>
-        <meta name="description" content="24/7 Melbourne airport transfers, fixed fare taxi bookings. Book online with Prime Cabs." />
+        {/* Primary SEO */}
+        <title>Melbourne Airport Taxi | Fixed Fare Airport Transfers – Prime Cabs Melbourne</title>
+        <meta
+          name="description"
+          content="Book a reliable Melbourne Airport taxi with Prime Cabs Melbourne. 24/7 airport transfers, fixed fares, no surge pricing, professional drivers. Instant online booking."
+        />
+
+        {/* Canonical */}
+        <link rel="canonical" href="https://www.primecabsmelbourne.com.au/" />
+
+        {/* Keywords (low weight but safe) */}
+        <meta
+          name="keywords"
+          content="Melbourne airport taxi, airport transfers Melbourne, Melbourne airport cab, taxi to Melbourne airport, fixed fare airport taxi, Melbourne airport pickup"
+        />
+
+        {/* Open Graph (Facebook / WhatsApp / LinkedIn) */}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="Melbourne Airport Taxi | Fixed Fare Transfers – Prime Cabs Melbourne" />
+        <meta
+          property="og:description"
+          content="24/7 Melbourne Airport taxi service with fixed fares. Book online for fast, reliable airport transfers across Melbourne."
+        />
+        <meta property="og:url" content="https://www.primecabsmelbourne.com.au/" />
+        <meta property="og:image" content="https://www.primecabsmelbourne.com.au/assets/images/prime-cabs-og.webp" />
+        <meta property="og:site_name" content="Prime Cabs Melbourne" />
+
+        {/* Twitter / X */}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Melbourne Airport Taxi | Prime Cabs Melbourne" />
+        <meta
+          name="twitter:description"
+          content="Fixed fare Melbourne Airport taxi service. Book 24/7 airport transfers online with Prime Cabs Melbourne."
+        />
+        <meta name="twitter:image" content="https://www.primecabsmelbourne.com.au/assets/images/prime-cabs-og.webp" />
+
+        {/* Geo / Local SEO */}
+        <meta name="geo.region" content="AU-VIC" />
+        <meta name="geo.placename" content="Melbourne" />
+        <meta name="geo.position" content="-37.8136;144.9631" />
+        <meta name="ICBM" content="-37.8136, 144.9631" />
+
+        {/* Mobile / UX */}
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+        {/* Crawling */}
+        <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+        <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "Service",
+                        "serviceType": "Airport Transfer Taxi",
+                        "name": "Melbourne Airport Taxi Transfers - Prime Cabs",
+                        "provider": {
+                            "@type": "LocalBusiness",
+                            "name": "Prime Cabs Melbourne",
+                            "url": "https://www.primecabsmelbourne.com.au",
+                            "image": "https://www.primecabsmelbourne.com.au/logo.png",
+                            "telephone": "+61488797233",
+                            "address": {
+                                "@type": "PostalAddress",
+                                "streetAddress": "29 Bayswater Rd",
+                                "addressLocality": "Croydon",
+                                "addressRegion": "VIC",
+                                "postalCode": "3136",
+                                "addressCountry": "AU"
+                            }
+                        },
+                        "areaServed": [
+                            {
+                                "@type": "Place",
+                                "name": "Melbourne"
+                            },
+                            {
+                                "@type": "Place",
+                                "name": "Tullamarine Airport"
+                            },
+                            {
+                                "@type": "Place",
+                                "name": "Avalon Airport"
+                            }
+                        ],
+                        "description": "24/7 airport transfer taxi service in Melbourne. Reliable pickups and drop-offs to and from Tullamarine and Avalon Airport. Choose from Sedans, SUVs, Vans and Luxury Cabs.",
+                        "availableChannel": {
+                            "@type": "ServiceChannel",
+                            "serviceUrl": "https://www.primecabsmelbourne.com.au/airport-taxi-melbourne"
+                        },
+                        "hasOfferCatalog": {
+                            "@type": "OfferCatalog",
+                            "name": "Fleet Options",
+                            "itemListElement": [
+                                {
+                                "@type": "Offer",
+                                "itemOffered": {
+                                    "@type": "Service",
+                                    "name": "Sedan",
+                                    "description": "Standard 4-seater sedan for Melbourne airport transfers."
+                                }
+                                },
+                                {
+                                "@type": "Offer",
+                                "itemOffered": {
+                                    "@type": "Service",
+                                    "name": "Luxury",
+                                    "description": "Premium luxury vehicle for comfortable airport transfers."
+                                }
+                                },
+                                {
+                                "@type": "Offer",
+                                "itemOffered": {
+                                    "@type": "Service",
+                                    "name": "SUV",
+                                    "description": "Spacious SUV ideal for families, luggage, and group travel."
+                                }
+                                },
+                                {
+                                "@type": "Offer",
+                                "itemOffered": {
+                                    "@type": "Service",
+                                    "name": "Van",
+                                    "description": "High-capacity van for group airport transfers, up to 11 passengers."
+                                }
+                                }
+                            ]
+                            }
+
+                    })}
+                </script>
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "TaxiService",
+                        "name": "Prime Cabs Melbourne",
+                        "url": "https://www.primecabsmelbourne.com.au/",
+                        "logo": "https://www.primecabsmelbourne.com.au/assets/images/logo.png"
+                    })}
+                </script>
+
       </Helmet>
+
 
       <section className="relative min-h-[100vh] overflow-hidden">
         <AnimatePresence mode="wait">

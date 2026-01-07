@@ -69,39 +69,40 @@ const AirportTaxiMelbourne = ({ loggedInUser }) => {
                             "name": "Fleet Options",
                             "itemListElement": [
                                 {
-                                    "@type": "Offer",
-                                    "itemOffered": {
-                                        "@type": "Product",
-                                        "name": "Sedan",
-                                        "description": "Standard 4-seater for airport transfers."
-                                    }
+                                "@type": "Offer",
+                                "itemOffered": {
+                                    "@type": "Service",
+                                    "name": "Sedan",
+                                    "description": "Standard 4-seater sedan for Melbourne airport transfers."
+                                }
                                 },
                                 {
-                                    "@type": "Offer",
-                                    "itemOffered": {
-                                        "@type": "Product",
-                                        "name": "Luxury",
-                                        "description": "Premium ride experience with luxury vehicle."
-                                    }
+                                "@type": "Offer",
+                                "itemOffered": {
+                                    "@type": "Service",
+                                    "name": "Luxury",
+                                    "description": "Premium luxury vehicle for comfortable airport transfers."
+                                }
                                 },
                                 {
-                                    "@type": "Offer",
-                                    "itemOffered": {
-                                        "@type": "Product",
-                                        "name": "SUV",
-                                        "description": "Spacious SUV, ideal for families or groups."
-                                    }
+                                "@type": "Offer",
+                                "itemOffered": {
+                                    "@type": "Service",
+                                    "name": "SUV",
+                                    "description": "Spacious SUV ideal for families, luggage, and group travel."
+                                }
                                 },
                                 {
-                                    "@type": "Offer",
-                                    "itemOffered": {
-                                        "@type": "Product",
-                                        "name": "Van",
-                                        "description": "High-capacity van for group transfers, up to 11 passengers."
-                                    }
+                                "@type": "Offer",
+                                "itemOffered": {
+                                    "@type": "Service",
+                                    "name": "Van",
+                                    "description": "High-capacity van for group airport transfers, up to 11 passengers."
+                                }
                                 }
                             ]
-                        }
+                            }
+
                     })}
                 </script>
             </Helmet>
