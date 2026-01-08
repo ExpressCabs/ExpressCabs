@@ -17,8 +17,8 @@ const BOOKING_FEE = 2.70; // ✅ you confirmed you charge this
 const DEFAULT_TOLL_CHARGE = 10.0; // ✅ add when route uses tolls (approx)
 
 // --- Pass-through fees (set as needed) ---
-const MEL_AIRPORT_PICKUP_FEE = 5.15;// Melbourne Airport access fee (pass-through)
-const TIME_RATE_MULTIPLIER = 1.12;
+const MEL_AIRPORT_PICKUP_FEE = 5.15; // Melbourne Airport access fee (pass-through)
+
 // --- Vic taxi-style quote model (time + distance) ---
 // NOTE: This is an approximation model (not a live meter). It is designed to be consistent and realistic for quoting.
 const TARIFFS = {
@@ -66,75 +66,6 @@ function pickTariff(dateObj) {
 
 function roundMoney(n) {
   return Math.round((n + Number.EPSILON) * 100) / 100;
-}
-
-
-// ---- Speed-threshold meter approximation ----
-// Vic taxi meters typically charge EITHER time OR distance depending on speed.
-// Requirement: if speed < 27km/h => time rate, else => distance rate.
-// Google Directions gives only total distance + total duration, not per-step speeds,
-// so we estimate a split between "slow" and "fast" portions using a 2-speed mixture model.
-//
-// Tuning knobs (reasonable defaults):
-// - SLOW_SPEED_KMH: typical congested/urban speed (<27)
-// - FAST_SPEED_KMH: typical flowing traffic speed (>27)
-const SPEED_SWITCH_KMH = 27;
-const SLOW_SPEED_KMH = 20;
-const FAST_SPEED_KMH = 45;
-
-function clamp(n, min, max) {
-  return Math.max(min, Math.min(max, n));
-}
-
-/**
- * Estimate how much of the trip is "slow" (<SPEED_SWITCH_KMH) vs "fast" (>SPEED_SWITCH_KMH)
- * using a 2-speed mixture model.
- *
- * Inputs: distanceKm (km), durationMin (minutes)
- * Returns:
- *  - slowKm: distance travelled at SLOW_SPEED_KMH
- *  - fastKm: remaining distance travelled at FAST_SPEED_KMH
- *  - slowMin: minutes spent in slow portion (time-charged)
- */
-function estimateSlowFastSplit(distanceKm, durationMin) {
-  const d = Math.max(0, distanceKm || 0);
-  const mins = Math.max(0, durationMin || 0);
-  const tHrs = mins / 60;
-
-  if (d === 0 || tHrs === 0) {
-    return { slowKm: 0, fastKm: d, slowMin: 0 };
-  }
-
-  // If average speed is already below the switch, treat whole trip as slow/time.
-  const avgSpeed = d / tHrs;
-  if (avgSpeed <= SPEED_SWITCH_KMH) {
-    return { slowKm: d, fastKm: 0, slowMin: mins };
-  }
-
-  // Solve mixture:
-  // t = d_s / v_s + (d - d_s) / v_f
-  // => d_s = (t - d/v_f) / (1/v_s - 1/v_f)
-  const vS = SLOW_SPEED_KMH;
-  const vF = FAST_SPEED_KMH;
-
-  const denom = (1 / vS) - (1 / vF);
-  if (denom <= 0) {
-    // fallback: no valid split, charge distance only
-    return { slowKm: 0, fastKm: d, slowMin: 0 };
-  }
-
-  const dSlow = (tHrs - d / vF) / denom;
-  const slowKm = clamp(dSlow, 0, d);
-  const fastKm = d - slowKm;
-  const slowMin = (slowKm / vS) * 60;
-
-  return { slowKm, fastKm, slowMin };
-}
-
-function computeSwitchFare({ distanceKm, durationMin, tariff }) {
-  const { fastKm, slowMin } = estimateSlowFastSplit(distanceKm, durationMin);
-  // meter-like: flagfall + distance when fast + time when slow
-  return tariff.flagfall + fastKm * tariff.perKm + slowMin * tariff.perMin * TIME_RATE_MULTIPLIER;
 }
 
 const VehicleSelection = ({
@@ -252,8 +183,8 @@ const VehicleSelection = ({
     const newFares = {};
 
     for (const v of VEHICLES) {
-      // Base quote: meter-like switch (time OR distance based on speed)
-      const base = computeSwitchFare({ distanceKm, durationMin, tariff });
+      // Base quote: time + distance + flagfall
+      const base = tariff.flagfall + distanceKm * tariff.perKm + durationMin * tariff.perMin;
 
       let total = base + GOVERNMENT_LEVY + BOOKING_FEE;
 
@@ -317,7 +248,7 @@ const VehicleSelection = ({
             </div>
           </div>
           <div className="text-right opacity-80">
-            <div>Rates: ${tariff.perKm}/km or ${tariff.perMin}/min (switch at {'<'}27 km/h)</div>
+            <div>Rates: ${tariff.perKm}/km + ${tariff.perMin}/min</div>
             <div>Flagfall: ${tariff.flagfall}</div>
             <div>Booking fee: ${BOOKING_FEE.toFixed(2)}</div>
             {/* {hasTolls && <div>Tolls (est.): ${DEFAULT_TOLL_CHARGE.toFixed(2)}</div>} */}
