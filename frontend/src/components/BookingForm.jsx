@@ -207,7 +207,14 @@ const BookingForm = ({
 
       const result = await res.json();
       if (res.ok) {
-        navigate('/ride-success', { state: { isGuest: !loggedInUser } });
+        navigate('/ride-success', {
+          state: {
+            isGuest: !loggedInUser,
+            bookingId: result?.id,          // ✅ comes from backend (ride id)
+            totalFare: result?.fare ?? fare // ✅ backend fare, fallback to frontend fare
+          }
+        });
+
       } else {
         alert(`Booking failed: ${result.error}`);
       }
