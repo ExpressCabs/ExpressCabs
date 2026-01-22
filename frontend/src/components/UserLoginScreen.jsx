@@ -58,7 +58,7 @@ const UserLoginScreen = ({ onLogin, onRegisterClick }) => {
   };
 
   return (
-    <div className="app-min-h bg-white">
+    <div className="min-h-screen bg-white">
       <Helmet>
         <title>User Login | Express Cabs</title>
         <meta

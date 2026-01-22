@@ -65,7 +65,7 @@ const UserRegisterScreen = ({ onBackToLogin }) => {
   };
 
   return (
-    <div className="app-min-h bg-white">
+    <div className="min-h-screen bg-white">
       <Helmet>
         <title>Create Account | Express Cabs</title>
         <meta

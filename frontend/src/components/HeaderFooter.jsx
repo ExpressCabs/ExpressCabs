@@ -208,6 +208,14 @@ const HeaderFooter = ({ mode, setMode, loggedInDriver, loggedInUser, setShowUser
                       <a
                         href="tel:+61488797233"
                         className="inline-flex items-center justify-center gap-2 h-11 rounded-full bg-gray-900 text-white font-semibold hover:bg-black transition"
+                        onClick={() => {
+                         window.dataLayer = window.dataLayer || [];
+                         window.dataLayer.push({
+                          event: "click_call",
+                          phone_number: "+61488797233",
+                          placement: "header"
+                         });
+                      }}
                       >
                         <FaPhoneAlt /> Call
                       </a>
@@ -253,6 +261,15 @@ const HeaderFooter = ({ mode, setMode, loggedInDriver, loggedInUser, setShowUser
                   href="tel:+61488797233"
                   className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-gray-900 text-white font-semibold hover:bg-black transition"
                   aria-label="Call Prime Cabs"
+                  onClick={() => {
+                    window.dataLayer = window.dataLayer || [];
+                    window.dataLayer.push({
+                      event: "click_call",
+                      phone_number: "+61488797233",
+                      placement: "footer_bar"
+                    });
+                  }}
+
                 >
                   <FaPhoneAlt /> Call
                 </motion.a>

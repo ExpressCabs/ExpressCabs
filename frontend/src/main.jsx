@@ -15,7 +15,7 @@ import { HelmetProvider } from "react-helmet-async";
 
 import HeaderFooter from "./components/HeaderFooter";
 import ScrollToTop from "./components/ScrollToTop";
-import DelayedGtag from "./utils/delayedGtag.jsx";
+import DelayedGtag from "./utils/delayedGtag";
 
 // ✅ Keep these as direct imports if they’re used immediately on homepage/mode switching
 import DriverDashboard from "./components/DriverDashboard";

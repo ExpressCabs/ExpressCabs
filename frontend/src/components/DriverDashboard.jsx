@@ -137,7 +137,7 @@ const DriverDashboard = ({ driver, onLogout }) => {
   );
 
   return (
-    <div className="app-min-h bg-white">
+    <div className="min-h-screen bg-white">
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">

@@ -9,6 +9,16 @@ const RideSuccessScreen = () => {
   const isGuest = location.state?.isGuest ?? false;
 
   useEffect(() => {
+     // ✅ Fire booking conversion event as soon as success screen loads
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: "booking_complete",
+        // Optional but recommended if you can pass these via navigation state:
+        booking_id: location.state?.bookingId,
+        value: location.state?.totalFare,
+        currency: "AUD",
+        is_guest: isGuest,
+      });
     const timeout = setTimeout(() => {
       navigate('/', {
         state: { nextMode: isGuest ? 'passenger' : 'myrides' },
@@ -16,7 +26,7 @@ const RideSuccessScreen = () => {
     }, 3000); // wait 3 seconds before redirect
 
     return () => clearTimeout(timeout);
-  }, [isGuest, navigate]);
+  }, [isGuest, navigate, location.state]);
 
   return (
     <div className="min-h-screen bg-white">
