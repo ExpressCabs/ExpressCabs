@@ -56,6 +56,19 @@ const bookRide = async (req, res) => {
       }
     });
 
+    const formatMelbourneTime = (dateInput) => {
+      const d = new Date(dateInput);
+      return new Intl.DateTimeFormat("en-AU", {
+        timeZone: "Australia/Melbourne",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      }).format(d);
+    };
+
     try {
       const transporter = nodemailer.createTransport({
         service: 'gmail',
@@ -68,7 +81,7 @@ const bookRide = async (req, res) => {
       await transporter.sendMail({
         from: `"Express Cabs" <${process.env.EMAIL_USER}>`,
         to: process.env.EMAIL_USER,
-        subject: '🛺 New Ride Booking Received',
+        subject: '-- New Ride Booking Received --',
         html: `
           <h2>New Ride Booking</h2>
           <p><strong>Name:</strong> ${name}</p>
@@ -76,7 +89,7 @@ const bookRide = async (req, res) => {
           <p><strong>Email:</strong> ${email || 'N/A'}</p>
           <p><strong>Pickup:</strong> ${pickup}</p>
           <p><strong>Dropoff:</strong> ${dropoff}</p>
-          <p><strong>Date & Time:</strong> ${new Date(rideDate).toLocaleString()}</p>
+          <p><strong>Date & Time:</strong> ${formatMelbourneTime(rideDate)}</p>
           <p><strong>Passengers:</strong> ${passengerCount}</p>
           <p><strong>Vehicle:</strong> ${vehicleType}</p>
           <p><strong>Fare:</strong> $${fare.toFixed(2)} (${fareType})</p>
@@ -94,10 +107,10 @@ const bookRide = async (req, res) => {
         `Your Express Cabs ride has been booked.\n\n` +
         `From: ${pickup}\n` +
         `To: ${dropoff}\n` +
-        `Time: ${new Date(rideDate).toLocaleString()}\n` +
+        `Time: ${formatMelbourneTime(rideDate)}\n` +
         `Vehicle: ${vehicleType} (${passengerCount} passengers)\n` +
         `Fare: $${fare.toFixed(2)}\n\n` +
-        `Need help? Call 0482 038 902`;
+        `Need help? Call 0488 797 233`;
 
       await client.messages.create({ from: process.env.TWILIO_PHONE_NUMBER, to: formattedPhone, body: smsText });
     } catch (smsErr) {
@@ -156,10 +169,10 @@ const assignRideToDriver = async (req, res) => {
       `A driver has been assigned to your Express Cabs ride.\n\n` +
       `From: ${ride.pickup}\n` +
       `To: ${ride.dropoff}\n` +
-      `Time: ${new Date(ride.rideDate).toLocaleString()}\n\n` +
+      `Time: ${formatMelbourneTime(ride.rideDate)}\n\n` +
       `Driver: ${driver.name}\n` +
       `Phone: ${driver.phone}\n\n` +
-      `Need help? Call 0482 038 902`;
+      `Need help? Call 0488 797 233`;
 
     await client.messages.create({ from: process.env.TWILIO_PHONE_NUMBER, to: phone, body: smsText });
     res.json({ message: 'Ride assigned and SMS sent.', ride: updatedRide });
