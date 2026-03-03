@@ -2,6 +2,91 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    --bg-main: #f5f7fb;
+    --surface: #ffffffd9;
+    --surface-solid: #ffffff;
+    --text-main: #102030;
+    --text-muted: #4e5f70;
+    --brand: #0a6a78;
+    --brand-strong: #064b56;
+    --accent: #df8d15;
+    --border-soft: #d7e1ea;
+    --shadow-soft: 0 16px 45px -24px rgba(8, 34, 48, 0.45);
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    color: var(--text-main);
+    background:
+      radial-gradient(900px 380px at 8% -12%, rgba(223, 141, 21, 0.14), transparent 72%),
+      radial-gradient(880px 420px at 96% 0%, rgba(10, 106, 120, 0.15), transparent 70%),
+      linear-gradient(180deg, #f8fbff 0%, #edf2f8 100%);
+    font-family: "DM Sans", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: "Sora", "Avenir Next", "Segoe UI", sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  .app-shell {
+    position: relative;
+    overflow: clip;
+  }
+
+  .app-shell::before {
+    content: "";
+    position: absolute;
+    inset: -20% -25% auto auto;
+    width: 520px;
+    height: 520px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(10, 106, 120, 0.14), rgba(10, 106, 120, 0));
+    pointer-events: none;
+    filter: blur(10px);
+    z-index: 0;
+  }
+
+  .app-shell::after {
+    content: "";
+    position: absolute;
+    inset: auto auto -26% -18%;
+    width: 520px;
+    height: 520px;
+    border-radius: 999px;
+    background: radial-gradient(circle, rgba(223, 141, 21, 0.12), rgba(223, 141, 21, 0));
+    pointer-events: none;
+    filter: blur(10px);
+    z-index: 0;
+  }
+
+  .content-surface {
+    position: relative;
+    z-index: 1;
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(8px);
+  }
+}
+
 /* height of visible area minus fixed header + fixed bottom CTA */
 .app-min-h {
   min-height: calc(100vh - 170px); /* 86 + 84 */

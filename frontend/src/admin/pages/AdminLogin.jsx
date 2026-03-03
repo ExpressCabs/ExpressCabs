@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
+import { Helmet } from 'react-helmet-async';
 
 const AdminLogin = ({ onLogin }) => {
     const [email, setEmail] = useState('');
@@ -38,6 +39,11 @@ const AdminLogin = ({ onLogin }) => {
 
     return (
         <div className="max-w-md mx-auto mt-10 bg-white shadow p-6 rounded">
+            <Helmet>
+                <title>Admin Login | Prime Cabs Melbourne</title>
+                <meta name="robots" content="noindex, nofollow" />
+                <link rel="canonical" href="https://www.primecabsmelbourne.com.au/" />
+            </Helmet>
             <h2 className="text-xl font-bold mb-4">Admin Login</h2>
             <form onSubmit={handleLogin} className="space-y-4">
                 <input

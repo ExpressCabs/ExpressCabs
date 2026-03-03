@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { Helmet } from 'react-helmet-async';
 
 const DriverResetPassword = () => {
     const [searchParams] = useSearchParams();
@@ -20,10 +21,26 @@ const DriverResetPassword = () => {
         }
     };
 
-    if (!token) return <p className="text-center mt-10">Invalid or missing token.</p>;
+    if (!token) {
+        return (
+            <>
+                <Helmet>
+                    <title>Reset Link Invalid | Prime Cabs Melbourne</title>
+                    <meta name="robots" content="noindex, nofollow" />
+                    <link rel="canonical" href="https://www.primecabsmelbourne.com.au/" />
+                </Helmet>
+                <p className="text-center mt-10">Invalid or missing token.</p>
+            </>
+        );
+    }
 
     return (
         <div className="max-w-md mx-auto mt-10 p-6 border rounded shadow bg-white">
+            <Helmet>
+                <title>Reset Driver Password | Prime Cabs Melbourne</title>
+                <meta name="robots" content="noindex, nofollow" />
+                <link rel="canonical" href="https://www.primecabsmelbourne.com.au/" />
+            </Helmet>
             <h2 className="text-xl font-bold mb-4">Reset Driver Password</h2>
 
             <div className="relative mb-3">

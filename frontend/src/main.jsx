@@ -17,7 +17,7 @@ import HeaderFooter from "./components/HeaderFooter";
 import ScrollToTop from "./components/ScrollToTop";
 import DelayedGtag from "./utils/delayedGtag";
 
-// ✅ Keep these as direct imports if they’re used immediately on homepage/mode switching
+// Keep these as direct imports if they are used immediately on homepage/mode switching
 import DriverDashboard from "./components/DriverDashboard";
 import DriverLoginScreen from "./components/DriverLoginScreen";
 import UserLoginScreen from "./components/UserLoginScreen";
@@ -25,11 +25,11 @@ import UserRegisterScreen from "./components/UserRegisterScreen";
 import UserRidesScreen from "./components/UserRidesScreen";
 import RideSuccessScreen from "./components/RideSuccessScreen";
 
-// ⚠️ AddressScreen is used in Home() in your file, but it wasn’t imported in the upload.
+// AddressScreen is used in Home() in your file, but it was not imported in the upload.
 // If it lives elsewhere, update this import path to the correct file.
 import AddressScreen from "./screens/AddressScreen";
 
-// ✅ Lazy-load non-critical screens/pages (big TBT win)
+// Lazy-load non-critical screens/pages
 const AirportTaxiMelbourne = lazy(() => import("./screens/AirportTaxiMelbourne"));
 const ContactUs = lazy(() => import("./screens/ContactUs"));
 const OurServices = lazy(() => import("./screens/OurServices"));
@@ -43,7 +43,7 @@ const DriverResetPassword = lazy(() => import("./components/DriverResetPassword"
 const AirportTransferSuburb = lazy(() => import("./pages/AirportTransferSuburb"));
 const AirportTransfersMelbourne = lazy(() => import("./pages/AirportTransfersMelbourne"));
 
-// ✅ Lazy-load Admin (important — admin bundles are usually heavy)
+// Lazy-load admin pages
 const RequireAdmin = lazy(() => import("./admin/components/RequireAdmin"));
 const AdminDashboard = lazy(() => import("./admin/pages/dashboard"));
 const InviteDriver = lazy(() => import("./admin/pages/inviteDriver"));
@@ -127,10 +127,10 @@ const App = () => {
   });
 
   const Home = () => (
-    <div className="pt-2 p-1 ">
+    <div className="app-shell px-2 sm:px-3 pb-2">
       {/* {showUserPopup && (...)} */}
 
-      <div className="min-h-screen border rounded shadow">
+      <div className="content-surface min-h-screen rounded-[20px]">
         {mode === "myrides" ? (
           <UserRidesScreen
             user={loggedInUser}
@@ -184,7 +184,7 @@ const App = () => {
 
   return (
     <>
-      {/* ✅ Loads gtag after 4 seconds (your chosen option) */}
+      {/* Loads gtag after 4 seconds */}
       <DelayedGtag />
 
       <HeaderFooter
@@ -197,11 +197,11 @@ const App = () => {
         handleUserLogout={handleUserLogout}
       />
 
-      {/* ✅ REQUIRED for lazy() routes */}
+      {/* REQUIRED for lazy() routes */}
       <Suspense
         fallback={
-          <div className="w-full py-10 text-center text-sm opacity-70">
-            Loading…
+          <div className="w-full py-14 text-center text-sm text-slate-600">
+            Loading...
           </div>
         }
       >

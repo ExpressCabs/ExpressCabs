@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Helmet } from 'react-helmet-async';
 
 import TemplateOne from '../components/blogTemplates/templateOne';
 import TemplateTwo from '../components/blogTemplates/templateTwo';
@@ -33,7 +34,18 @@ export default function BlogSlug() {
     }, [slug]);
 
     if (loading) return <div className="p-8 text-center">Loading...</div>;
-    if (notFound || !blog) return <div className="p-8 text-center text-red-600">Blog not found.</div>;
+    if (notFound || !blog) {
+        return (
+            <>
+                <Helmet>
+                    <title>Blog Not Found | Prime Cabs Melbourne</title>
+                    <meta name="robots" content="noindex, nofollow" />
+                    <link rel="canonical" href="https://www.primecabsmelbourne.com.au/" />
+                </Helmet>
+                <div className="p-8 text-center text-red-600">Blog not found.</div>
+            </>
+        );
+    }
 
     // Normalize and render template
     const renderTemplate = () => {

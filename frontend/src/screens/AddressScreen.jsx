@@ -58,14 +58,14 @@ function StepPill({ label, active, done, disabled, onClick }) {
           done ? 'bg-emerald-600 text-white' : active ? 'bg-gray-900 text-white' : 'bg-white/15 text-white',
         ].join(' ')}
       >
-        {done ? '✓' : '•'}
+        {done ? 'OK' : '-'}
       </span>
       <span className="whitespace-nowrap">{label}</span>
     </button>
   );
 }
 
-const AddressScreen = ({ loggedInUser }) => {
+export default function AddressScreen({ loggedInUser }) {
   const OTP_ENABLED = import.meta.env.VITE_OTP_VERIFICATION_ENABLED === 'true';
 
   const [heroIndex, setHeroIndex] = useState(0);
@@ -122,7 +122,7 @@ const AddressScreen = ({ loggedInUser }) => {
     <div className="min-h-screen bg-white">
       <Helmet>
         {/* Primary SEO */}
-        <title>Melbourne Airport Taxi | Fixed Fare Airport Transfers – Prime Cabs Melbourne</title>
+        <title>Melbourne Airport Taxi | Fixed Fare Airport Transfers - Prime Cabs Melbourne</title>
         <meta
           name="description"
           content="Book a reliable Melbourne Airport taxi with Prime Cabs Melbourne. 24/7 airport transfers, fixed fares, no surge pricing, professional drivers. Instant online booking."
@@ -139,7 +139,7 @@ const AddressScreen = ({ loggedInUser }) => {
 
         {/* Open Graph (Facebook / WhatsApp / LinkedIn) */}
         <meta property="og:type" content="website" />
-        <meta property="og:title" content="Melbourne Airport Taxi | Fixed Fare Transfers – Prime Cabs Melbourne" />
+        <meta property="og:title" content="Melbourne Airport Taxi | Fixed Fare Transfers - Prime Cabs Melbourne" />
         <meta
           property="og:description"
           content="24/7 Melbourne Airport taxi service with fixed fares. Book online for fast, reliable airport transfers across Melbourne."
@@ -282,8 +282,8 @@ const AddressScreen = ({ loggedInUser }) => {
 
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-black/35" />
         <div className="absolute inset-0">
-          <div className="absolute -top-36 -right-40 w-[520px] h-[520px] bg-indigo-500/25 rounded-full blur-3xl" />
-          <div className="absolute -bottom-48 -left-40 w-[520px] h-[520px] bg-purple-500/20 rounded-full blur-3xl" />
+          <div className="absolute -top-36 -right-40 w-[520px] h-[520px] bg-[var(--brand)]/25 rounded-full blur-3xl" />
+          <div className="absolute -bottom-48 -left-40 w-[520px] h-[520px] bg-[var(--accent)]/20 rounded-full blur-3xl" />
         </div>
 
         <div className="relative z-10 min-h-[100vh] flex items-center justify-center px-4 py-12">
@@ -364,7 +364,7 @@ const AddressScreen = ({ loggedInUser }) => {
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }} variants={fadeUp} className="text-center">
             <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900">Our Fleet</h2>
             <p className="mt-3 text-gray-600 max-w-2xl mx-auto">
-              Choose the right vehicle for your trip — from standard sedans to group vans.
+              Choose the right vehicle for your trip - from standard sedans to group vans.
             </p>
           </motion.div>
 
@@ -425,6 +425,5 @@ const AddressScreen = ({ loggedInUser }) => {
       <ContactUs />
     </div>
   );
-};
+}
 
-export default AddressScreen;

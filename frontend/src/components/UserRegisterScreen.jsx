@@ -72,6 +72,8 @@ const UserRegisterScreen = ({ onBackToLogin }) => {
           name="description"
           content="Create an Express Cabs account to book faster and track your rides."
         />
+        <meta name="robots" content="noindex, nofollow" />
+        <link rel="canonical" href="https://www.primecabsmelbourne.com.au/" />
       </Helmet>
 
       {/* HERO */}

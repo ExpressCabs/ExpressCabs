@@ -1,6 +1,7 @@
 // components/DriverLoginScreen.jsx
 import React, { useState } from 'react';
 import axios from 'axios';
+import { Helmet } from 'react-helmet-async';
 
 const DriverLoginScreen = ({ onLogin }) => {
     const [email, setEmail] = useState('');
@@ -31,6 +32,11 @@ const DriverLoginScreen = ({ onLogin }) => {
 
     return (
         <div className="max-w-sm mx-auto mt-8 p-4 border rounded shadow bg-white">
+            <Helmet>
+                <title>Driver Login | Prime Cabs Melbourne</title>
+                <meta name="robots" content="noindex, nofollow" />
+                <link rel="canonical" href="https://www.primecabsmelbourne.com.au/" />
+            </Helmet>
             <h2 className="text-xl font-bold mb-4">Driver Login</h2>
             <form onSubmit={handleLogin} className="space-y-4">
                 <div>

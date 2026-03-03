@@ -2,4 +2,3 @@ User-agent: *
 Allow: /
 
 Sitemap: https://www.primecabsmelbourne.com.au/sitemap.xml
-Sitemap: https://expresscabs.onrender.com/api/sitemap.xml

@@ -1,7 +1,6 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-const axios = require('axios');
+const prisma = require('../lib/prisma');
 const https = require('https');
+const { isNonEmptyString } = require('../lib/validators');
 
 const createBlog = async (req, res) => {
     try {
@@ -19,6 +18,10 @@ const createBlog = async (req, res) => {
             body2,
             conclusion
         } = req.body;
+
+        if (!isNonEmptyString(title) || !isNonEmptyString(template) || !isNonEmptyString(body1) || !isNonEmptyString(body2) || !isNonEmptyString(conclusion) || !isNonEmptyString(image1)) {
+            return res.status(400).json({ success: false, error: 'Missing required blog fields' });
+        }
 
         const slug = title
             .toLowerCase()
@@ -45,9 +48,9 @@ const createBlog = async (req, res) => {
 
         const pingURL = `https://www.google.com/ping?sitemap=${encodeURIComponent('https://www.primecabsmelbourne.com.au/sitemap.xml')}`;
         https.get(pingURL, (pingRes) => {
-            console.log(`✅ Google pinged: ${pingRes.statusCode}`);
+            console.log(`Google pinged: ${pingRes.statusCode}`);
         }).on('error', (err) => {
-            console.error('❌ Failed to ping Google:', err.message);
+            console.error('Failed to ping Google:', err.message);
         });
 
         res.json({ success: true, blog });

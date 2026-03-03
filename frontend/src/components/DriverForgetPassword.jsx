@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { Helmet } from 'react-helmet-async';
 
 const DriverForgotPassword = () => {
     const [email, setEmail] = useState('');
@@ -16,6 +17,11 @@ const DriverForgotPassword = () => {
 
     return (
         <div className="p-4 max-w-md mx-auto">
+            <Helmet>
+                <title>Driver Password Reset | Prime Cabs Melbourne</title>
+                <meta name="robots" content="noindex, nofollow" />
+                <link rel="canonical" href="https://www.primecabsmelbourne.com.au/" />
+            </Helmet>
             <h2 className="text-xl font-bold mb-2">Driver Password Reset</h2>
             <input
                 type="email"

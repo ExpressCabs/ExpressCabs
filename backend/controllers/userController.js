@@ -1,118 +1,168 @@
 // controllers/userController.js
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
+const prisma = require('../lib/prisma');
 const twilio = require('twilio');
 const bcrypt = require('bcrypt');
-const crypto = require('crypto');
+const { normalizeAuPhone, isNonEmptyString } = require('../lib/validators');
 
-exports.registerUser = async (req, res) => {
-    const { name, phone, email, password } = req.body;
+const twilioClient = twilio(
+  process.env.TWILIO_ACCOUNT_SID || process.env.TWILIO_SID,
+  process.env.TWILIO_AUTH_TOKEN
+);
 
-    if (!phone || !password || !name) {
-        return res.status(400).json({ message: 'Name, phone, and password are required' });
-    }
-
-    const existingUser = await prisma.user.findUnique({ where: { phone } });
-
-    if (existingUser) {
-        return res.status(409).json({ message: 'User already exists' });
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const user = await prisma.user.create({
-        data: {
-            name,
-            phone,
-            email,
-            password: hashedPassword,
-        },
-    });
-
-    res.status(201).json({ user });
+const publicUserFields = {
+  id: true,
+  name: true,
+  phone: true,
+  email: true,
+  createdAt: true,
 };
 
+exports.registerUser = async (req, res) => {
+  const { name, phone, email, password } = req.body;
+  const normalizedPhone = normalizeAuPhone(phone);
 
-const twilioClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
+  if (!isNonEmptyString(name) || !isNonEmptyString(normalizedPhone) || !isNonEmptyString(password)) {
+    return res.status(400).json({ message: 'Name, phone, and password are required' });
+  }
+
+  if (String(password).length < 8) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters' });
+  }
+
+  try {
+    const existingUser = await prisma.user.findUnique({ where: { phone: normalizedPhone } });
+    if (existingUser) {
+      return res.status(409).json({ message: 'User already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    const user = await prisma.user.create({
+      data: {
+        name: name.trim(),
+        phone: normalizedPhone,
+        email: isNonEmptyString(email) ? String(email).trim().toLowerCase() : null,
+        password: hashedPassword,
+      },
+      select: publicUserFields,
+    });
+
+    return res.status(201).json({ user });
+  } catch (err) {
+    console.error('User registration error:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
+};
 
 // Step 1: Send OTP
 exports.userForgotPassword = async (req, res) => {
-    const { phone } = req.body;
-    if (!phone) return res.status(400).json({ message: 'Phone is required' });
+  const normalizedPhone = normalizeAuPhone(req.body.phone);
+  if (!isNonEmptyString(normalizedPhone)) {
+    return res.status(400).json({ message: 'Phone is required' });
+  }
 
-    try {
-        const user = await prisma.user.findUnique({ where: { phone } });
-        if (!user) return res.status(404).json({ message: 'User not found' });
+  try {
+    const user = await prisma.user.findUnique({ where: { phone: normalizedPhone } });
 
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
+    if (user) {
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      const expiry = new Date(Date.now() + 10 * 60 * 1000);
 
-        await prisma.user.update({
-            where: { phone },
-            data: { otpCode: otp, otpExpiresAt: expiry },
-        });
+      await prisma.user.update({
+        where: { phone: normalizedPhone },
+        data: { otpCode: otp, otpExpiresAt: expiry },
+      });
 
-        await twilioClient.messages.create({
-            to: phone,
-            from: process.env.TWILIO_PHONE_NUMBER,
-            body: `Your Prime Cabs OTP is: ${otp}`,
-        });
-
-        res.json({ message: 'OTP sent via SMS' });
-    } catch (err) {
-        console.error('Forgot password SMS error:', err);
-        res.status(500).json({ message: 'Server error' });
+      await twilioClient.messages.create({
+        to: normalizedPhone,
+        from: process.env.TWILIO_PHONE_NUMBER,
+        body: `Your Prime Cabs OTP is: ${otp}`,
+      });
     }
+
+    return res.json({ message: 'If the account exists, OTP has been sent via SMS' });
+  } catch (err) {
+    console.error('Forgot password SMS error:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
 };
 
 // Step 2: Verify OTP + Reset Password
 exports.userVerifyOtp = async (req, res) => {
-    const { phone, otp, newPassword } = req.body;
-    if (!phone || !otp || !newPassword)
-        return res.status(400).json({ message: 'Missing fields' });
+  const { otp, newPassword } = req.body;
+  const normalizedPhone = normalizeAuPhone(req.body.phone);
 
+  if (!isNonEmptyString(normalizedPhone) || !isNonEmptyString(otp) || !isNonEmptyString(newPassword)) {
+    return res.status(400).json({ message: 'Missing fields' });
+  }
+
+  if (String(newPassword).length < 8) {
+    return res.status(400).json({ message: 'Password must be at least 8 characters' });
+  }
+
+  try {
     const user = await prisma.user.findFirst({
-        where: {
-            phone,
-            otpCode: otp,
-            otpExpiresAt: { gte: new Date() },
-        },
+      where: {
+        phone: normalizedPhone,
+        otpCode: String(otp).trim(),
+        otpExpiresAt: { gte: new Date() },
+      },
     });
 
     if (!user) return res.status(400).json({ message: 'Invalid or expired OTP' });
 
-    const hashed = await bcrypt.hash(newPassword, 10);
+    const hashed = await bcrypt.hash(newPassword, 12);
 
     await prisma.user.update({
-        where: { id: user.id },
-        data: {
-            password: hashed,
-            otpCode: null,
-            otpExpiresAt: null,
-        },
+      where: { id: user.id },
+      data: {
+        password: hashed,
+        otpCode: null,
+        otpExpiresAt: null,
+      },
     });
 
-    res.json({ message: 'Password reset successful' });
+    return res.json({ message: 'Password reset successful' });
+  } catch (err) {
+    console.error('Verify OTP error:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
 };
 
 exports.loginUser = async (req, res) => {
-    const { phone, password } = req.body;
+  const normalizedPhone = normalizeAuPhone(req.body.phone);
+  const { password } = req.body;
 
-    if (!phone || !password) {
-        return res.status(400).json({ message: 'Phone and password are required' });
-    }
+  if (!isNonEmptyString(normalizedPhone) || !isNonEmptyString(password)) {
+    return res.status(400).json({ message: 'Phone and password are required' });
+  }
 
-    const user = await prisma.user.findUnique({ where: { phone } });
+  try {
+    const user = await prisma.user.findUnique({
+      where: { phone: normalizedPhone },
+      select: {
+        id: true,
+        name: true,
+        phone: true,
+        email: true,
+        createdAt: true,
+        password: true,
+      },
+    });
 
     if (!user) {
-        return res.status(404).json({ message: 'User not found' });
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-
     if (!isMatch) {
-        return res.status(401).json({ message: 'Incorrect password' });
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    res.json({ user });
+    const { password: _, ...safeUser } = user;
+    return res.json({ user: safeUser });
+  } catch (err) {
+    console.error('User login error:', err);
+    return res.status(500).json({ message: 'Server error' });
+  }
 };

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { Helmet } from 'react-helmet-async';
 
 const UserForgotPassword = () => {
     const [step, setStep] = useState(1);
@@ -33,6 +34,11 @@ const UserForgotPassword = () => {
 
     return (
         <div className="p-4 max-w-md mx-auto">
+            <Helmet>
+                <title>User Password Reset | Prime Cabs Melbourne</title>
+                <meta name="robots" content="noindex, nofollow" />
+                <link rel="canonical" href="https://www.primecabsmelbourne.com.au/" />
+            </Helmet>
             <h2 className="text-xl font-bold mb-2">User Password Reset</h2>
 
             {step === 1 && (

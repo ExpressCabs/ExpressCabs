@@ -65,6 +65,8 @@ const UserLoginScreen = ({ onLogin, onRegisterClick }) => {
           name="description"
           content="Login to your Express Cabs account to manage bookings and view ride history."
         />
+        <meta name="robots" content="noindex, nofollow" />
+        <link rel="canonical" href="https://www.primecabsmelbourne.com.au/" />
       </Helmet>
 
       {/* HERO */}

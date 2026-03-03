@@ -191,6 +191,11 @@ export default function AirportTransferSuburb() {
   if (!suburb) {
     return (
       <>
+        <Helmet>
+          <title>Suburb Not Found | Prime Cabs Melbourne</title>
+          <meta name="robots" content="noindex, nofollow" />
+          <link rel="canonical" href={`${CANONICAL_BASE}/airport-transfer/melbourne`} />
+        </Helmet>
         <div className="max-w-5xl mx-auto px-6 py-16">
           <h1 className="text-3xl font-bold">Suburb not found</h1>
           <p className="mt-2 text-gray-600">
@@ -216,10 +221,8 @@ export default function AirportTransferSuburb() {
   const durationText =
     metrics?.durationText ?? (suburb.etaMin ? `${suburb.etaMin} mins` : "—");
 
-  // Canonical URL: prefer seo.canonicalPath if present
-  const canonicalPath =
-    suburb?.seo?.canonicalPath ||
-    `/airport-transfer/${suburb.slug}-${suburb.postcode}`;
+  // Canonical URL must match the live route format to avoid duplicate/canonical mismatches.
+  const canonicalPath = `/airport-transfer/melbourne/${suburb.slug}`;
 
   const canonicalUrl = `${CANONICAL_BASE}${canonicalPath}`;
 
