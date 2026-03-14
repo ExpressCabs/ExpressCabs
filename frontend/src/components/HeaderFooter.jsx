@@ -205,6 +205,7 @@ export default function HeaderFooter({ mode, setMode, loggedInDriver, loggedInUs
                         href={WHATSAPP_LINK}
                         target="_blank"
                         rel="noopener noreferrer"
+                        data-track-location="header_whatsapp"
                         className="inline-flex items-center justify-center gap-2 h-11 rounded-full bg-[var(--surface-solid)] border border-[var(--border-soft)] text-slate-900 font-semibold hover:bg-slate-100 transition"
                       >
                         <FaWhatsapp /> WhatsApp
@@ -264,6 +265,7 @@ export function SiteFooter({ setMode }) {
                     href={WHATSAPP_LINK}
                     target="_blank"
                     rel="noopener noreferrer"
+                    data-track-location="site_footer_whatsapp"
                     className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-gray-900 text-white font-semibold hover:bg-black transition"
                     aria-label="Add Prime Cabs on WhatsApp"
                   >
@@ -384,6 +386,7 @@ export function SiteFooter({ setMode }) {
                   href={WHATSAPP_LINK}
                   target="_blank"
                   rel="noopener noreferrer"
+                  data-track-location="sticky_footer_whatsapp"
                   className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-[var(--surface-solid)] border border-[var(--border-soft)] text-slate-900 font-semibold hover:bg-slate-100 transition"
                   aria-label="Add Prime Cabs on WhatsApp"
                 >
