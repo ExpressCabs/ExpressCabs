@@ -34,7 +34,7 @@ const AirportTaxiMelbourne = ({ loggedInUser }) => {
                             "@type": "LocalBusiness",
                             "name": "Prime Cabs Melbourne",
                             "url": "https://www.primecabsmelbourne.com.au",
-                            "image": "https://www.primecabsmelbourne.com.au/logo.png",
+                            "image": "https://www.primecabsmelbourne.com.au/favicon_io/android-chrome-512x512.png",
                             "telephone": "+61482038902",
                             "address": {
                                 "@type": "PostalAddress",

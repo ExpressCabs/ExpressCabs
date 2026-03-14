@@ -195,7 +195,7 @@ export default function AddressScreen({ loggedInUser }) {
                             "@type": "LocalBusiness",
                             "name": "Prime Cabs Melbourne",
                             "url": "https://www.primecabsmelbourne.com.au",
-                            "image": "https://www.primecabsmelbourne.com.au/logo.png",
+                            "image": "https://www.primecabsmelbourne.com.au/favicon_io/android-chrome-512x512.png",
                             "telephone": "+61488797233",
                             "address": {
                                 "@type": "PostalAddress",
@@ -272,7 +272,7 @@ export default function AddressScreen({ loggedInUser }) {
                         "@type": "TaxiService",
                         "name": "Prime Cabs Melbourne",
                         "url": "https://www.primecabsmelbourne.com.au/",
-                        "logo": "https://www.primecabsmelbourne.com.au/assets/images/logo.png"
+                        "logo": "https://www.primecabsmelbourne.com.au/favicon_io/android-chrome-512x512.png"
                     })}
                 </script>
 
