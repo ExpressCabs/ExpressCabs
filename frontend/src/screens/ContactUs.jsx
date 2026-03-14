@@ -393,7 +393,7 @@ export default function ContactUs({ showMap = true }) {
                     <a
                       key={area.slug}
                       href={`/airport-transfer/melbourne/${area.slug}`}
-                      className="group rounded-3xl border border-gray-200 bg-gradient-to-br from-white via-gray-50 to-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-lg"
+                      className="group rounded-3xl border border-gray-200 bg-gradient-to-br from-white via-gray-50 to-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:border-gray-300 hover:shadow-lg"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
@@ -404,11 +404,8 @@ export default function ContactUs({ showMap = true }) {
                           Route
                         </span>
                       </div>
-                      <p className="mt-3 text-sm text-gray-600">
-                        View airport transfer details, travel coverage, and booking options from {area.name}.
-                      </p>
-                      <div className="mt-4 flex items-center justify-between text-sm font-semibold text-gray-900">
-                        <span>Explore suburb</span>
+                      <div className="mt-3 flex items-center justify-between text-sm font-semibold text-gray-900">
+                        <span>Explore transfer options</span>
                         <span className="transition group-hover:translate-x-1">+</span>
                       </div>
                     </a>

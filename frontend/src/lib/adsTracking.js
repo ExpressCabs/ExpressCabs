@@ -2,6 +2,7 @@ const DEFAULT_GOOGLE_ADS_ID = 'AW-17249057389';
 const DEFAULT_BOOKING_CONVERSION_LABEL = 'OwxRCP63nOAaEO30_qBA';
 
 let telClickTrackingInstalled = false;
+let googleAdsTagPromise = null;
 
 export function getGoogleAdsId() {
   return import.meta.env.VITE_GOOGLE_ADS_ID || DEFAULT_GOOGLE_ADS_ID;
@@ -13,6 +14,56 @@ export function getBookingConversionLabel() {
 
 export function getPhoneClickConversionLabel() {
   return import.meta.env.VITE_GOOGLE_ADS_PHONE_CLICK_LABEL || '';
+}
+
+export function loadGoogleAdsTag() {
+  if (typeof document === 'undefined') {
+    return Promise.resolve(false);
+  }
+
+  if (typeof window !== 'undefined' && typeof window.gtag !== 'function') {
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function gtag() {
+      window.dataLayer.push(arguments);
+    };
+    window.gtag('js', new Date());
+    window.gtag('config', getGoogleAdsId());
+  }
+
+  if (googleAdsTagPromise) {
+    return googleAdsTagPromise;
+  }
+
+  googleAdsTagPromise = new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[data-google-ads-tag="true"]');
+    if (existing) {
+      if (existing.dataset.loaded === 'true') {
+        resolve(true);
+        return;
+      }
+
+      existing.addEventListener('load', () => resolve(true), { once: true });
+      existing.addEventListener('error', reject, { once: true });
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.async = true;
+    script.dataset.googleAdsTag = 'true';
+    script.src = `https://www.googletagmanager.com/gtag/js?id=${getGoogleAdsId()}`;
+    script.addEventListener(
+      'load',
+      () => {
+        script.dataset.loaded = 'true';
+        resolve(true);
+      },
+      { once: true }
+    );
+    script.addEventListener('error', reject, { once: true });
+    document.head.appendChild(script);
+  });
+
+  return googleAdsTagPromise;
 }
 
 function getSafeTrimmedValue(value) {

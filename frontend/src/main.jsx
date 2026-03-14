@@ -15,7 +15,7 @@ import { HelmetProvider } from "react-helmet-async";
 
 import HeaderFooter, { SiteFooter } from "./components/HeaderFooter";
 import ScrollToTop from "./components/ScrollToTop";
-import { installTelClickTracking } from "./lib/adsTracking";
+import { installTelClickTracking, loadGoogleAdsTag } from "./lib/adsTracking";
 
 // Keep these as direct imports if they are used immediately on homepage/mode switching
 import DriverDashboard from "./components/DriverDashboard";
@@ -60,6 +60,36 @@ const App = () => {
 
   useEffect(() => {
     installTelClickTracking();
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const bootGoogleAds = () => {
+      if (cancelled) return;
+      loadGoogleAdsTag().catch((error) => {
+        console.error("Google Ads tag failed to load:", error);
+      });
+    };
+
+    const scheduleBoot = () => {
+      if ("requestIdleCallback" in window) {
+        window.requestIdleCallback(bootGoogleAds, { timeout: 2500 });
+        return;
+      }
+      window.setTimeout(bootGoogleAds, 1500);
+    };
+
+    if (document.readyState === "complete") {
+      scheduleBoot();
+    } else {
+      window.addEventListener("load", scheduleBoot, { once: true });
+    }
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener("load", scheduleBoot);
+    };
   }, []);
 
   // Keep your existing "nextMode" redirect logic + VH fix
