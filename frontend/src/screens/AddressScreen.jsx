@@ -1,11 +1,12 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef, lazy, Suspense } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 
-import ContactUs from './ContactUs';
-import OurServices from './OurServices';
-import BlogPreviewCarousel from '../components/BlogPreviewCarousel';
 import BookingForm from '../components/BookingForm';
+
+const ContactUs = lazy(() => import('./ContactUs'));
+const OurServices = lazy(() => import('./OurServices'));
+const BlogPreviewCarousel = lazy(() => import('../components/BlogPreviewCarousel'));
 
 const heroImages = [
   '/assets/images/prime_cabs_landscape.avif',
@@ -62,6 +63,44 @@ function StepPill({ label, active, done, disabled, onClick }) {
       </span>
       <span className="whitespace-nowrap">{label}</span>
     </button>
+  );
+}
+
+function DeferredSection({ children, minHeight = 'min-h-[240px]' }) {
+  const [shouldRender, setShouldRender] = useState(false);
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node || shouldRender) return undefined;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          setShouldRender(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '300px 0px' }
+    );
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [shouldRender]);
+
+  return (
+    <div ref={containerRef} className={shouldRender ? '' : minHeight}>
+      {shouldRender ? (
+        <Suspense
+          fallback={
+            <div className={`w-full ${minHeight} rounded-3xl border border-gray-200 bg-white/70 animate-pulse`} />
+          }
+        >
+          {children}
+        </Suspense>
+      ) : null}
+    </div>
   );
 }
 
@@ -415,14 +454,20 @@ export default function AddressScreen({ loggedInUser }) {
       </section>
 
       <div className="mt-8">
-        <BlogPreviewCarousel />
+        <DeferredSection minHeight="min-h-[420px]">
+          <BlogPreviewCarousel />
+        </DeferredSection>
       </div>
 
       <div className="mt-8">
-        <OurServices />
+        <DeferredSection minHeight="min-h-[720px]">
+          <OurServices />
+        </DeferredSection>
       </div>
 
-      <ContactUs />
+      <DeferredSection minHeight="min-h-[960px]">
+        <ContactUs />
+      </DeferredSection>
     </div>
   );
 }

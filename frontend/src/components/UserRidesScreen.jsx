@@ -165,6 +165,7 @@ const UserRidesScreen = ({ user, onLogout, setMode }) => {
                   {ride.driver?.phone ? (
                     <a
                       href={`tel:${ride.driver.phone}`}
+                      data-track-location="driver_phone_link"
                       className="inline-flex items-center justify-center px-4 py-2 rounded-full bg-gray-900 text-white text-sm font-semibold hover:bg-black transition"
                     >
                       Call driver

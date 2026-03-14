@@ -123,6 +123,7 @@ export default function ContactUs() {
               </a>
               <a
                 href="tel:+61488797233"
+                data-track-location="contact_top_call"
                 className="inline-flex items-center justify-center px-6 py-3 rounded-full bg-white/10 border border-white/20 text-white font-semibold hover:bg-white/15 transition"
               >
                 Call now
@@ -160,6 +161,7 @@ export default function ContactUs() {
 
                 <a
                   href="tel:+61488797233"
+                  data-track-location="contact_phone_card"
                   className="flex items-start gap-3 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition"
                 >
                   <FaPhoneAlt className="text-gray-900 mt-1" />
@@ -196,6 +198,7 @@ export default function ContactUs() {
                 <p className="mt-2 text-sm text-gray-700">Fast response • Fixed fare quotes • Melbourne-wide</p>
                 <a
                   href="tel:+61488797233"
+                  data-track-location="contact_bottom_call"
                   className="mt-5 inline-flex w-full items-center justify-center px-6 py-3 rounded-full bg-gray-900 text-white font-semibold hover:bg-black transition"
                 >
                   Call +61 488 797 233

@@ -9,29 +9,19 @@ const RideSuccessScreen = () => {
   const isGuest = location.state?.isGuest ?? false;
 
   useEffect(() => {
-     // ✅ Fire booking conversion event as soon as success screen loads
-      window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push({
-        event: "booking_complete",
-        // Optional but recommended if you can pass these via navigation state:
-        booking_id: location.state?.bookingId,
-        value: location.state?.totalFare,
-        currency: "AUD",
-        is_guest: isGuest,
-      });
     const timeout = setTimeout(() => {
       navigate('/', {
         state: { nextMode: isGuest ? 'passenger' : 'myrides' },
       });
-    }, 3000); // wait 3 seconds before redirect
+    }, 3000);
 
     return () => clearTimeout(timeout);
-  }, [isGuest, navigate, location.state]);
+  }, [isGuest, navigate]);
 
   return (
     <div className="min-h-screen bg-white">
       <Helmet>
-        <title>Thank You – Ride Booked | Express Cabs</title>
+        <title>Thank You â€“ Ride Booked | Express Cabs</title>
         <meta
           name="description"
           content="Your ride has been successfully booked with Express Cabs. We'll be in touch shortly with driver details."
@@ -39,9 +29,7 @@ const RideSuccessScreen = () => {
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
-      {/* Premium success hero */}
       <section className="relative overflow-hidden">
-        {/* Background */}
         <div className="absolute inset-0">
           <div className="h-[520px] w-full bg-gray-900" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-white" />
@@ -58,7 +46,7 @@ const RideSuccessScreen = () => {
           >
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur">
               <span className="text-xs font-semibold tracking-wide text-white/90">BOOKING CONFIRMED</span>
-              <span className="text-white/40">•</span>
+              <span className="text-white/40">â€¢</span>
               <span className="text-xs text-white/80">Express Cabs</span>
             </div>
 
@@ -77,7 +65,7 @@ const RideSuccessScreen = () => {
               transition={{ delay: 0.16, duration: 0.55, ease: 'easeOut' }}
               className="mt-4 text-white/85 text-lg max-w-2xl"
             >
-              Thanks — we’ll confirm your booking shortly and share driver details when assigned.
+              Thanks â€” weâ€™ll confirm your booking shortly and share driver details when assigned.
             </motion.p>
 
             <motion.div
@@ -100,7 +88,6 @@ const RideSuccessScreen = () => {
         </div>
       </section>
 
-      {/* Glass success card */}
       <section className="max-w-7xl mx-auto px-6 -mt-10 md:-mt-12 pb-16">
         <motion.div
           initial={{ opacity: 0, y: 18, scale: 0.985 }}
@@ -111,14 +98,13 @@ const RideSuccessScreen = () => {
           <div className="relative">
             <div className="absolute -inset-1 rounded-[28px] bg-gradient-to-r from-gray-200/70 via-white/60 to-gray-200/70 blur-xl" />
             <div className="relative rounded-[28px] border border-gray-200 bg-white/90 backdrop-blur shadow-[0_30px_80px_-20px_rgba(0,0,0,0.18)] p-7 md:p-10 text-center">
-              {/* Animated check */}
               <motion.div
                 initial={{ scale: 0.85, rotate: -10, opacity: 0 }}
                 animate={{ scale: 1, rotate: 0, opacity: 1 }}
                 transition={{ duration: 0.6, ease: 'easeOut' }}
                 className="mx-auto w-16 h-16 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-2xl"
               >
-                ✅
+                âœ…
               </motion.div>
 
               <motion.h2
@@ -137,11 +123,10 @@ const RideSuccessScreen = () => {
                 className="mt-2 text-sm md:text-base text-gray-600"
               >
                 {isGuest
-                  ? "Redirecting you back to booking..."
-                  : "Redirecting you to My Rides..."}
+                  ? 'Redirecting you back to booking...'
+                  : 'Redirecting you to My Rides...'}
               </motion.p>
 
-              {/* Progress bar */}
               <div className="mt-6 rounded-full bg-gray-100 border border-gray-200 overflow-hidden h-3">
                 <motion.div
                   initial={{ width: 0 }}

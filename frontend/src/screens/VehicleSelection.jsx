@@ -15,10 +15,14 @@ const VEHICLES = [
 // --- Fees you control ---
 const BOOKING_FEE = 2.70; // ✅ you confirmed you charge this
 const DEFAULT_TOLL_CHARGE = 10.0; // ✅ add when route uses tolls (approx)
+const GLOBAL_TRIP_MULTIPLIER = 1.1;
+const SHORT_TRIP_DISTANCE_THRESHOLD_KM = 35;
+const SHORT_TRIP_SURCHARGE = 10.0;
+const SHORT_TRIP_MULTIPLIER = 1.025;
 
 // --- Pass-through fees (set as needed) ---
 const MEL_AIRPORT_PICKUP_FEE = 5.15;// Melbourne Airport access fee (pass-through)
-const TIME_RATE_MULTIPLIER = 1.12;
+const TIME_RATE_MULTIPLIER = 1.2;
 // --- Vic taxi-style quote model (time + distance) ---
 // NOTE: This is an approximation model (not a live meter). It is designed to be consistent and realistic for quoting.
 const TARIFFS = {
@@ -256,6 +260,13 @@ const VehicleSelection = ({
       const base = computeSwitchFare({ distanceKm, durationMin, tariff });
 
       let total = base + GOVERNMENT_LEVY + BOOKING_FEE;
+
+      if (distanceKm < SHORT_TRIP_DISTANCE_THRESHOLD_KM) {
+        total += SHORT_TRIP_SURCHARGE;
+        total *= SHORT_TRIP_MULTIPLIER;
+      } else {
+        total *= GLOBAL_TRIP_MULTIPLIER;
+      }
 
       // High occupancy add-on
       if (passengerCount > 4 && v.seats > 4) total += HIGH_OCCUPANCY_FEE;

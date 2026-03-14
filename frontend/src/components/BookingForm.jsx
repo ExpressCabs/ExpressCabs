@@ -6,16 +6,17 @@ import VehicleSelection from '../screens/VehicleSelection';
 import PassengerDetails from '../screens/PassengerDetails';
 import OTPVerification from '../screens/OTPVerification';
 
+import { fireBookingConversion } from '../lib/adsTracking';
 import { useGoogleMapsReady } from '../utils/useGoogleMapsReady';
 
 const BookingForm = ({
   loggedInUser,
   embedded = false,
 
-  // ✅ NEW: parent can listen for step/progress updates
+  // âœ… NEW: parent can listen for step/progress updates
   onProgressChange,
 
-  // ✅ NEW: parent can request step changes (for clickable pills)
+  // âœ… NEW: parent can request step changes (for clickable pills)
   requestedStep,
 }) => {
   const OTP_ENABLED = import.meta.env.VITE_OTP_VERIFICATION_ENABLED === 'true';
@@ -48,7 +49,7 @@ const BookingForm = ({
   const [fareType, setFareType] = useState('');
   const [passengerDetails, setPassengerDetails] = useState(null);
 
-  // ✅ NEW: map placeholder control
+  // âœ… NEW: map placeholder control
   const [mapInitialized, setMapInitialized] = useState(false);
 
   // Lazy-load maps only after user interacts
@@ -79,7 +80,7 @@ const BookingForm = ({
     setMap(gMap);
     directionsRenderer.current = new window.google.maps.DirectionsRenderer({ map: gMap });
 
-    // ✅ mark initialized so placeholder disappears
+    // âœ… mark initialized so placeholder disappears
     setMapInitialized(true);
 
     const pickupAutocomplete = new window.google.maps.places.Autocomplete(pickupInputRef.current, {
@@ -117,15 +118,15 @@ const BookingForm = ({
 
   // Init when maps become ready; retry a few frames
   // Auto-load maps shortly after page is visible (trust boost), without blocking initial paint
-    useEffect(() => {
+  useEffect(() => {
     if (mapsEnabled) return;
 
     const t = setTimeout(() => {
-        setMapsEnabled(true);
-    }, 1200); // 1.2s (you can change to 1000–2000)
+      setMapsEnabled(true);
+    }, 1200); // 1.2s (you can change to 1000â€“2000)
 
     return () => clearTimeout(t);
-    }, [mapsEnabled]);
+  }, [mapsEnabled]);
 
   useEffect(() => {
     if (step !== 1 || !mapsReady) return;
@@ -207,14 +208,34 @@ const BookingForm = ({
 
       const result = await res.json();
       if (res.ok) {
+        const transactionId = String(
+          result?.id || result?.ride?.id || result?.booking?.id || Date.now()
+        );
+        const conversionValue = Number.isFinite(Number(fare)) ? Number(fare) : 1;
+
+        window.gtag?.('event', 'booking_submit', {
+          currency: 'AUD',
+          value: conversionValue,
+          booking_type: bookingType,
+          passenger_count: Number(passengerCount) || undefined,
+          vehicle_type: selectedVehicle?.id || undefined,
+        });
+
+        fireBookingConversion({
+          value: conversionValue,
+          transactionId,
+          name: passengerDetails?.name,
+          email: passengerDetails?.email,
+          phone: passengerDetails?.phone,
+        });
+
         navigate('/ride-success', {
           state: {
             isGuest: !loggedInUser,
-            bookingId: result?.id,          // ✅ comes from backend (ride id)
-            totalFare: result?.fare ?? fare // ✅ backend fare, fallback to frontend fare
-          }
+            bookingId: result?.id,
+            totalFare: result?.fare ?? fare,
+          },
         });
-
       } else {
         alert(`Booking failed: ${result.error}`);
       }
@@ -226,7 +247,7 @@ const BookingForm = ({
 
   const phone = passengerDetails?.phone ?? '';
 
-  // ✅ NEW: compute how far user is allowed to jump
+  // âœ… NEW: compute how far user is allowed to jump
   const maxStepAllowed = useMemo(() => {
     // step 1 always allowed
     let max = 1;
@@ -245,14 +266,14 @@ const BookingForm = ({
     return max;
   }, [pickupLoc, dropoffLoc, selectedVehicle, passengerDetails, OTP_ENABLED]);
 
-  // ✅ NEW: notify parent about current step/progress so pills update
+  // âœ… NEW: notify parent about current step/progress so pills update
   useEffect(() => {
     if (typeof onProgressChange === 'function') {
       onProgressChange({ step, maxStepAllowed, otpEnabled: OTP_ENABLED });
     }
   }, [step, maxStepAllowed, OTP_ENABLED, onProgressChange]);
 
-  // ✅ NEW: allow parent to request a step (clickable pills)
+  // âœ… NEW: allow parent to request a step (clickable pills)
   useEffect(() => {
     if (!requestedStep) return;
 
@@ -269,7 +290,7 @@ const BookingForm = ({
         <div className="text-center">
           <div className="mx-auto h-10 w-10 rounded-full bg-gray-200 animate-pulse mb-3" />
           <p className="text-sm font-semibold text-gray-700">
-            {!mapsEnabled ? 'Loading live map…' : !mapsReady ? 'Loading live map…' : 'Preparing map…'}
+            {!mapsEnabled ? 'Loading live mapâ€¦' : !mapsReady ? 'Loading live mapâ€¦' : 'Preparing mapâ€¦'}
           </p>
           <p className="text-xs text-gray-500 mt-1">
             Start typing your address to activate suggestions.
@@ -279,7 +300,7 @@ const BookingForm = ({
     </div>
   );
 
-  // ✅ EMBEDDED UI (matches your AddressScreen card styling)
+  // âœ… EMBEDDED UI (matches your AddressScreen card styling)
   const content = (
     <>
       {step === 1 && (
@@ -292,7 +313,7 @@ const BookingForm = ({
               </p>
             </div>
             <div className="hidden md:flex flex-col items-end">
-              <span className="text-[11px] font-semibold text-gray-600">Fast • Secure • 24/7</span>
+              <span className="text-[11px] font-semibold text-gray-600">Fast â€¢ Secure â€¢ 24/7</span>
               <span className="text-[11px] text-gray-500 mt-1">Prime Cabs Melbourne</span>
             </div>
           </div>
@@ -399,7 +420,6 @@ const BookingForm = ({
               Next
             </button>
 
-            {/* ✅ Placeholder until map is ready + initialized */}
             {!mapsReady || !mapInitialized ? <MapPlaceholder /> : null}
 
             <div

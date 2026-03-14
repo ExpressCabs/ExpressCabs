@@ -190,15 +190,8 @@ export default function HeaderFooter({ mode, setMode, loggedInDriver, loggedInUs
                     <div className="mt-3 grid gap-2">
                       <a
                         href="tel:+61488797233"
+                        data-track-location="header_call"
                         className="inline-flex items-center justify-center gap-2 h-11 rounded-full bg-gray-900 text-white font-semibold hover:bg-black transition"
-                        onClick={() => {
-                          window.dataLayer = window.dataLayer || [];
-                          window.dataLayer.push({
-                            event: 'click_call',
-                            phone_number: '+61488797233',
-                            placement: 'header',
-                          });
-                        }}
                       >
                         <FaPhoneAlt /> Call
                       </a>
@@ -240,16 +233,9 @@ export default function HeaderFooter({ mode, setMode, loggedInDriver, loggedInUs
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}
                   href="tel:+61488797233"
+                  data-track-location="sticky_footer_call"
                   className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-gray-900 text-white font-semibold hover:bg-black transition"
                   aria-label="Call Prime Cabs"
-                  onClick={() => {
-                    window.dataLayer = window.dataLayer || [];
-                    window.dataLayer.push({
-                      event: 'click_call',
-                      phone_number: '+61488797233',
-                      placement: 'footer_bar',
-                    });
-                  }}
                 >
                   <FaPhoneAlt /> Call
                 </motion.a>

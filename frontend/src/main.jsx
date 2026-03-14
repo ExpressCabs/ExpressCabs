@@ -15,7 +15,7 @@ import { HelmetProvider } from "react-helmet-async";
 
 import HeaderFooter from "./components/HeaderFooter";
 import ScrollToTop from "./components/ScrollToTop";
-import DelayedGtag from "./utils/delayedGtag";
+import { installTelClickTracking } from "./lib/adsTracking";
 
 // Keep these as direct imports if they are used immediately on homepage/mode switching
 import DriverDashboard from "./components/DriverDashboard";
@@ -57,6 +57,10 @@ const App = () => {
   const location = useLocation();
 
   const [mode, setMode] = useState("passenger");
+
+  useEffect(() => {
+    installTelClickTracking();
+  }, []);
 
   // Keep your existing "nextMode" redirect logic + VH fix
   useEffect(() => {
@@ -184,9 +188,6 @@ const App = () => {
 
   return (
     <>
-      {/* Loads gtag after 4 seconds */}
-      <DelayedGtag />
-
       <HeaderFooter
         mode={mode}
         setMode={setMode}
