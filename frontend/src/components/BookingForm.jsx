@@ -189,14 +189,6 @@ const BookingForm = ({
         );
         const conversionValue = Number.isFinite(Number(fare)) ? Number(fare) : 1;
 
-        window.gtag?.('event', 'booking_submit', {
-          currency: 'AUD',
-          value: conversionValue,
-          booking_type: bookingType,
-          passenger_count: Number(passengerCount) || undefined,
-          vehicle_type: selectedVehicle?.id || undefined,
-        });
-
         fireBookingConversion({
           value: conversionValue,
           transactionId,

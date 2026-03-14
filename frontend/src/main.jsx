@@ -64,9 +64,14 @@ const App = () => {
   const [mode, setMode] = useState("passenger");
 
   useEffect(() => {
-    installTelClickTracking();
-    installWhatsappClickTracking();
+    const cleanupTelTracking = installTelClickTracking();
+    const cleanupWhatsappTracking = installWhatsappClickTracking();
     primeGoogleAdsTagLoad();
+
+    return () => {
+      cleanupTelTracking?.();
+      cleanupWhatsappTracking?.();
+    };
   }, []);
 
   useEffect(() => {

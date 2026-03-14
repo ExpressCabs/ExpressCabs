@@ -1,12 +1,14 @@
 const DEFAULT_GOOGLE_ADS_ID = 'AW-17249057389';
 const DEFAULT_BOOKING_CONVERSION_LABEL = 'OwxRCP63nOAaEO30_qBA';
 
-let telClickTrackingInstalled = false;
-let whatsappClickTrackingInstalled = false;
 let googleTagPromise = null;
 let googleTagConfigured = false;
 let googleTagPrimeInstalled = false;
 let googleTagPrimeTimeoutId = null;
+let telClickTrackingCleanup = null;
+let whatsappClickTrackingCleanup = null;
+const DEDUPE_WINDOW_MS = 1000;
+const recentEventTimestamps = new Map();
 
 export function getGoogleAdsId() {
   return import.meta.env.VITE_GOOGLE_ADS_ID || DEFAULT_GOOGLE_ADS_ID;
@@ -198,6 +200,31 @@ export function trackPageView({ path, title, location } = {}) {
   });
 }
 
+function shouldSkipDuplicateEvent(key) {
+  if (typeof Date === 'undefined') {
+    return false;
+  }
+
+  const now = Date.now();
+  const lastFiredAt = recentEventTimestamps.get(key);
+
+  if (typeof lastFiredAt === 'number' && now - lastFiredAt < DEDUPE_WINDOW_MS) {
+    return true;
+  }
+
+  recentEventTimestamps.set(key, now);
+
+  if (recentEventTimestamps.size > 50) {
+    for (const [eventKey, timestamp] of recentEventTimestamps.entries()) {
+      if (now - timestamp >= DEDUPE_WINDOW_MS) {
+        recentEventTimestamps.delete(eventKey);
+      }
+    }
+  }
+
+  return false;
+}
+
 export function fireGoogleAdsConversion({ sendTo, value, currency, transactionId, userData, callback } = {}) {
   ensureGtagStub();
   configureGoogleTargets();
@@ -228,12 +255,10 @@ export function fireGoogleAdsConversion({ sendTo, value, currency, transactionId
 }
 
 export function fireBookingConversion({ value, transactionId, name, email, phone } = {}) {
-  emitEvent('booking_submit', {
-    currency: 'AUD',
-    value,
-    transaction_id: transactionId,
-    method: 'booking_form',
-  });
+  const dedupeKey = `booking:${transactionId || 'unknown'}`;
+  if (shouldSkipDuplicateEvent(dedupeKey)) {
+    return false;
+  }
 
   return fireGoogleAdsConversion({
     sendTo: `${getGoogleAdsId()}/${getBookingConversionLabel()}`,
@@ -246,11 +271,10 @@ export function fireBookingConversion({ value, transactionId, name, email, phone
 
 export function firePhoneClickConversion({ phone, location } = {}) {
   const label = getPhoneClickConversionLabel();
-
-  emitEvent('phone_click', {
-    phone_number: phone,
-    click_location: location,
-  });
+  const dedupeKey = `phone:${phone || 'unknown'}:${location || 'unknown'}`;
+  if (shouldSkipDuplicateEvent(dedupeKey)) {
+    return false;
+  }
 
   if (!label) {
     return false;
@@ -264,10 +288,10 @@ export function firePhoneClickConversion({ phone, location } = {}) {
 
 export function fireWhatsappClickConversion({ location } = {}) {
   const label = getWhatsappClickConversionLabel();
-
-  emitEvent('whatsapp_click', {
-    click_location: location,
-  });
+  const dedupeKey = `whatsapp:${location || 'unknown'}`;
+  if (shouldSkipDuplicateEvent(dedupeKey)) {
+    return false;
+  }
 
   if (!label) {
     return false;
@@ -279,11 +303,11 @@ export function fireWhatsappClickConversion({ location } = {}) {
 }
 
 export function installTelClickTracking() {
-  if (telClickTrackingInstalled || typeof document === 'undefined') {
-    return;
+  if (telClickTrackingCleanup || typeof document === 'undefined') {
+    return telClickTrackingCleanup;
   }
 
-  document.addEventListener('click', (event) => {
+  const handleDocumentClick = (event) => {
     const link = event.target instanceof Element ? event.target.closest('a[href^="tel:"]') : null;
 
     if (!link) {
@@ -301,17 +325,24 @@ export function installTelClickTracking() {
       'tel_link';
 
     firePhoneClickConversion({ phone, location });
-  });
+  };
 
-  telClickTrackingInstalled = true;
+  document.addEventListener('click', handleDocumentClick);
+
+  telClickTrackingCleanup = () => {
+    document.removeEventListener('click', handleDocumentClick);
+    telClickTrackingCleanup = null;
+  };
+
+  return telClickTrackingCleanup;
 }
 
 export function installWhatsappClickTracking() {
-  if (whatsappClickTrackingInstalled || typeof document === 'undefined') {
-    return;
+  if (whatsappClickTrackingCleanup || typeof document === 'undefined') {
+    return whatsappClickTrackingCleanup;
   }
 
-  document.addEventListener('click', (event) => {
+  const handleDocumentClick = (event) => {
     const link =
       event.target instanceof Element
         ? event.target.closest('a[href*="wa.me"], a[href*="whatsapp.com"]')
@@ -330,7 +361,14 @@ export function installWhatsappClickTracking() {
       'whatsapp_link';
 
     fireWhatsappClickConversion({ location });
-  });
+  };
 
-  whatsappClickTrackingInstalled = true;
+  document.addEventListener('click', handleDocumentClick);
+
+  whatsappClickTrackingCleanup = () => {
+    document.removeEventListener('click', handleDocumentClick);
+    whatsappClickTrackingCleanup = null;
+  };
+
+  return whatsappClickTrackingCleanup;
 }
