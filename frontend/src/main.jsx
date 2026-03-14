@@ -13,7 +13,7 @@ import {
 
 import { HelmetProvider } from "react-helmet-async";
 
-import HeaderFooter from "./components/HeaderFooter";
+import HeaderFooter, { SiteFooter } from "./components/HeaderFooter";
 import ScrollToTop from "./components/ScrollToTop";
 import { installTelClickTracking } from "./lib/adsTracking";
 
@@ -285,6 +285,8 @@ const App = () => {
           <Route path="/blog/:slug" element={<BlogSlug />} />
         </Routes>
       </Suspense>
+
+      <SiteFooter setMode={setMode} />
     </>
   );
 };

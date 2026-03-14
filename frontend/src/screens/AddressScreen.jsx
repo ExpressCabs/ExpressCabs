@@ -1,19 +1,11 @@
 import React, { useEffect, useState, useMemo, useRef, lazy, Suspense } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 
 import BookingForm from '../components/BookingForm';
 
 const ContactUs = lazy(() => import('./ContactUs'));
-const OurServices = lazy(() => import('./OurServices'));
 const BlogPreviewCarousel = lazy(() => import('../components/BlogPreviewCarousel'));
-
-const heroImages = [
-  '/assets/images/prime_cabs_landscape.avif',
-  '/assets/images/prime_cabs_landscape2.avif',
-  '/assets/images/prime_cabs_landscape3.avif',
-  '/assets/images/prime_cabs_landscape4.avif',
-];
 
 const fleet = [
   { name: 'Sedan', seats: 4, image: '/assets/vehicles/sedan-modern.png' },
@@ -107,26 +99,12 @@ function DeferredSection({ children, minHeight = 'min-h-[240px]' }) {
 export default function AddressScreen({ loggedInUser }) {
   const OTP_ENABLED = import.meta.env.VITE_OTP_VERIFICATION_ENABLED === 'true';
 
-  const [heroIndex, setHeroIndex] = useState(0);
   const [fleetIndex, setFleetIndex] = useState(0);
 
   // ✅ NEW: step sync + clickable pill request
   const [currentStep, setCurrentStep] = useState(1);
   const [maxStepAllowed, setMaxStepAllowed] = useState(1);
   const [requestedStep, setRequestedStep] = useState(null);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setHeroIndex((prev) => (prev + 1) % heroImages.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
-
-  useEffect(() => {
-    const next = heroImages[(heroIndex + 1) % heroImages.length];
-    const img = new Image();
-    img.src = next;
-  }, [heroIndex]);
 
   useEffect(() => {
     const fleetTimer = setInterval(() => {
@@ -302,51 +280,33 @@ export default function AddressScreen({ loggedInUser }) {
 
 
       <section className="relative min-h-[100vh] overflow-hidden">
-        <AnimatePresence mode="wait">
-          <motion.img
-            key={heroIndex}
-            src={heroImages[heroIndex]}
-            alt=""
-            aria-hidden="true"
-            className="absolute inset-0 w-full h-full object-cover object-center"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.4, ease: 'easeOut' }}
-            fetchpriority={heroIndex === 0 ? 'high' : 'auto'}
-            loading={heroIndex === 0 ? 'eager' : 'lazy'}
-            decoding="async"
-          />
-        </AnimatePresence>
-
-        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-black/35" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(211,84,0,0.18),_transparent_34%),radial-gradient(circle_at_bottom_right,_rgba(14,116,144,0.14),_transparent_32%),linear-gradient(180deg,_#101114_0%,_#16181c_42%,_#242933_100%)]" />
         <div className="absolute inset-0">
-          <div className="absolute -top-36 -right-40 w-[520px] h-[520px] bg-[var(--brand)]/25 rounded-full blur-3xl" />
-          <div className="absolute -bottom-48 -left-40 w-[520px] h-[520px] bg-[var(--accent)]/20 rounded-full blur-3xl" />
+          <div className="absolute inset-x-0 top-0 h-px bg-white/10" />
+          <div className="absolute inset-x-0 bottom-0 h-px bg-black/20" />
         </div>
 
         <div className="relative z-10 min-h-[100vh] flex items-center justify-center px-4 py-12">
           <div className="w-full max-w-6xl mx-auto grid lg:grid-cols-12 gap-10 items-center">
             <motion.div
               className="lg:col-span-6 text-white"
-              initial="hidden"
-              whileInView="show"
-              viewport={{ once: true, margin: '-80px' }}
-              variants={fadeUp}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, ease: 'easeOut' }}
             >
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur">
                 <span className="text-xs font-semibold tracking-wide">MELBOURNE AIRPORT TRANSFERS</span>
               </div>
 
-              <motion.h1 custom={1} variants={fadeUp} className="mt-5 text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.05]">
+              <h1 className="mt-5 text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.05]">
                 Book a reliable taxi in minutes.
-              </motion.h1>
+              </h1>
 
-              <motion.p custom={2} variants={fadeUp} className="mt-5 text-lg md:text-xl text-white/85 max-w-xl">
+              <p className="mt-5 text-lg md:text-xl text-white/85 max-w-xl">
                 Fixed fare airport transfers with professional drivers and comfortable vehicles.
-              </motion.p>
+              </p>
 
-              <motion.div custom={3} variants={fadeUp} className="mt-7 flex flex-wrap gap-2">
+              <div className="mt-7 flex flex-wrap gap-2">
                 {['24/7 Available', 'Fixed Upfront Quotes', 'Airport Specialists', 'Clean Vehicles'].map((t) => (
                   <span
                     key={t}
@@ -355,10 +315,10 @@ export default function AddressScreen({ loggedInUser }) {
                     {t}
                   </span>
                 ))}
-              </motion.div>
+              </div>
 
               {/* ✅ Clickable pills (synced to real progress) */}
-              <motion.div custom={4} variants={fadeUp} className="mt-10 flex flex-wrap gap-2">
+              <div className="mt-10 flex flex-wrap gap-2">
                 {stepMeta.map((s) => (
                   <StepPill
                     key={s.key}
@@ -369,7 +329,7 @@ export default function AddressScreen({ loggedInUser }) {
                     onClick={() => onPillClick(s.key)}
                   />
                 ))}
-              </motion.div>
+              </div>
             </motion.div>
 
             <div className="lg:col-span-6">
@@ -459,14 +419,8 @@ export default function AddressScreen({ loggedInUser }) {
         </DeferredSection>
       </div>
 
-      <div className="mt-8">
-        <DeferredSection minHeight="min-h-[720px]">
-          <OurServices />
-        </DeferredSection>
-      </div>
-
-      <DeferredSection minHeight="min-h-[960px]">
-        <ContactUs />
+      <DeferredSection minHeight="min-h-[840px]">
+        <ContactUs showMap={false} />
       </DeferredSection>
     </div>
   );

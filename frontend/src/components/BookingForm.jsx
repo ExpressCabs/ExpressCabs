@@ -1,13 +1,13 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo, lazy, Suspense } from 'react';
 import { MdCalendarToday } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 
-import VehicleSelection from '../screens/VehicleSelection';
-import PassengerDetails from '../screens/PassengerDetails';
-import OTPVerification from '../screens/OTPVerification';
-
 import { fireBookingConversion } from '../lib/adsTracking';
 import { useGoogleMapsReady } from '../utils/useGoogleMapsReady';
+
+const VehicleSelection = lazy(() => import('../screens/VehicleSelection'));
+const PassengerDetails = lazy(() => import('../screens/PassengerDetails'));
+const OTPVerification = lazy(() => import('../screens/OTPVerification'));
 
 const BookingForm = ({
   loggedInUser,
@@ -300,6 +300,12 @@ const BookingForm = ({
     </div>
   );
 
+  const stepFallback = (
+    <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 text-sm text-gray-600">
+      Loading...
+    </div>
+  );
+
   // âœ… EMBEDDED UI (matches your AddressScreen card styling)
   const content = (
     <>
@@ -431,50 +437,56 @@ const BookingForm = ({
       )}
 
       {step === 2 && (
-        <VehicleSelection
-          {...{
-            pickupLoc,
-            dropoffLoc,
-            passengerCount,
-            bookingType,
-            scheduledDateTime,
-            setStep,
-            setSelectedVehicle,
-            setFare,
-            setFareType,
-            setMap,
-          }}
-        />
+        <Suspense fallback={stepFallback}>
+          <VehicleSelection
+            {...{
+              pickupLoc,
+              dropoffLoc,
+              passengerCount,
+              bookingType,
+              scheduledDateTime,
+              setStep,
+              setSelectedVehicle,
+              setFare,
+              setFareType,
+              setMap,
+            }}
+          />
+        </Suspense>
       )}
 
       {step === 3 && (
-        <PassengerDetails
-          {...{
-            setStep,
-            onSubmitPassengerDetails: handlePassengerSubmit,
-            pickupLoc,
-            dropoffLoc,
-            pickupAddress,
-            dropoffAddress,
-            selectedVehicle,
-            passengerCount,
-            fare,
-            fareType,
-            scheduledDateTime,
-            loggedInUser,
-          }}
-        />
+        <Suspense fallback={stepFallback}>
+          <PassengerDetails
+            {...{
+              setStep,
+              onSubmitPassengerDetails: handlePassengerSubmit,
+              pickupLoc,
+              dropoffLoc,
+              pickupAddress,
+              dropoffAddress,
+              selectedVehicle,
+              passengerCount,
+              fare,
+              fareType,
+              scheduledDateTime,
+              loggedInUser,
+            }}
+          />
+        </Suspense>
       )}
 
       {OTP_ENABLED && step === 4 && (
-        <OTPVerification
-          {...{
-            setStep,
-            phone,
-            onSuccess: handleBookRide,
-            onBack: () => setStep(3),
-          }}
-        />
+        <Suspense fallback={stepFallback}>
+          <OTPVerification
+            {...{
+              setStep,
+              phone,
+              onSuccess: handleBookRide,
+              onBack: () => setStep(3),
+            }}
+          />
+        </Suspense>
       )}
 
       {!OTP_ENABLED && step === 4 && (

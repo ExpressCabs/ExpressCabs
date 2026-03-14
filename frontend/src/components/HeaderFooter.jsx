@@ -1,8 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaPhoneAlt, FaWhatsapp } from 'react-icons/fa';
+import { FaPhoneAlt, FaWhatsapp, FaMapMarkerAlt, FaEnvelope, FaClock } from 'react-icons/fa';
 import logo from '/assets/images/logo.png';
+
+const PRIMARY_PHONE = '+61488797233';
+const WHATSAPP_LINK = 'https://wa.me/61482038902';
+const EMAIL = 'bookmelbourneairporttaxis@gmail.com';
+const ADDRESS = '29 Bayswater Rd, Croydon VIC 3136';
+const GOOGLE_MAPS_LINK = 'https://www.google.com/maps?q=29+Bayswater+Rd,+Croydon+VIC+3136,+Australia';
 
 export default function HeaderFooter({ mode, setMode, loggedInDriver, loggedInUser, setShowUserPopup }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -189,14 +195,14 @@ export default function HeaderFooter({ mode, setMode, loggedInDriver, loggedInUs
                     <p className="text-xs font-semibold text-slate-700">Need help now?</p>
                     <div className="mt-3 grid gap-2">
                       <a
-                        href="tel:+61488797233"
+                        href={`tel:${PRIMARY_PHONE}`}
                         data-track-location="header_call"
                         className="inline-flex items-center justify-center gap-2 h-11 rounded-full bg-gray-900 text-white font-semibold hover:bg-black transition"
                       >
                         <FaPhoneAlt /> Call
                       </a>
                       <a
-                        href="https://wa.me/61482038902"
+                        href={WHATSAPP_LINK}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center justify-center gap-2 h-11 rounded-full bg-[var(--surface-solid)] border border-[var(--border-soft)] text-slate-900 font-semibold hover:bg-slate-100 transition"
@@ -213,8 +219,140 @@ export default function HeaderFooter({ mode, setMode, loggedInDriver, loggedInUs
       </motion.header>
 
       <div className="h-[86px] sm:h-[92px]" />
+    </>
+  );
+}
 
-      <motion.footer
+export function SiteFooter({ setMode }) {
+  const navigate = useNavigate();
+
+  const footerLinks = [
+    { label: 'Book Ride', onClick: () => { setMode?.('passenger'); navigate('/'); } },
+    { label: 'Services', onClick: () => { setMode?.('services'); navigate('/services'); } },
+    { label: 'Contact', onClick: () => { setMode?.('contact'); navigate('/contact'); } },
+    { label: 'Airport Taxi Melbourne', onClick: () => navigate('/airport-taxi-melbourne') },
+  ];
+
+  return (
+    <>
+      <footer className="relative mt-16 border-t border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(211,84,0,0.16),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(14,116,144,0.14),_transparent_26%),linear-gradient(180deg,_#0f1115_0%,_#13161c_46%,_#0d1014_100%)]">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-12">
+          <div className="rounded-[28px] border border-white/10 bg-white/5 shadow-[0_30px_90px_-34px_rgba(0,0,0,0.55)] overflow-hidden backdrop-blur">
+            <div className="grid gap-0 lg:grid-cols-[1.2fr_0.8fr_1fr]">
+              <div className="p-6 sm:p-8 border-b lg:border-b-0 lg:border-r border-white/10 bg-[linear-gradient(145deg,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0.02)_100%)]">
+                <div className="flex items-center gap-3">
+                  <img src={logo} alt="Prime Cabs Logo" className="h-11 w-auto" />
+                  <div>
+                    <p className="text-lg font-extrabold text-white">Prime Cabs</p>
+                    <p className="text-sm text-white/70">Melbourne airport transfers, fixed-fare bookings, and 24/7 support.</p>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex flex-wrap gap-2">
+                  {['24/7 Bookings', 'WhatsApp Support', 'Airport Specialists'].map((item) => (
+                    <span
+                      key={item}
+                      className="inline-flex items-center rounded-full border border-white/10 bg-white/8 px-3 py-1.5 text-xs font-semibold text-white/80"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                  <a
+                    href={WHATSAPP_LINK}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-gray-900 text-white font-semibold hover:bg-black transition"
+                    aria-label="Add Prime Cabs on WhatsApp"
+                  >
+                    <FaWhatsapp /> Add on WhatsApp
+                  </a>
+                  <a
+                    href={`tel:${PRIMARY_PHONE}`}
+                    data-track-location="sticky_footer_call"
+                    className="inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full border border-white/12 bg-white/8 text-white font-semibold hover:bg-white/12 transition"
+                    aria-label="Call Prime Cabs"
+                  >
+                    <FaPhoneAlt /> Call {PRIMARY_PHONE.replace('+61', '+61 ')}
+                  </a>
+                </div>
+              </div>
+
+              <div className="p-6 sm:p-8 border-b lg:border-b-0 lg:border-r border-white/10">
+                <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-white/45">Quick Links</p>
+                <div className="mt-5 grid gap-2">
+                  {footerLinks.map((link) => (
+                    <button
+                      key={link.label}
+                      onClick={link.onClick}
+                      className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-left text-sm font-semibold text-white/85 hover:bg-white/10 transition"
+                    >
+                      <span>{link.label}</span>
+                      <span className="text-white/35">+</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-6 sm:p-8">
+                <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-white/45">Find Us</p>
+                <div className="mt-5 grid gap-3">
+                  <div className="rounded-2xl border border-white/10 bg-white/6 p-4">
+                    <div className="flex items-start gap-3">
+                      <FaMapMarkerAlt className="mt-1 text-white/70" />
+                      <div>
+                        <p className="text-sm font-semibold text-white">Address</p>
+                        <p className="mt-1 text-sm text-white/70">{ADDRESS}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <a
+                    href={`mailto:${EMAIL}`}
+                    className="rounded-2xl border border-white/10 bg-white/6 p-4 hover:bg-white/10 transition"
+                  >
+                    <div className="flex items-start gap-3">
+                      <FaEnvelope className="mt-1 text-white/70" />
+                      <div>
+                        <p className="text-sm font-semibold text-white">Email</p>
+                        <p className="mt-1 text-sm text-white/70 break-all">{EMAIL}</p>
+                      </div>
+                    </div>
+                  </a>
+
+                  <div className="rounded-2xl border border-white/10 bg-white/6 p-4">
+                    <div className="flex items-start gap-3">
+                      <FaClock className="mt-1 text-white/70" />
+                      <div>
+                        <p className="text-sm font-semibold text-white">Hours</p>
+                        <p className="mt-1 text-sm text-white/70">Open 24/7 for bookings and support.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <a
+                    href={GOOGLE_MAPS_LINK}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center justify-center rounded-full border border-white/12 bg-white/8 px-5 py-3 text-sm font-semibold text-white hover:bg-white/12 transition"
+                  >
+                    Open in Google Maps
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-white/10 px-6 sm:px-8 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-black/15">
+              <p className="text-sm text-white/68">Prime Cabs Melbourne. Reliable airport transfers and local taxi bookings.</p>
+              <p className="text-xs text-white/45">No social profiles yet. WhatsApp is the fastest way to reach us.</p>
+            </div>
+          </div>
+        </div>
+      </footer>
+
+      <motion.div
         initial={{ y: 18, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.45, delay: 0.1, ease: 'easeOut' }}
@@ -232,7 +370,7 @@ export default function HeaderFooter({ mode, setMode, loggedInDriver, loggedInUs
                 <motion.a
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}
-                  href="tel:+61488797233"
+                  href={`tel:${PRIMARY_PHONE}`}
                   data-track-location="sticky_footer_call"
                   className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-gray-900 text-white font-semibold hover:bg-black transition"
                   aria-label="Call Prime Cabs"
@@ -243,11 +381,11 @@ export default function HeaderFooter({ mode, setMode, loggedInDriver, loggedInUs
                 <motion.a
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}
-                  href="https://wa.me/61482038902"
+                  href={WHATSAPP_LINK}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 h-11 px-5 rounded-full bg-[var(--surface-solid)] border border-[var(--border-soft)] text-slate-900 font-semibold hover:bg-slate-100 transition"
-                  aria-label="WhatsApp Prime Cabs"
+                  aria-label="Add Prime Cabs on WhatsApp"
                 >
                   <FaWhatsapp /> WhatsApp
                 </motion.a>
@@ -255,7 +393,7 @@ export default function HeaderFooter({ mode, setMode, loggedInDriver, loggedInUs
             </div>
           </div>
         </div>
-      </motion.footer>
+      </motion.div>
 
       <div className="h-[84px] sm:h-[92px]" />
     </>
