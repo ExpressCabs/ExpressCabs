@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Helmet } from 'react-helmet-async';
+import { toast } from '../../components/ToastProvider';
 
 const AdminLogin = ({ onLogin }) => {
     const [email, setEmail] = useState('');
@@ -33,7 +34,7 @@ const AdminLogin = ({ onLogin }) => {
             navigate(redirectTo, { replace: true });
         } catch (err) {
             console.error('Login error:', err);
-            alert(err?.response?.data?.error || 'Login failed');
+            toast.error(err?.response?.data?.error || err?.response?.data?.message || 'Login failed');
         }
     };
 

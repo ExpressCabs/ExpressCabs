@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { toast } from '../../components/ToastProvider';
 
 export default function BlogNew() {
     const [form, setForm] = useState({
@@ -60,12 +61,10 @@ export default function BlogNew() {
 
             const res = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/blogs`, payload);
             const slug = res.data?.blog?.slug || form.title.toLowerCase().replace(/\s+/g, '-');
-
-
-            alert('Blog created and submitted to Google for indexing');
+            toast.success(`Blog created successfully${slug ? `: ${slug}` : '.'}`);
         } catch (error) {
             console.error('Error creating blog:', error);
-            alert('Failed to create blog');
+            toast.error(error.response?.data?.error || 'Failed to create blog');
         }
     };
 

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
+import { toast } from '../components/ToastProvider';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
@@ -46,7 +47,7 @@ const PassengerDetails = ({
 
   const submit = () => {
     if (!name || !phone) {
-      alert('Please enter name and phone');
+      toast.error('Please enter name and phone.');
       return;
     }
     onSubmitPassengerDetails({ name, phone, email, note });

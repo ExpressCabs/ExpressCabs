@@ -5,6 +5,7 @@ const { normalizeAuPhone, parsePositiveInt } = require('../lib/validators');
 const twilio = require('twilio');
 
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+const BOOKING_MANAGER_PHONE = normalizeAuPhone('0488797233');
 
 const formatMelbourneTime = (dateInput) => {
   const d = new Date(dateInput);
@@ -123,11 +124,32 @@ const bookRide = async (req, res) => {
       `Fare: $${parsedFare.toFixed(2)}\n\n` +
       `Need help? Call 0488 797 233`;
 
+    const managerBookingSmsText =
+      `New ride booking received.\n\n` +
+      `Name: ${name}\n` +
+      `Phone: ${formattedPhone}\n` +
+      `Email: ${email || 'N/A'}\n` +
+      `From: ${pickup}\n` +
+      `To: ${dropoff}\n` +
+      `Time: ${formatMelbourneTime(parsedRideDate)}\n` +
+      `Passengers: ${parsedPassengerCount}\n` +
+      `Vehicle: ${vehicleType}\n` +
+      `Fare: $${parsedFare.toFixed(2)} (${fareType})` +
+      (note ? `\nNote: ${note}` : '');
+
     notificationTasks.push(
       client.messages.create({
         from: process.env.TWILIO_PHONE_NUMBER,
         to: formattedPhone,
         body: smsText,
+      })
+    );
+
+    notificationTasks.push(
+      client.messages.create({
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: BOOKING_MANAGER_PHONE,
+        body: managerBookingSmsText,
       })
     );
 
@@ -137,6 +159,9 @@ const bookRide = async (req, res) => {
     }
     if (notificationResults[1].status === 'rejected') {
       console.error('Failed to send booking SMS:', notificationResults[1].reason);
+    }
+    if (notificationResults[2].status === 'rejected') {
+      console.error('Failed to send booking manager SMS:', notificationResults[2].reason);
     }
 
     res.status(201).json(ride);
@@ -221,11 +246,11 @@ const assignRideToDriver = async (req, res) => {
     const phone = normalizeAuPhone(ride.phone);
     const smsText =
       `Hi ${ride.name},\n` +
-      `A driver has been assigned to your Express Cabs ride.\n\n` +
+      `An assigned manager is looking after your ride.\n\n` +
       `From: ${ride.pickup}\n` +
       `To: ${ride.dropoff}\n` +
       `Time: ${formatMelbourneTime(ride.rideDate)}\n\n` +
-      `Driver: ${driver.name}\n` +
+      `Assigned Job Manager: ${driver.name}\n` +
       `Phone: ${driver.phone}\n\n` +
       `Need help? Call 0488 797 233`;
 

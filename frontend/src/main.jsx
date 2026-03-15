@@ -15,6 +15,7 @@ import { HelmetProvider } from "react-helmet-async";
 
 import HeaderFooter, { SiteFooter } from "./components/HeaderFooter";
 import ScrollToTop from "./components/ScrollToTop";
+import { ToastProvider } from "./components/ToastProvider";
 import {
   installTelClickTracking,
   installWhatsappClickTracking,
@@ -314,8 +315,10 @@ const App = () => {
 const AppWrapper = () => (
   <BrowserRouter>
     <HelmetProvider>
-      <ScrollToTop />
-      <App />
+      <ToastProvider>
+        <ScrollToTop />
+        <App />
+      </ToastProvider>
     </HelmetProvider>
   </BrowserRouter>
 );

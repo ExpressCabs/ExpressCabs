@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { FaPhoneAlt, FaEnvelope, FaMapMarkerAlt, FaClock, FaTaxi } from 'react-icons/fa';
+import { toast } from '../components/ToastProvider';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 14 },
@@ -82,14 +83,14 @@ export default function ContactUs({ showMap = true }) {
       });
       const data = await res.json();
       if (res.ok) {
-        alert('Message sent successfully!');
+        toast.success('Message sent successfully.');
         setFormData({ name: '', email: '', phone: '', message: '', type: 'General Inquiry', callback: false });
       } else {
-        alert(`Failed to send: ${data.message}`);
+        toast.error(data?.message ? `Failed to send: ${data.message}` : 'Failed to send message.');
       }
     } catch (err) {
       console.error('Send error:', err);
-      alert('Something went wrong.');
+      toast.error('Something went wrong.');
     } finally {
       setSubmitting(false);
     }

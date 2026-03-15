@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
+import { toast } from './ToastProvider';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 14 },
@@ -40,7 +41,7 @@ const UserRegisterScreen = ({ onBackToLogin }) => {
 
   const handleRegister = async () => {
     if (!name || !phone || !password) {
-      alert('Please fill in all required fields');
+      toast.error('Please fill in all required fields.');
       return;
     }
 
@@ -53,14 +54,15 @@ const UserRegisterScreen = ({ onBackToLogin }) => {
 
       if (!res.ok) {
         const err = await res.json();
-        alert(err.message || 'Registration failed');
+        toast.error(err.message || 'Registration failed.');
         return;
       }
 
       setSuccess(true);
+      toast.success('Registration successful. You can now log in.');
     } catch (error) {
       console.error('Error:', error);
-      alert('Something went wrong');
+      toast.error('Something went wrong.');
     }
   };
 

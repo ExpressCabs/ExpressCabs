@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
+import { toast } from './ToastProvider';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 14 },
@@ -32,7 +33,7 @@ const UserLoginScreen = ({ onLogin, onRegisterClick }) => {
 
   const handleLogin = async () => {
     if (!phone || !password) {
-      alert('Please enter both phone and password');
+      toast.error('Please enter both phone and password.');
       return;
     }
 
@@ -46,14 +47,14 @@ const UserLoginScreen = ({ onLogin, onRegisterClick }) => {
       const data = await res.json();
 
       if (!res.ok) {
-        alert(data.message || 'Login failed');
+        toast.error(data.message || 'Login failed.');
         return;
       }
 
       onLogin(data.user); // ✅ keep exact behavior
     } catch (error) {
       console.error('Login error:', error);
-      alert('Login request failed');
+      toast.error('Login request failed.');
     }
   };
 

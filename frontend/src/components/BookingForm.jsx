@@ -3,11 +3,28 @@ import { MdCalendarToday } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 
 import { fireBookingConversion } from '../lib/adsTracking';
+import { estimateFareRange, isMelbourneAirport } from '../lib/ridePricing';
+import { toast } from './ToastProvider';
 import { useGoogleMapsReady } from '../utils/useGoogleMapsReady';
 
 const VehicleSelection = lazy(() => import('../screens/VehicleSelection'));
 const PassengerDetails = lazy(() => import('../screens/PassengerDetails'));
 const OTPVerification = lazy(() => import('../screens/OTPVerification'));
+
+const MODERN_MAP_STYLES = [
+  { elementType: 'geometry', stylers: [{ color: '#eef2ff' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#334155' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#f8fafc' }] },
+  { featureType: 'administrative', elementType: 'geometry.stroke', stylers: [{ color: '#cbd5e1' }] },
+  { featureType: 'poi', elementType: 'geometry', stylers: [{ color: '#e2e8f0' }] },
+  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#d1fae5' }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#dbe4f0' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#dbeafe' }] },
+  { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#93c5fd' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#bfdbfe' }] },
+];
 
 const BookingForm = ({
   loggedInUser,
@@ -42,6 +59,7 @@ const BookingForm = ({
   const [passengerDetails, setPassengerDetails] = useState(null);
   const [mapInitialized, setMapInitialized] = useState(false);
   const [mapsEnabled, setMapsEnabled] = useState(false);
+  const [routePreview, setRoutePreview] = useState(null);
 
   const { ready: mapsReady } = useGoogleMapsReady({ enabled: mapsEnabled });
 
@@ -65,10 +83,23 @@ const BookingForm = ({
       zoom: 13,
       disableDefaultUI: true,
       zoomControl: true,
+      fullscreenControl: false,
+      streetViewControl: false,
+      mapTypeControl: false,
+      styles: MODERN_MAP_STYLES,
     });
 
     setMap(gMap);
-    directionsRenderer.current = new window.google.maps.DirectionsRenderer({ map: gMap });
+    directionsRenderer.current = new window.google.maps.DirectionsRenderer({
+      map: gMap,
+      suppressMarkers: true,
+      preserveViewport: false,
+      polylineOptions: {
+        strokeColor: '#111827',
+        strokeOpacity: 0.95,
+        strokeWeight: 6,
+      },
+    });
     setMapInitialized(true);
 
     const pickupAutocomplete = new window.google.maps.places.Autocomplete(pickupInputRef.current, {
@@ -80,7 +111,19 @@ const BookingForm = ({
       if (place?.geometry) {
         const location = place.geometry.location;
         if (pickupMarker.current) pickupMarker.current.setMap(null);
-        pickupMarker.current = new window.google.maps.Marker({ position: location, map: gMap, label: 'P' });
+        pickupMarker.current = new window.google.maps.Marker({
+          position: location,
+          map: gMap,
+          label: { text: 'P', color: '#ffffff', fontWeight: '700' },
+          icon: {
+            path: window.google.maps.SymbolPath.CIRCLE,
+            fillColor: '#0f172a',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 3,
+            scale: 11,
+          },
+        });
         setPickupLoc(location);
         setPickupAddress(place.formatted_address || place.name);
         gMap.setCenter(location);
@@ -96,7 +139,19 @@ const BookingForm = ({
       if (place?.geometry) {
         const location = place.geometry.location;
         if (dropoffMarker.current) dropoffMarker.current.setMap(null);
-        dropoffMarker.current = new window.google.maps.Marker({ position: location, map: gMap, label: 'D' });
+        dropoffMarker.current = new window.google.maps.Marker({
+          position: location,
+          map: gMap,
+          label: { text: 'D', color: '#ffffff', fontWeight: '700' },
+          icon: {
+            path: window.google.maps.SymbolPath.CIRCLE,
+            fillColor: '#2563eb',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 3,
+            scale: 11,
+          },
+        });
         setDropoffLoc(location);
         setDropoffAddress(place.formatted_address || place.name);
         gMap.setCenter(location);
@@ -135,16 +190,53 @@ const BookingForm = ({
           origin: pickupLoc,
           destination: dropoffLoc,
           travelMode: window.google.maps.TravelMode.DRIVING,
+          drivingOptions: {
+            departureTime: bookingType === 'later' && scheduledDateTime ? new Date(scheduledDateTime) : new Date(),
+            trafficModel: window.google.maps.TrafficModel.BEST_GUESS,
+          },
         },
         (result, status) => {
           if (status === 'OK') {
             directionsRenderer.current?.setDirections(result);
             map.fitBounds(result.routes[0].bounds);
+
+            const route = result.routes?.[0];
+            const leg = route?.legs?.[0];
+            const warningsText = (route?.warnings || []).join(' ').toLowerCase();
+            const steps = leg?.steps || [];
+            const hasTolls =
+              warningsText.includes('toll') ||
+              steps.some((step) => {
+                const instructions = (step.instructions || '').toLowerCase();
+                return instructions.includes('toll') || instructions.includes('citylink') || instructions.includes('eastlink');
+              });
+
+            if (leg) {
+              const distanceKm = (leg.distance?.value || 0) / 1000;
+              const durationMinutes = ((leg.duration_in_traffic?.value || leg.duration?.value || 0) / 60);
+              const fareRange = estimateFareRange({
+                distanceKm,
+                durationMin: durationMinutes,
+                rideDate: bookingType === 'later' && scheduledDateTime ? new Date(scheduledDateTime) : new Date(),
+                passengerCount: Number(passengerCount) || 1,
+                airportPickup: isMelbourneAirport(pickupAddress),
+                hasTolls,
+              });
+
+              setRoutePreview({
+                distanceText: leg.distance?.text || `${distanceKm.toFixed(1)} km`,
+                durationText: leg.duration_in_traffic?.text || leg.duration?.text || `${Math.round(durationMinutes)} min`,
+                tollsText: hasTolls ? 'Likely tolls on fastest route' : 'No obvious tolls detected',
+                minFareText: fareRange ? `$${fareRange.minFare.toFixed(2)}` : '--',
+                maxFareText: fareRange ? `$${fareRange.maxFare.toFixed(2)}` : '--',
+                fareTypeText: fareRange ? `${fareRange.tariff.name} estimate` : 'Estimate',
+              });
+            }
           }
         }
       );
     }
-  }, [pickupLoc, dropoffLoc, map]);
+  }, [bookingType, dropoffLoc, map, passengerCount, pickupAddress, pickupLoc, scheduledDateTime]);
 
   const handlePassengerSubmit = (details) => {
     setPassengerDetails(details);
@@ -205,25 +297,47 @@ const BookingForm = ({
           },
         });
       } else {
-        alert(`Booking failed: ${result.error}`);
+        toast.error(result.error ? `Booking failed: ${result.error}` : 'Booking failed.');
       }
     } catch (err) {
       console.error('Booking error:', err);
-      alert('Error booking the ride.');
+      toast.error('Error booking the ride.');
     }
   };
 
   const phone = passengerDetails?.phone ?? '';
+  const hasPassengerCount = Number(passengerCount) > 0;
+  const hasScheduleSelection = bookingType === 'now' || Boolean(scheduledDateTime);
+  const canContinueToVehicle = Boolean(pickupLoc && dropoffLoc && hasPassengerCount && hasScheduleSelection);
+
+  const handleContinueToVehicle = () => {
+    if (!pickupLoc || !dropoffLoc) {
+      toast.error('Select pickup and dropoff first.');
+      return;
+    }
+
+    if (!hasPassengerCount) {
+      toast.error('Select the number of passengers before continuing.');
+      return;
+    }
+
+    if (!hasScheduleSelection) {
+      toast.error('Select the date and time before continuing.');
+      return;
+    }
+
+    setStep(2);
+  };
 
   const maxStepAllowed = useMemo(() => {
     let max = 1;
-    if (pickupLoc && dropoffLoc) max = 2;
+    if (canContinueToVehicle) max = 2;
     if (pickupLoc && dropoffLoc && selectedVehicle) max = 3;
     if (pickupLoc && dropoffLoc && selectedVehicle && passengerDetails) {
       max = 4;
     }
     return max;
-  }, [pickupLoc, dropoffLoc, selectedVehicle, passengerDetails]);
+  }, [canContinueToVehicle, pickupLoc, dropoffLoc, selectedVehicle, passengerDetails]);
 
   useEffect(() => {
     if (typeof onProgressChange === 'function') {
@@ -377,11 +491,72 @@ const BookingForm = ({
               </div>
             )}
 
+            {canContinueToVehicle && routePreview ? (
+              <div className="mb-4 rounded-[22px] border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_58%,#eef2ff_100%)] px-4 py-4 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.35)]">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Trip Estimate</p>
+                    <p className="mt-1 text-sm font-semibold text-slate-900">
+                      {bookingType === 'later' ? 'Scheduled quote snapshot' : 'Live quote snapshot'}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="rounded-full bg-slate-900 px-3 py-1 text-[11px] font-semibold text-white">
+                      {routePreview.fareTypeText}
+                    </span>
+                    {Number(passengerCount) > 4 ? (
+                      <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-800">
+                        High occupancy
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-900 px-4 py-4 text-white">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/55">Approx Fare</p>
+                  <p className="mt-1 text-2xl font-extrabold tracking-tight">
+                    {routePreview.minFareText}
+                    {routePreview.maxFareText !== routePreview.minFareText ? ` - ${routePreview.maxFareText}` : ''}
+                  </p>
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <div className="rounded-2xl border border-slate-200 bg-white/80 px-3 py-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Trip Distance</p>
+                    <p className="mt-1 text-lg font-extrabold tracking-tight text-slate-900">{routePreview.distanceText}</p>
+                  </div>
+
+                  <div className="rounded-2xl border border-slate-200 bg-white/80 px-3 py-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Trip Time</p>
+                    <p className="mt-1 text-lg font-extrabold tracking-tight text-slate-900">{routePreview.durationText}</p>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-medium text-slate-600">
+                  <span className="rounded-full border border-slate-200 bg-white/80 px-3 py-1.5">
+                    {Number(passengerCount)} passenger{Number(passengerCount) === 1 ? '' : 's'}
+                  </span>
+                  <span className="rounded-full border border-slate-200 bg-white/80 px-3 py-1.5">
+                    {routePreview.tollsText}
+                  </span>
+                </div>
+              </div>
+            ) : null}
+
             <button
-              onClick={() => setStep(2)}
-              className="h-11 w-full rounded-xl bg-gray-900 font-semibold text-white transition hover:bg-black"
-              disabled={!pickupLoc || !dropoffLoc}
-              title={!pickupLoc || !dropoffLoc ? 'Select pickup and dropoff first' : 'Next'}
+              onClick={handleContinueToVehicle}
+              className={`h-11 w-full rounded-xl font-semibold text-white transition ${
+                canContinueToVehicle ? 'bg-gray-900 hover:bg-black' : 'bg-gray-500 hover:bg-gray-600'
+              }`}
+              title={
+                !pickupLoc || !dropoffLoc
+                  ? 'Select pickup and dropoff first'
+                  : !hasPassengerCount
+                  ? 'Select the number of passengers first'
+                  : !hasScheduleSelection
+                  ? 'Choose a date and time for later bookings'
+                  : 'Next'
+              }
             >
               Next
             </button>

@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import { toast } from './ToastProvider';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
@@ -49,7 +50,7 @@ function fmtDateTime(d) {
 }
 
 function money(v) {
-  if (typeof v !== 'number') return '—';
+  if (typeof v !== 'number') return '-';
   return `$${v.toFixed(2)}`;
 }
 
@@ -73,6 +74,7 @@ const DriverDashboard = ({ driver, onLogout }) => {
       setUnassignedRides(res.data);
     } catch (err) {
       console.error('Error fetching unassigned rides:', err);
+      toast.error('Unable to load unassigned rides right now.');
     } finally {
       setLoading(false);
     }
@@ -87,6 +89,7 @@ const DriverDashboard = ({ driver, onLogout }) => {
       setMyRides(res.data);
     } catch (err) {
       console.error('Error fetching assigned rides:', err);
+      toast.error('Unable to load your assigned rides right now.');
     } finally {
       setLoading(false);
     }
@@ -100,15 +103,15 @@ const DriverDashboard = ({ driver, onLogout }) => {
         { driverId: driver.id }
       );
       if (res.status === 200 || res.status === 204) {
-        alert('✅ Ride assigned successfully!');
+        toast.success('Ride assigned successfully.');
         setUnassignedRides((prev) => prev.filter((r) => r.id !== rideId));
         if (tab === 'myrides') fetchMyRides();
       } else {
-        alert('❌ Unexpected response from server');
+        toast.error('Unexpected response from server.');
       }
     } catch (err) {
-      console.error('❌ Assignment failed:', err);
-      alert('❌ Failed to assign ride.');
+      console.error('Assignment failed:', err);
+      toast.error(err.response?.data?.error || 'Failed to assign ride.');
     } finally {
       setAssigning(null);
     }
@@ -121,13 +124,13 @@ const DriverDashboard = ({ driver, onLogout }) => {
         { driverId: driver.id }
       );
       if (res.status === 200) {
-        alert('✅ Ride unassigned successfully!');
+        toast.success('Ride unassigned successfully.');
         setMyRides((prev) => prev.filter((r) => r.id !== rideId));
         fetchUnassignedRides();
       }
     } catch (err) {
-      console.error('❌ Unassign error:', err);
-      alert('❌ Could not unassign ride.');
+      console.error('Unassign error:', err);
+      toast.error(err.response?.data?.error || 'Could not unassign ride.');
     }
   };
 
@@ -138,7 +141,6 @@ const DriverDashboard = ({ driver, onLogout }) => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
           <div className="h-[340px] md:h-[420px] w-full bg-gray-900" />
@@ -161,7 +163,7 @@ const DriverDashboard = ({ driver, onLogout }) => {
               </motion.h1>
 
               <motion.p custom={2} variants={fadeUp} className="mt-4 text-white/85 text-lg">
-                Manage ride assignments quickly. Tap “Assign to me” to lock a job.
+                Manage ride assignments quickly. Tap "Assign to Me" to lock a job.
               </motion.p>
 
               <motion.div custom={3} variants={fadeUp} className="mt-6 flex flex-wrap gap-2">
@@ -191,7 +193,6 @@ const DriverDashboard = ({ driver, onLogout }) => {
         </div>
       </section>
 
-      {/* Content */}
       <section className="max-w-6xl mx-auto px-6 -mt-10 md:-mt-12 pb-16">
         <motion.div
           initial="hidden"
@@ -200,7 +201,6 @@ const DriverDashboard = ({ driver, onLogout }) => {
           variants={softIn}
           className="rounded-3xl border border-gray-200 bg-white/90 backdrop-blur shadow-[0_30px_80px_-20px_rgba(0,0,0,0.18)] p-6 md:p-10"
         >
-          {/* Tabs */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h2 className="text-xl md:text-2xl font-extrabold text-gray-900">Rides</h2>
@@ -240,7 +240,6 @@ const DriverDashboard = ({ driver, onLogout }) => {
             </div>
           </div>
 
-          {/* Loading skeleton */}
           {loading ? (
             <div className="mt-6 space-y-4">
               <div className="h-24 rounded-3xl bg-gray-200 animate-pulse" />
@@ -252,7 +251,7 @@ const DriverDashboard = ({ driver, onLogout }) => {
               {unassignedRides.length === 0 ? (
                 <div className="rounded-3xl border border-gray-200 bg-gray-50 p-6">
                   <p className="font-semibold text-gray-900">No available rides at the moment.</p>
-                  <p className="mt-1 text-sm text-gray-600">Check back shortly — new jobs appear here.</p>
+                  <p className="mt-1 text-sm text-gray-600">Check back shortly. New jobs appear here.</p>
                 </div>
               ) : (
                 <div className="grid md:grid-cols-2 gap-4">
@@ -275,7 +274,7 @@ const DriverDashboard = ({ driver, onLogout }) => {
 
                           <div className="flex flex-col items-end gap-2">
                             <Pill tone="blue">Unassigned</Pill>
-                            <Pill>{ride.passengerCount ? `${ride.passengerCount} pax` : 'Pax —'}</Pill>
+                            <Pill>{ride.passengerCount ? `${ride.passengerCount} pax` : 'Pax -'}</Pill>
                           </div>
                         </div>
                       </div>
@@ -334,17 +333,17 @@ const DriverDashboard = ({ driver, onLogout }) => {
                         <div className="grid sm:grid-cols-2 gap-3">
                           <div className="rounded-2xl border border-gray-200 bg-white p-4">
                             <p className="text-xs font-semibold text-gray-500">Passenger</p>
-                            <p className="mt-1 font-semibold text-gray-900">{ride.name || '—'}</p>
-                            <p className="mt-1 text-gray-700">{ride.phone || '—'}</p>
+                            <p className="mt-1 font-semibold text-gray-900">{ride.name || '-'}</p>
+                            <p className="mt-1 text-gray-700">{ride.phone || '-'}</p>
                           </div>
 
                           <div className="rounded-2xl border border-gray-200 bg-white p-4">
                             <p className="text-xs font-semibold text-gray-500">Trip</p>
                             <p className="mt-1 text-gray-800">
-                              <span className="font-semibold">From:</span> {ride.pickup || '—'}
+                              <span className="font-semibold">From:</span> {ride.pickup || '-'}
                             </p>
                             <p className="mt-1 text-gray-800">
-                              <span className="font-semibold">To:</span> {ride.dropoff || '—'}
+                              <span className="font-semibold">To:</span> {ride.dropoff || '-'}
                             </p>
                           </div>
                         </div>
@@ -365,16 +364,16 @@ const DriverDashboard = ({ driver, onLogout }) => {
                                 { method: 'POST' }
                               );
                               if (res.ok) {
-                                alert('✅ Ride marked as completed.');
+                                toast.success('Ride marked as completed.');
                                 fetchMyRides();
                               } else {
                                 const error = await res.json();
-                                alert('❌ ' + (error?.error || 'Failed to update.'));
+                                toast.error(error?.error || 'Failed to update ride.');
                               }
                             }}
                             className="flex-1 h-11 rounded-xl bg-gray-900 text-white font-semibold hover:bg-black transition"
                           >
-                            ✅ Complete
+                            Complete
                           </button>
                         </div>
 

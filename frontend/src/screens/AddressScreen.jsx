@@ -50,9 +50,9 @@ function StepPill({ label, active, done, disabled, onClick }) {
           'inline-flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-extrabold',
           done ? 'bg-emerald-600 text-white' : active ? 'bg-gray-900 text-white' : 'bg-white/15 text-white',
         ].join(' ')}
-      >
-        {done ? 'OK' : '-'}
-      </span>
+        >
+        {done ? '•' : '-'}
+        </span>
       <span className="whitespace-nowrap">{label}</span>
     </button>
   );
