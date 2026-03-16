@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from '../components/ToastProvider';
 
@@ -13,7 +13,7 @@ const fadeUp = {
 
 function Pill({ children }) {
   return (
-    <span className="text-xs px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-gray-700 font-semibold">
+    <span className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs font-semibold text-gray-700">
       {children}
     </span>
   );
@@ -31,6 +31,7 @@ const PassengerDetails = ({
   scheduledDateTime,
   loggedInUser,
 }) => {
+  const topRef = useRef(null);
   const [name, setName] = useState(loggedInUser?.name || '');
   const [phone, setPhone] = useState(loggedInUser?.phone || '');
   const [email, setEmail] = useState(loggedInUser?.email || '');
@@ -39,66 +40,70 @@ const PassengerDetails = ({
   const tripMeta = useMemo(() => {
     const when = scheduledDateTime ? new Date(scheduledDateTime).toLocaleString('en-AU') : 'Now';
     const pax = passengerCount ? `${passengerCount} passengers` : 'Passengers not set';
-    const v = selectedVehicle?.name || selectedVehicle?.title || selectedVehicle?.id || 'Vehicle selected';
-    const f = typeof fare === 'number' ? `$${fare.toFixed(2)}` : fare ? `$${fare}` : '—';
-    const ft = fareType ? `${fareType}` : '';
-    return { when, pax, v, f, ft };
+    const vehicleName = selectedVehicle?.name || selectedVehicle?.title || selectedVehicle?.id || 'Vehicle selected';
+    const totalFare = typeof fare === 'number' ? `$${fare.toFixed(2)}` : fare ? `$${fare}` : '--';
+    const fareLabel = fareType || '';
+    return { when, pax, vehicleName, totalFare, fareLabel };
   }, [scheduledDateTime, passengerCount, selectedVehicle, fare, fareType]);
+
+  useEffect(() => {
+    if (!topRef.current) return;
+
+    topRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
 
   const submit = () => {
     if (!name || !phone) {
       toast.error('Please enter name and phone.');
       return;
     }
+
     onSubmitPassengerDetails({ name, phone, email, note });
   };
 
   return (
-    <motion.div initial="hidden" animate="show" className="text-gray-900">
-      {/* Header */}
+    <motion.div ref={topRef} initial="hidden" animate="show" className="scroll-mt-28 text-gray-900">
       <motion.div variants={fadeUp} className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-2xl md:text-3xl font-extrabold tracking-tight">Passenger details</h2>
+          <h2 className="text-2xl font-extrabold tracking-tight md:text-3xl">Passenger details</h2>
           <p className="mt-1 text-sm text-gray-600">
             Confirm your contact details so the driver can reach you.
           </p>
         </div>
-        <div className="hidden md:flex flex-wrap gap-2 justify-end">
+        <div className="hidden flex-wrap justify-end gap-2 md:flex">
           <Pill>Secure booking</Pill>
           <Pill>24/7 support</Pill>
           <Pill>Fast confirmation</Pill>
         </div>
       </motion.div>
 
-      {/* Trip summary */}
       <motion.div
         variants={fadeUp}
         custom={1}
-        className="mt-6 rounded-3xl border border-gray-200 bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-5 md:p-6"
+        className="mt-5 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm"
       >
-        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+        <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
           <div className="min-w-0">
-            <p className="text-xs font-semibold text-indigo-700">Trip summary</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Trip summary</p>
             <p className="mt-2 text-sm text-gray-800">
-              <span className="font-semibold">Pickup:</span> {pickupAddress || '—'}
+              <span className="font-semibold">Pickup:</span> {pickupAddress || '--'}
             </p>
             <p className="mt-1 text-sm text-gray-800">
-              <span className="font-semibold">Dropoff:</span> {dropoffAddress || '—'}
+              <span className="font-semibold">Dropoff:</span> {dropoffAddress || '--'}
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 md:justify-end">
             <Pill>{tripMeta.when}</Pill>
             <Pill>{tripMeta.pax}</Pill>
-            <Pill>{tripMeta.v}</Pill>
-            <Pill>{tripMeta.f} {tripMeta.ft}</Pill>
+            <Pill>{tripMeta.vehicleName}</Pill>
+            <Pill>{tripMeta.totalFare}{tripMeta.fareLabel ? ` | ${tripMeta.fareLabel}` : ''}</Pill>
           </div>
         </div>
       </motion.div>
 
-      {/* Form */}
       <motion.div variants={fadeUp} custom={2} className="mt-6 grid gap-4">
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="text-sm font-semibold text-gray-800">Full name *</label>
             <input
@@ -106,7 +111,7 @@ const PassengerDetails = ({
               placeholder="Passenger name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="mt-2 w-full h-11 px-3 border border-gray-200 rounded-xl bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/15"
+              className="mt-2 h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/15"
             />
           </div>
 
@@ -117,7 +122,7 @@ const PassengerDetails = ({
               placeholder="04xx xxx xxx"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="mt-2 w-full h-11 px-3 border border-gray-200 rounded-xl bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/15"
+              className="mt-2 h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/15"
             />
           </div>
         </div>
@@ -129,7 +134,7 @@ const PassengerDetails = ({
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="mt-2 w-full h-11 px-3 border border-gray-200 rounded-xl bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/15"
+            className="mt-2 h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/15"
           />
         </div>
 
@@ -139,25 +144,24 @@ const PassengerDetails = ({
             placeholder="e.g., Flight number, luggage details, child seat, pick-up instructions..."
             value={note}
             onChange={(e) => setNote(e.target.value)}
-            className="mt-2 w-full min-h-[120px] px-3 py-3 border border-gray-200 rounded-xl bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/15"
+            className="mt-2 min-h-[120px] w-full rounded-xl border border-gray-200 bg-white px-3 py-3 text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/15"
           />
           <p className="mt-2 text-xs text-gray-500">
             Tip: Add terminal info, airline, or special pickup instructions for faster service.
           </p>
         </div>
 
-        {/* Actions */}
-        <div className="mt-2 grid sm:grid-cols-2 gap-3">
+        <div className="mt-2 grid gap-3 sm:grid-cols-2">
           <button
             onClick={() => setStep(2)}
-            className="h-11 rounded-xl border border-gray-200 bg-white text-gray-900 font-semibold hover:bg-gray-50 transition"
+            className="h-11 rounded-xl border border-gray-200 bg-white font-semibold text-gray-900 transition hover:bg-gray-50"
           >
             Back
           </button>
 
           <button
             onClick={submit}
-            className="h-11 rounded-xl bg-gray-900 text-white font-semibold hover:bg-black transition"
+            className="h-11 rounded-xl bg-gray-900 font-semibold text-white transition hover:bg-black"
           >
             Continue
           </button>

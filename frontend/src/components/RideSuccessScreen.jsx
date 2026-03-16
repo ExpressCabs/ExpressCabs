@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
@@ -6,7 +6,14 @@ import { Helmet } from 'react-helmet-async';
 const RideSuccessScreen = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const topRef = useRef(null);
   const isGuest = location.state?.isGuest ?? false;
+
+  useEffect(() => {
+    if (!topRef.current) return;
+
+    topRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -19,9 +26,9 @@ const RideSuccessScreen = () => {
   }, [isGuest, navigate]);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div ref={topRef} className="min-h-screen scroll-mt-28 bg-white">
       <Helmet>
-        <title>Thank You â€“ Ride Booked | Express Cabs</title>
+        <title>Thank You - Ride Booked | Express Cabs</title>
         <meta
           name="description"
           content="Your ride has been successfully booked with Express Cabs. We'll be in touch shortly with driver details."
@@ -33,20 +40,19 @@ const RideSuccessScreen = () => {
         <div className="absolute inset-0">
           <div className="h-[520px] w-full bg-gray-900" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-white" />
-          <div className="absolute -top-32 -right-36 w-[520px] h-[520px] bg-emerald-500/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-44 -left-36 w-[520px] h-[520px] bg-indigo-500/20 rounded-full blur-3xl" />
+          <div className="absolute -right-36 -top-32 h-[520px] w-[520px] rounded-full bg-emerald-500/20 blur-3xl" />
+          <div className="absolute -bottom-44 -left-36 h-[520px] w-[520px] rounded-full bg-indigo-500/20 blur-3xl" />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-6 pt-16 pb-14">
+        <div className="relative mx-auto max-w-7xl px-6 pb-14 pt-24">
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.55, ease: 'easeOut' }}
             className="max-w-3xl text-white"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 backdrop-blur">
               <span className="text-xs font-semibold tracking-wide text-white/90">BOOKING CONFIRMED</span>
-              <span className="text-white/40">â€¢</span>
               <span className="text-xs text-white/80">Express Cabs</span>
             </div>
 
@@ -54,7 +60,7 @@ const RideSuccessScreen = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.08, duration: 0.55, ease: 'easeOut' }}
-              className="mt-6 text-4xl md:text-5xl font-extrabold tracking-tight"
+              className="mt-6 text-4xl font-extrabold tracking-tight md:text-5xl"
             >
               Ride booked successfully
             </motion.h1>
@@ -63,9 +69,9 @@ const RideSuccessScreen = () => {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.16, duration: 0.55, ease: 'easeOut' }}
-              className="mt-4 text-white/85 text-lg max-w-2xl"
+              className="mt-4 max-w-2xl text-lg text-white/85"
             >
-              Thanks â€” weâ€™ll confirm your booking shortly and share driver details when assigned.
+              Thanks, we will confirm your booking shortly and share driver details when assigned.
             </motion.p>
 
             <motion.div
@@ -74,13 +80,13 @@ const RideSuccessScreen = () => {
               transition={{ delay: 0.22, duration: 0.55, ease: 'easeOut' }}
               className="mt-6 flex flex-wrap gap-2"
             >
-              <span className="text-xs md:text-sm px-3 py-1.5 rounded-full bg-white/10 border border-white/15 text-white/90 backdrop-blur">
+              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs text-white/90 backdrop-blur md:text-sm">
                 24/7 Service
               </span>
-              <span className="text-xs md:text-sm px-3 py-1.5 rounded-full bg-white/10 border border-white/15 text-white/90 backdrop-blur">
+              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs text-white/90 backdrop-blur md:text-sm">
                 Airport Specialists
               </span>
-              <span className="text-xs md:text-sm px-3 py-1.5 rounded-full bg-white/10 border border-white/15 text-white/90 backdrop-blur">
+              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs text-white/90 backdrop-blur md:text-sm">
                 Fast Confirmation
               </span>
             </motion.div>
@@ -88,30 +94,30 @@ const RideSuccessScreen = () => {
         </div>
       </section>
 
-      <section className="max-w-7xl mx-auto px-6 -mt-10 md:-mt-12 pb-16">
+      <section className="-mt-10 mx-auto max-w-7xl px-6 pb-16 md:-mt-12">
         <motion.div
           initial={{ opacity: 0, y: 18, scale: 0.985 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.6, ease: 'easeOut' }}
-          className="max-w-xl mx-auto"
+          className="mx-auto max-w-xl"
         >
           <div className="relative">
             <div className="absolute -inset-1 rounded-[28px] bg-gradient-to-r from-gray-200/70 via-white/60 to-gray-200/70 blur-xl" />
-            <div className="relative rounded-[28px] border border-gray-200 bg-white/90 backdrop-blur shadow-[0_30px_80px_-20px_rgba(0,0,0,0.18)] p-7 md:p-10 text-center">
+            <div className="relative rounded-[28px] border border-gray-200 bg-white/90 p-7 text-center shadow-[0_30px_80px_-20px_rgba(0,0,0,0.18)] backdrop-blur md:p-10">
               <motion.div
                 initial={{ scale: 0.85, rotate: -10, opacity: 0 }}
                 animate={{ scale: 1, rotate: 0, opacity: 1 }}
                 transition={{ duration: 0.6, ease: 'easeOut' }}
-                className="mx-auto w-16 h-16 rounded-full bg-emerald-100 border border-emerald-200 flex items-center justify-center text-2xl"
+                className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-emerald-200 bg-emerald-100 text-2xl"
               >
-                âœ…
+                OK
               </motion.div>
 
               <motion.h2
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1, duration: 0.55, ease: 'easeOut' }}
-                className="mt-5 text-2xl md:text-3xl font-extrabold text-gray-900"
+                className="mt-5 text-2xl font-extrabold text-gray-900 md:text-3xl"
               >
                 Booking received
               </motion.h2>
@@ -120,14 +126,12 @@ const RideSuccessScreen = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.18, duration: 0.55, ease: 'easeOut' }}
-                className="mt-2 text-sm md:text-base text-gray-600"
+                className="mt-2 text-sm text-gray-600 md:text-base"
               >
-                {isGuest
-                  ? 'Redirecting you back to booking...'
-                  : 'Redirecting you to My Rides...'}
+                {isGuest ? 'Redirecting you back to booking...' : 'Redirecting you to My Rides...'}
               </motion.p>
 
-              <div className="mt-6 rounded-full bg-gray-100 border border-gray-200 overflow-hidden h-3">
+              <div className="mt-6 h-3 overflow-hidden rounded-full border border-gray-200 bg-gray-100">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: '100%' }}
@@ -136,26 +140,26 @@ const RideSuccessScreen = () => {
                 />
               </div>
 
-              <div className="mt-6 grid sm:grid-cols-2 gap-3">
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
                 <button
                   onClick={() =>
                     navigate('/', { state: { nextMode: isGuest ? 'passenger' : 'myrides' } })
                   }
-                  className="h-11 rounded-xl bg-gray-900 text-white font-semibold hover:bg-black transition"
+                  className="h-11 rounded-xl bg-gray-900 font-semibold text-white transition hover:bg-black"
                 >
                   Continue now
                 </button>
 
                 <button
                   onClick={() => navigate('/')}
-                  className="h-11 rounded-xl border border-gray-200 bg-white font-semibold text-gray-900 hover:bg-gray-50 transition"
+                  className="h-11 rounded-xl border border-gray-200 bg-white font-semibold text-gray-900 transition hover:bg-gray-50"
                 >
                   Home
                 </button>
               </div>
 
               <p className="mt-5 text-xs text-gray-500">
-                If you need urgent assistance, contact us via call/WhatsApp from the bottom bar.
+                If you need urgent assistance, contact us via call or WhatsApp from the bottom bar.
               </p>
             </div>
           </div>

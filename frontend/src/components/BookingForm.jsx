@@ -36,12 +36,14 @@ const BookingForm = ({
   const navigate = useNavigate();
 
   const mapRef = useRef(null);
+  const tripEstimateRef = useRef(null);
   const pickupInputRef = useRef(null);
   const dropoffInputRef = useRef(null);
   const pickupMarker = useRef(null);
   const dropoffMarker = useRef(null);
   const directionsRenderer = useRef(null);
   const gmapsInitRef = useRef(false);
+  const prevHasPassengerCountRef = useRef(false);
 
   const [map, setMap] = useState(null);
   const [pickupLoc, setPickupLoc] = useState(null);
@@ -310,6 +312,16 @@ const BookingForm = ({
   const hasScheduleSelection = bookingType === 'now' || Boolean(scheduledDateTime);
   const canContinueToVehicle = Boolean(pickupLoc && dropoffLoc && hasPassengerCount && hasScheduleSelection);
 
+  useEffect(() => {
+    const justEnteredPassengerCount = hasPassengerCount && !prevHasPassengerCountRef.current;
+
+    if (justEnteredPassengerCount && canContinueToVehicle && routePreview && tripEstimateRef.current) {
+      tripEstimateRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    prevHasPassengerCountRef.current = hasPassengerCount;
+  }, [canContinueToVehicle, hasPassengerCount, routePreview]);
+
   const handleContinueToVehicle = () => {
     if (!pickupLoc || !dropoffLoc) {
       toast.error('Select pickup and dropoff first.');
@@ -492,7 +504,10 @@ const BookingForm = ({
             )}
 
             {canContinueToVehicle && routePreview ? (
-              <div className="mb-4 rounded-[22px] border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_58%,#eef2ff_100%)] px-4 py-4 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.35)]">
+              <div
+                ref={tripEstimateRef}
+                className="mb-4 scroll-mt-28 rounded-[22px] border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_58%,#eef2ff_100%)] px-4 py-4 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.35)]"
+              >
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500">Trip Estimate</p>
