@@ -12,6 +12,7 @@ export default function AdminSidebar() {
         <div className="bg-gray-100 p-4 md:w-64">
             <h2 className="text-xl font-bold mb-4">Admin Panel</h2>
             <nav className="flex flex-col gap-3">
+                <NavLink to="/admin/analytics" className="hover:underline">Analytics</NavLink>
                 <NavLink to="/admin/invite-driver" className="hover:underline">Invite Driver</NavLink>
                 <NavLink to="/admin/blogs" className="hover:underline">All Blogs</NavLink>
                 <NavLink to="/admin/blogs/new" className="hover:underline">Write Blog</NavLink>

@@ -152,6 +152,7 @@ model VisitSession {
 
   @@index([visitorId])
   @@index([startedAt])
+  @@index([updatedAt])
   @@index([sourceType])
   @@index([gclid])
   @@index([ipHash])
@@ -207,6 +208,7 @@ model TrafficBlockSignal {
 
   @@unique([ipHash, reason])
   @@index([status])
+  @@index([lastSeenAt])
 }
 
 model VisitSecuritySnapshot {

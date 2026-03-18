@@ -58,6 +58,13 @@ const BlogNew = lazy(() => import("./admin/pages/blogNew"));
 const BlogList = lazy(() => import("./admin/pages/blogList"));
 const EmailSender = lazy(() => import("./admin/pages/emailSender"));
 const AdminLogin = lazy(() => import("./admin/pages/AdminLogin"));
+const AnalyticsOverview = lazy(() => import("./admin/pages/AnalyticsOverview"));
+const AnalyticsLive = lazy(() => import("./admin/pages/AnalyticsLive"));
+const AnalyticsFunnel = lazy(() => import("./admin/pages/AnalyticsFunnel"));
+const AnalyticsTrafficQuality = lazy(() => import("./admin/pages/AnalyticsTrafficQuality"));
+const AnalyticsSuburbs = lazy(() => import("./admin/pages/AnalyticsSuburbs"));
+const AnalyticsSessions = lazy(() => import("./admin/pages/AnalyticsSessions"));
+const AnalyticsBlockSignals = lazy(() => import("./admin/pages/AnalyticsBlockSignals"));
 
 const App = () => {
   const navigate = useNavigate();
@@ -323,6 +330,14 @@ const App = () => {
               </RequireAdmin>
             }
           >
+            <Route index element={<AnalyticsOverview />} />
+            <Route path="analytics" element={<AnalyticsOverview />} />
+            <Route path="analytics/live" element={<AnalyticsLive />} />
+            <Route path="analytics/funnel" element={<AnalyticsFunnel />} />
+            <Route path="analytics/traffic-quality" element={<AnalyticsTrafficQuality />} />
+            <Route path="analytics/suburbs" element={<AnalyticsSuburbs />} />
+            <Route path="analytics/sessions" element={<AnalyticsSessions />} />
+            <Route path="analytics/block-signals" element={<AnalyticsBlockSignals />} />
             <Route path="invite-driver" element={<InviteDriver />} />
             <Route path="blogs" element={<BlogList />} />
             <Route path="blogs/new" element={<BlogNew />} />

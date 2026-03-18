@@ -9,7 +9,7 @@ const AdminLogin = ({ onLogin }) => {
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
-    const redirectTo = location.state?.from?.pathname || '/admin/invite-driver';
+    const redirectTo = location.state?.from?.pathname || '/admin/analytics';
 
     // If already logged in, redirect away from login page
     useEffect(() => {
@@ -27,7 +27,7 @@ const AdminLogin = ({ onLogin }) => {
                 password,
             });
 
-            const admin = res.data.user;
+            const admin = { ...res.data.user, token: res.data.token };
             localStorage.setItem('admin', JSON.stringify(admin));
 
             if (onLogin) onLogin(admin); // 🔥 Immediately update in-memory state
