@@ -22,6 +22,7 @@ import {
   primeGoogleAdsTagLoad,
   trackPageView,
 } from "./lib/adsTracking";
+import { initializeAnalyticsTracking, trackAnalyticsEvent } from "./lib/tracking/events";
 
 // Keep these as direct imports if they are used immediately on homepage/mode switching
 import DriverDashboard from "./components/DriverDashboard";
@@ -68,6 +69,7 @@ const App = () => {
     const cleanupTelTracking = installTelClickTracking();
     const cleanupWhatsappTracking = installWhatsappClickTracking();
     primeGoogleAdsTagLoad();
+    initializeAnalyticsTracking();
 
     return () => {
       cleanupTelTracking?.();
@@ -76,11 +78,35 @@ const App = () => {
   }, []);
 
   useEffect(() => {
+    const path = `${location.pathname}${location.search}`;
+
     trackPageView({
-      path: `${location.pathname}${location.search}`,
+      path,
       title: document.title,
       location: window.location.href,
     });
+
+    trackAnalyticsEvent('page_view', {
+      path,
+      pageTitle: document.title,
+      metadata: {
+        location: window.location.href,
+      },
+    });
+
+    const engagedViewTimeout = window.setTimeout(() => {
+      trackAnalyticsEvent('engaged_view', {
+        path,
+        pageTitle: document.title,
+        metadata: {
+          engagedSeconds: 10,
+        },
+      });
+    }, 10000);
+
+    return () => {
+      window.clearTimeout(engagedViewTimeout);
+    };
   }, [location.pathname, location.search]);
 
   // Keep your existing "nextMode" redirect logic + VH fix

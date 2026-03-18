@@ -16,6 +16,7 @@ const blogRoutes = require('./routes/blogRoutes');
 const sitemapRoutes = require('./routes/sitemapRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const airportMetricsRouter = require('./routes/airportMetrics');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 
 const app = express();
 
@@ -79,6 +80,7 @@ app.use('/api/blogs', blogRoutes);
 app.use('/api', sitemapRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', airportMetricsRouter);
+app.use('/api/analytics', analyticsRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

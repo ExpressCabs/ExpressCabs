@@ -1,3 +1,5 @@
+import { trackAnalyticsEvent } from './tracking/events';
+
 const DEFAULT_GOOGLE_ADS_ID = 'AW-17249057389';
 const DEFAULT_BOOKING_CONVERSION_LABEL = 'OwxRCP63nOAaEO30_qBA';
 
@@ -325,6 +327,13 @@ export function installTelClickTracking() {
       'tel_link';
 
     firePhoneClickConversion({ phone, location });
+    trackAnalyticsEvent('tel_click', {
+      clickTarget: phone,
+      clickLocation: location,
+      metadata: {
+        phoneNumber: phone,
+      },
+    });
   };
 
   document.addEventListener('click', handleDocumentClick);
@@ -361,6 +370,10 @@ export function installWhatsappClickTracking() {
       'whatsapp_link';
 
     fireWhatsappClickConversion({ location });
+    trackAnalyticsEvent('whatsapp_click', {
+      clickTarget: 'whatsapp',
+      clickLocation: location,
+    });
   };
 
   document.addEventListener('click', handleDocumentClick);

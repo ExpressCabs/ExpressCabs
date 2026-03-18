@@ -39,6 +39,7 @@ const bookRide = async (req, res) => {
       fare,
       fareType,
       userId,
+      sessionToken,
     } = req.body;
 
     const parsedRideDate = new Date(rideDate);
@@ -89,6 +90,17 @@ const bookRide = async (req, res) => {
         userId: userId || null,
       },
     });
+
+    if (typeof sessionToken === 'string' && sessionToken.trim()) {
+      await prisma.visitSession
+        .updateMany({
+          where: { sessionToken: sessionToken.trim() },
+          data: { attributedRideId: ride.id },
+        })
+        .catch((analyticsError) => {
+          console.error('Failed to attach ride to analytics session:', analyticsError);
+        });
+    }
 
     const notificationTasks = [];
 

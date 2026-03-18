@@ -3,6 +3,8 @@ import { MdCalendarToday } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 
 import { fireBookingConversion } from '../lib/adsTracking';
+import { trackAnalyticsEvent } from '../lib/tracking/events';
+import { getOrCreateSessionToken } from '../lib/tracking/session';
 import { estimateFareRange, isMelbourneAirport } from '../lib/ridePricing';
 import { toast } from './ToastProvider';
 import { useGoogleMapsReady } from '../utils/useGoogleMapsReady';
@@ -44,6 +46,11 @@ const BookingForm = ({
   const directionsRenderer = useRef(null);
   const gmapsInitRef = useRef(false);
   const prevHasPassengerCountRef = useRef(false);
+  const bookingStartedTrackedRef = useRef(false);
+  const pickupTrackedRef = useRef('');
+  const dropoffTrackedRef = useRef('');
+  const fareTrackedRef = useRef('');
+  const vehicleTrackedRef = useRef('');
 
   const [map, setMap] = useState(null);
   const [pickupLoc, setPickupLoc] = useState(null);
@@ -65,11 +72,45 @@ const BookingForm = ({
 
   const { ready: mapsReady } = useGoogleMapsReady({ enabled: mapsEnabled });
 
+  const trackBookingStarted = useCallback(() => {
+    if (bookingStartedTrackedRef.current) {
+      return;
+    }
+
+    bookingStartedTrackedRef.current = true;
+    trackAnalyticsEvent('booking_started', {
+      stepName: 'address_entry',
+      bookingType,
+      metadata: {
+        entrySurface: embedded ? 'embedded_booking_form' : 'booking_form',
+      },
+    });
+  }, [bookingType, embedded]);
+
+  const extractSuburbFromPlace = useCallback((place) => {
+    const components = Array.isArray(place?.address_components) ? place.address_components : [];
+    const localityComponent = components.find((component) =>
+      Array.isArray(component.types) &&
+      ['locality', 'postal_town', 'administrative_area_level_2', 'sublocality', 'sublocality_level_1'].some((type) =>
+        component.types.includes(type)
+      )
+    );
+
+    if (localityComponent?.long_name) {
+      return localityComponent.long_name;
+    }
+
+    const addressText = place?.formatted_address || place?.name || '';
+    const match = addressText.match(/,\s*([^,]+?)(?:\s+VIC|\s+\d{4}|,|$)/i);
+    return match?.[1]?.trim() || addressText;
+  }, []);
+
   const handleMapIntent = useCallback(() => {
+    trackBookingStarted();
     if (!mapsEnabled) {
       setMapsEnabled(true);
     }
-  }, [mapsEnabled]);
+  }, [mapsEnabled, trackBookingStarted]);
 
   const initMapAndAutocomplete = useCallback(() => {
     if (gmapsInitRef.current) return;
@@ -111,6 +152,7 @@ const BookingForm = ({
     pickupAutocomplete.addListener('place_changed', () => {
       const place = pickupAutocomplete.getPlace();
       if (place?.geometry) {
+        trackBookingStarted();
         const location = place.geometry.location;
         if (pickupMarker.current) pickupMarker.current.setMap(null);
         pickupMarker.current = new window.google.maps.Marker({
@@ -129,6 +171,22 @@ const BookingForm = ({
         setPickupLoc(location);
         setPickupAddress(place.formatted_address || place.name);
         gMap.setCenter(location);
+
+        const pickupSuburb = extractSuburbFromPlace(place);
+        const eventKey = `${pickupSuburb}:${place.formatted_address || place.name || ''}`;
+        if (pickupTrackedRef.current !== eventKey) {
+          pickupTrackedRef.current = eventKey;
+          trackAnalyticsEvent('pickup_entered', {
+            stepName: 'address_entry',
+            pickupSuburb,
+            isAirportPickup: isMelbourneAirport(place.formatted_address || place.name || ''),
+            bookingType,
+            passengerCount: Number(passengerCount) || undefined,
+            metadata: {
+              pickupAddress: place.formatted_address || place.name || '',
+            },
+          });
+        }
       }
     });
 
@@ -139,6 +197,7 @@ const BookingForm = ({
     dropoffAutocomplete.addListener('place_changed', () => {
       const place = dropoffAutocomplete.getPlace();
       if (place?.geometry) {
+        trackBookingStarted();
         const location = place.geometry.location;
         if (dropoffMarker.current) dropoffMarker.current.setMap(null);
         dropoffMarker.current = new window.google.maps.Marker({
@@ -157,9 +216,25 @@ const BookingForm = ({
         setDropoffLoc(location);
         setDropoffAddress(place.formatted_address || place.name);
         gMap.setCenter(location);
+
+        const dropoffSuburb = extractSuburbFromPlace(place);
+        const eventKey = `${dropoffSuburb}:${place.formatted_address || place.name || ''}`;
+        if (dropoffTrackedRef.current !== eventKey) {
+          dropoffTrackedRef.current = eventKey;
+          trackAnalyticsEvent('dropoff_entered', {
+            stepName: 'address_entry',
+            dropoffSuburb,
+            isAirportDropoff: isMelbourneAirport(place.formatted_address || place.name || ''),
+            bookingType,
+            passengerCount: Number(passengerCount) || undefined,
+            metadata: {
+              dropoffAddress: place.formatted_address || place.name || '',
+            },
+          });
+        }
       }
     });
-  }, [mapsReady, step]);
+  }, [bookingType, extractSuburbFromPlace, mapsReady, passengerCount, step, trackBookingStarted]);
 
   useEffect(() => {
     if (step !== 1 || !mapsReady) return;
@@ -232,6 +307,9 @@ const BookingForm = ({
                 minFareText: fareRange ? `$${fareRange.minFare.toFixed(2)}` : '--',
                 maxFareText: fareRange ? `$${fareRange.maxFare.toFixed(2)}` : '--',
                 fareTypeText: fareRange ? `${fareRange.tariff.name} estimate` : 'Estimate',
+                minFare: fareRange?.minFare ?? null,
+                maxFare: fareRange?.maxFare ?? null,
+                hasTolls,
               });
             }
           }
@@ -240,7 +318,53 @@ const BookingForm = ({
     }
   }, [bookingType, dropoffLoc, map, passengerCount, pickupAddress, pickupLoc, scheduledDateTime]);
 
+  useEffect(() => {
+    if (!routePreview?.minFare || !routePreview?.maxFare || !pickupAddress || !dropoffAddress) {
+      return;
+    }
+
+    const fareKey = [
+      routePreview.minFare,
+      routePreview.maxFare,
+      bookingType,
+      passengerCount,
+      pickupAddress,
+      dropoffAddress,
+    ].join(':');
+
+    if (fareTrackedRef.current === fareKey) {
+      return;
+    }
+
+    fareTrackedRef.current = fareKey;
+    trackAnalyticsEvent('fare_calculated', {
+      stepName: 'vehicle_quote',
+      estimatedFare: Number(((routePreview.minFare + routePreview.maxFare) / 2).toFixed(2)),
+      bookingType,
+      passengerCount: Number(passengerCount) || undefined,
+      isAirportPickup: isMelbourneAirport(pickupAddress),
+      isAirportDropoff: isMelbourneAirport(dropoffAddress),
+      metadata: {
+        fareMin: routePreview.minFare,
+        fareMax: routePreview.maxFare,
+        fareType: routePreview.fareTypeText,
+        hasTolls: routePreview.hasTolls,
+      },
+    });
+  }, [bookingType, dropoffAddress, passengerCount, pickupAddress, routePreview]);
+
   const handlePassengerSubmit = (details) => {
+    trackAnalyticsEvent('passenger_details_submitted', {
+      stepName: 'passenger_details',
+      bookingType,
+      passengerCount: Number(passengerCount) || undefined,
+      vehicleType: selectedVehicle?.id || null,
+      estimatedFare: Number.isFinite(Number(fare)) ? Number(fare) : undefined,
+      metadata: {
+        hasEmail: Boolean(details?.email),
+        hasPhone: Boolean(details?.phone),
+      },
+    });
     setPassengerDetails(details);
     setStep(4);
   };
@@ -267,9 +391,19 @@ const BookingForm = ({
       fareType,
       passengerCount,
       userId: loggedInUser?.id ?? null,
+      sessionToken: getOrCreateSessionToken(),
     };
 
     try {
+      trackAnalyticsEvent('booking_submit_attempt', {
+        stepName: 'booking_submit',
+        bookingType,
+        passengerCount: Number(passengerCount) || undefined,
+        vehicleType: selectedVehicle?.id || null,
+        estimatedFare: Number.isFinite(Number(fare)) ? Number(fare) : undefined,
+        bookingDateTime: rideDate.toISOString(),
+      });
+
       const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/rides/book-ride`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -291,6 +425,19 @@ const BookingForm = ({
           phone: passengerDetails?.phone,
         });
 
+        trackAnalyticsEvent('booking_submit_success', {
+          stepName: 'booking_submit',
+          bookingType,
+          passengerCount: Number(passengerCount) || undefined,
+          vehicleType: selectedVehicle?.id || null,
+          estimatedFare: Number.isFinite(Number(result?.fare)) ? Number(result.fare) : conversionValue,
+          bookingDateTime: rideDate.toISOString(),
+          metadata: {
+            rideId: result?.id,
+            finalFare: result?.fare ?? fare,
+          },
+        });
+
         navigate('/ride-success', {
           state: {
             isGuest: !loggedInUser,
@@ -299,10 +446,31 @@ const BookingForm = ({
           },
         });
       } else {
+        trackAnalyticsEvent('booking_submit_error', {
+          stepName: 'booking_submit',
+          bookingType,
+          passengerCount: Number(passengerCount) || undefined,
+          vehicleType: selectedVehicle?.id || null,
+          estimatedFare: Number.isFinite(Number(fare)) ? Number(fare) : undefined,
+          metadata: {
+            errorType: res.status >= 500 ? 'server_error' : 'validation_error',
+            message: result?.error || 'Booking failed.',
+          },
+        });
         toast.error(result.error ? `Booking failed: ${result.error}` : 'Booking failed.');
       }
     } catch (err) {
       console.error('Booking error:', err);
+      trackAnalyticsEvent('booking_submit_error', {
+        stepName: 'booking_submit',
+        bookingType,
+        passengerCount: Number(passengerCount) || undefined,
+        vehicleType: selectedVehicle?.id || null,
+        estimatedFare: Number.isFinite(Number(fare)) ? Number(fare) : undefined,
+        metadata: {
+          errorType: 'network_error',
+        },
+      });
       toast.error('Error booking the ride.');
     }
   };
@@ -322,7 +490,31 @@ const BookingForm = ({
     prevHasPassengerCountRef.current = hasPassengerCount;
   }, [canContinueToVehicle, hasPassengerCount, routePreview]);
 
+  useEffect(() => {
+    if (!selectedVehicle?.id || !Number.isFinite(Number(fare))) {
+      return;
+    }
+
+    const vehicleKey = `${selectedVehicle.id}:${fare}:${passengerCount}:${bookingType}`;
+    if (vehicleTrackedRef.current === vehicleKey) {
+      return;
+    }
+
+    vehicleTrackedRef.current = vehicleKey;
+    trackAnalyticsEvent('vehicle_selected', {
+      stepName: 'vehicle_selection',
+      vehicleType: selectedVehicle.id,
+      estimatedFare: Number(fare),
+      bookingType,
+      passengerCount: Number(passengerCount) || undefined,
+      metadata: {
+        vehicleName: selectedVehicle.name || selectedVehicle.id,
+      },
+    });
+  }, [bookingType, fare, passengerCount, selectedVehicle]);
+
   const handleContinueToVehicle = () => {
+    trackBookingStarted();
     if (!pickupLoc || !dropoffLoc) {
       toast.error('Select pickup and dropoff first.');
       return;

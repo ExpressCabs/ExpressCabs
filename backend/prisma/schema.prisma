@@ -44,6 +44,7 @@ model Ride {
   status         String   @default("upcoming")
   driver         Driver?  @relation("DriverRides", fields: [driverId], references: [id])
   user           User?    @relation(fields: [userId], references: [id])
+  attributedSessions VisitSession[]
 }
 
 model User {
@@ -91,4 +92,128 @@ model Admin {
   password  String
   name      String
   createdAt DateTime @default(now())
+}
+
+model Visitor {
+  id               Int            @id @default(autoincrement())
+  visitorToken     String         @unique
+  firstSeenAt      DateTime       @default(now())
+  lastSeenAt       DateTime       @default(now())
+  firstSourceType  String?
+  firstLandingPath String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  sessions         VisitSession[]
+  events           VisitEvent[]
+}
+
+model VisitSession {
+  id                  Int                     @id @default(autoincrement())
+  sessionToken        String                  @unique
+  visitorId           Int
+  startedAt           DateTime                @default(now())
+  endedAt             DateTime?
+  landingUrl          String?
+  landingPath         String?
+  referrer            String?
+  sourceType          String                  @default("direct")
+  utmSource           String?
+  utmMedium           String?
+  utmCampaign         String?
+  utmTerm             String?
+  utmContent          String?
+  gclid               String?
+  gbraid              String?
+  wbraid              String?
+  geoCity             String?
+  geoRegion           String?
+  geoCountry          String?
+  isLikelyMelbourne   Boolean                 @default(false)
+  ipHash              String?
+  userAgent           String?
+  browser             String?
+  deviceType          String?
+  screenWidth         Int?
+  timezone            String?
+  sessionDurationSec  Int                     @default(0)
+  eventCount          Int                     @default(0)
+  riskScore           Int                     @default(0)
+  riskBand            String                  @default("good")
+  riskReasonsJson     Json?
+  attributedRideId    Int?
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  visitor             Visitor                 @relation(fields: [visitorId], references: [id])
+  attributedRide      Ride?                   @relation(fields: [attributedRideId], references: [id])
+  events              VisitEvent[]
+
+  @@index([visitorId])
+  @@index([startedAt])
+  @@index([sourceType])
+  @@index([gclid])
+  @@index([ipHash])
+  @@index([riskBand])
+  @@index([landingPath])
+}
+
+model VisitEvent {
+  id                 Int          @id @default(autoincrement())
+  sessionId          Int
+  visitorId          Int
+  eventName          String
+  eventTime          DateTime     @default(now())
+  path               String?
+  pageTitle          String?
+  stepName           String?
+  pickupSuburb       String?
+  dropoffSuburb      String?
+  isAirportPickup    Boolean?
+  isAirportDropoff   Boolean?
+  estimatedFare      Float?
+  vehicleType        String?
+  passengerCount     Int?
+  bookingType        String?
+  bookingDateTime    DateTime?
+  clickTarget        String?
+  clickLocation      String?
+  metadataJson       Json?
+  sourceTypeSnapshot String?
+  createdAt          DateTime     @default(now())
+  session            VisitSession @relation(fields: [sessionId], references: [id])
+  visitor            Visitor      @relation(fields: [visitorId], references: [id])
+
+  @@index([sessionId, eventTime])
+  @@index([eventName, eventTime])
+  @@index([pickupSuburb])
+  @@index([dropoffSuburb])
+}
+
+model TrafficBlockSignal {
+  id                    Int      @id @default(autoincrement())
+  ipHash                String
+  firstSeenAt           DateTime @default(now())
+  lastSeenAt            DateTime @default(now())
+  sessionCount          Int      @default(0)
+  paidSessionCount      Int      @default(0)
+  suspiciousSessionCount Int     @default(0)
+  reason                String
+  status                String   @default("open")
+  notes                 String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([ipHash, reason])
+  @@index([status])
+}
+
+model VisitSecuritySnapshot {
+  id          Int      @id @default(autoincrement())
+  rawIp       String?
+  ipHash      String?
+  headersJson Json?
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+
+  @@index([expiresAt])
+  @@index([ipHash])
 }
