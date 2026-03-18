@@ -1,7 +1,7 @@
 // controllers/adminController.js
 const prisma = require('../lib/prisma');
 const bcrypt = require('bcrypt');
-const { createAdminToken, verifyAdminToken } = require('../lib/adminAuth');
+const { createAdminToken, hasAdminAuthSecret, verifyAdminToken } = require('../lib/adminAuth');
 
 exports.adminLogin = async (req, res) => {
     const email = String(req.body.email || '').trim().toLowerCase();
@@ -9,6 +9,13 @@ exports.adminLogin = async (req, res) => {
 
     if (!email || !password) {
         return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    if (!hasAdminAuthSecret()) {
+        return res.status(500).json({
+            message: 'Admin authentication is not configured',
+            code: 'ADMIN_AUTH_NOT_CONFIGURED',
+        });
     }
 
     try {
@@ -29,6 +36,13 @@ exports.adminLogin = async (req, res) => {
 };
 
 exports.requireAdminAuth = (req, res, next) => {
+    if (!hasAdminAuthSecret()) {
+        return res.status(503).json({
+            message: 'Admin authentication is not configured',
+            code: 'ADMIN_AUTH_NOT_CONFIGURED',
+        });
+    }
+
     const bearerHeader = String(req.headers.authorization || '');
     const token = bearerHeader.startsWith('Bearer ')
         ? bearerHeader.slice('Bearer '.length).trim()

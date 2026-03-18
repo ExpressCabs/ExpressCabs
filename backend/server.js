@@ -7,6 +7,7 @@ const prisma = require('./lib/prisma');
 const securityHeaders = require('./middleware/securityHeaders');
 const { createRateLimiter } = require('./middleware/rateLimit');
 const { notFoundHandler, errorHandler } = require('./middleware/errorHandlers');
+const { hasAdminAuthSecret } = require('./lib/adminAuth');
 
 const rideRoutes = require('./routes/rideRoutes');
 const driverRoutes = require('./routes/driverRoutes');
@@ -109,6 +110,9 @@ const runStartupMigrations = () => {
 const startServer = async () => {
   try {
     runStartupMigrations();
+    if (!hasAdminAuthSecret()) {
+      console.warn('ADMIN_SESSION_SECRET is not configured. Admin login and analytics auth will not work until it is set.');
+    }
     server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   } catch (error) {
     console.error('Failed to start server:', error);

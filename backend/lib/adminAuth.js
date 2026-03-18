@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const DEFAULT_EXPIRY_MS = 1000 * 60 * 60 * 12;
 
 const getSecret = () => String(process.env.ADMIN_SESSION_SECRET || process.env.ADMIN_DEBUG_KEY || '').trim();
+const hasAdminAuthSecret = () => Boolean(getSecret());
 
 const encode = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
 const decode = (value) => JSON.parse(Buffer.from(value, 'base64url').toString('utf8'));
@@ -38,19 +39,24 @@ const verifyAdminToken = (token) => {
     return null;
   }
 
-  if (sign(payload) !== signature) {
+  try {
+    if (!hasAdminAuthSecret() || sign(payload) !== signature) {
+      return null;
+    }
+
+    const decoded = decode(payload);
+    if (decoded.expiresAt < Date.now() || decoded.role !== 'admin') {
+      return null;
+    }
+
+    return decoded;
+  } catch (error) {
     return null;
   }
-
-  const decoded = decode(payload);
-  if (decoded.expiresAt < Date.now() || decoded.role !== 'admin') {
-    return null;
-  }
-
-  return decoded;
 };
 
 module.exports = {
   createAdminToken,
+  hasAdminAuthSecret,
   verifyAdminToken,
 };
