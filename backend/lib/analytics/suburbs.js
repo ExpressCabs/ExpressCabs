@@ -9,6 +9,15 @@ const AIRPORT_PATTERNS = [
   /avalon airport/i,
 ];
 
+const MELBOURNE_INTENT_PATH_PATTERNS = [
+  /melbourne/i,
+  /airport/i,
+  /airport-transfer\/melbourne/i,
+  /airport-taxi-melbourne/i,
+];
+
+const MELBOURNE_TIMEZONES = new Set(['Australia/Sydney', 'Australia/Melbourne']);
+
 const suburbMap = new Map();
 
 for (const suburb of suburbsData) {
@@ -69,10 +78,11 @@ const normalizeSuburb = (value) => {
   return parts[1] ? toTitleCase(parts[1]) : parts[0] ? toTitleCase(parts[0]) : null;
 };
 
-const isLikelyMelbourne = ({
+const getMelbourneClassification = ({
   geoCity,
   geoRegion,
   geoCountry,
+  timezone,
   landingPath,
   pickupSuburb,
   dropoffSuburb,
@@ -83,18 +93,28 @@ const isLikelyMelbourne = ({
   const region = String(geoRegion || '').toLowerCase();
   const country = String(geoCountry || '').toLowerCase();
   const pathValue = String(landingPath || '').toLowerCase();
+  const reasons = {
+    melbourneByGeo: Boolean(city.includes('melbourne') || region.includes('vic') || region.includes('victoria')),
+    melbourneByTimezone: MELBOURNE_TIMEZONES.has(String(timezone || '')),
+    melbourneByLandingPage: MELBOURNE_INTENT_PATH_PATTERNS.some((pattern) => pattern.test(pathValue)),
+    melbourneByRoute: Boolean(
+      (pickupSuburb && suburbMap.has(String(pickupSuburb).toLowerCase())) ||
+      (dropoffSuburb && suburbMap.has(String(dropoffSuburb).toLowerCase())) ||
+      isAirportPickup ||
+      isAirportDropoff
+    ),
+  };
 
-  if (city.includes('melbourne')) return true;
-  if (region.includes('vic')) return true;
-  if (country && country !== 'au') return false;
-  if (pickupSuburb && suburbMap.has(String(pickupSuburb).toLowerCase())) return true;
-  if (dropoffSuburb && suburbMap.has(String(dropoffSuburb).toLowerCase())) return true;
-  if (isAirportPickup || isAirportDropoff) return true;
-  return pathValue.includes('melbourne') || pathValue.includes('airport');
+  const isLikelyMelbourne = Object.values(reasons).some(Boolean) && (!country || country === 'au');
+
+  return {
+    isLikelyMelbourne,
+    reasons,
+  };
 };
 
 module.exports = {
+  getMelbourneClassification,
   isAirportText,
-  isLikelyMelbourne,
   normalizeSuburb,
 };

@@ -3,7 +3,7 @@ const { ALLOWED_EVENT_NAMES, MAX_EVENT_BATCH_SIZE, MAX_METADATA_KEYS, MAX_STRING
 const { extractAttribution } = require('../lib/analytics/attribution');
 const { extractRequestContext } = require('../lib/analytics/requestMeta');
 const { computeSessionRisk } = require('../lib/analytics/risk');
-const { isAirportText, isLikelyMelbourne, normalizeSuburb } = require('../lib/analytics/suburbs');
+const { getMelbourneClassification, isAirportText, normalizeSuburb } = require('../lib/analytics/suburbs');
 
 const safeString = (value, max = MAX_STRING_LENGTH) => {
   if (typeof value !== 'string') {
@@ -141,20 +141,31 @@ const refreshSessionState = async (sessionId, sessionEndedAt) => {
           id: true,
           sourceType: true,
           landingPath: true,
+          sessionDurationSec: true,
+          riskBand: true,
+          riskReasonDetailsJson: true,
         },
       })
     : [];
 
+  const relatedSessions = repeatedSessions.map((item) => ({
+    ...item,
+    hasFunnelDepth: Array.isArray(item.riskReasonDetailsJson)
+      ? item.riskReasonDetailsJson.some((reason) => reason?.code === 'current_session_engaged')
+      : false,
+  }));
+
   const risk = computeSessionRisk({
     session: { ...session, sessionDurationSec },
     events,
-    relatedSessions: repeatedSessions,
+    relatedSessions,
   });
 
-  const melbourneLikely = isLikelyMelbourne({
+  const melbourneClassification = getMelbourneClassification({
     geoCity: session.geoCity,
     geoRegion: session.geoRegion,
     geoCountry: session.geoCountry,
+    timezone: session.timezone,
     landingPath: session.landingPath,
     pickupSuburb: events.map((event) => event.pickupSuburb).find(Boolean),
     dropoffSuburb: events.map((event) => event.dropoffSuburb).find(Boolean),
@@ -168,10 +179,12 @@ const refreshSessionState = async (sessionId, sessionEndedAt) => {
       endedAt,
       sessionDurationSec,
       eventCount: events.length,
-      isLikelyMelbourne: melbourneLikely,
+      isLikelyMelbourne: melbourneClassification.isLikelyMelbourne,
+      melbourneClassificationReason: melbourneClassification.reasons,
       riskScore: risk.riskScore,
       riskBand: risk.riskBand,
       riskReasonsJson: risk.riskReasons,
+      riskReasonDetailsJson: risk.riskReasonDetails,
     },
   });
 
@@ -279,15 +292,24 @@ const startSession = async (req, res) => {
         gclid: attribution.gclid,
         gbraid: attribution.gbraid,
         wbraid: attribution.wbraid,
+        sourceClassificationReason: attribution.sourceClassificationReason,
         geoCity: context.geoCity,
         geoRegion: context.geoRegion,
         geoCountry: context.geoCountry,
-        isLikelyMelbourne: isLikelyMelbourne({
+        isLikelyMelbourne: getMelbourneClassification({
           geoCity: context.geoCity,
           geoRegion: context.geoRegion,
           geoCountry: context.geoCountry,
+          timezone: context.timezone,
           landingPath: attribution.landingPath,
-        }),
+        }).isLikelyMelbourne,
+        melbourneClassificationReason: getMelbourneClassification({
+          geoCity: context.geoCity,
+          geoRegion: context.geoRegion,
+          geoCountry: context.geoCountry,
+          timezone: context.timezone,
+          landingPath: attribution.landingPath,
+        }).reasons,
         ipHash: context.ipHash,
         userAgent: context.userAgent,
         browser: context.browser,
@@ -422,8 +444,44 @@ const endSession = async (req, res) => {
   }
 };
 
+const getAnalyticsDebugSessions = async (req, res) => {
+  try {
+    const limit = Math.min(Math.max(Number(req.query.limit) || 25, 1), 100);
+    const sessions = await prisma.visitSession.findMany({
+      orderBy: { startedAt: 'desc' },
+      take: limit,
+      select: {
+        id: true,
+        sessionToken: true,
+        visitorId: true,
+        sourceType: true,
+        sourceClassificationReason: true,
+        gclid: true,
+        gbraid: true,
+        wbraid: true,
+        referrer: true,
+        landingPath: true,
+        isLikelyMelbourne: true,
+        melbourneClassificationReason: true,
+        riskScore: true,
+        riskBand: true,
+        riskReasonsJson: true,
+        riskReasonDetailsJson: true,
+        startedAt: true,
+        endedAt: true,
+      },
+    });
+
+    return res.json({ sessions });
+  } catch (error) {
+    console.error('Failed to fetch analytics debug sessions:', error);
+    return res.status(500).json({ error: 'Failed to fetch analytics debug sessions.' });
+  }
+};
+
 module.exports = {
   startSession,
   ingestEventsBatch,
   endSession,
+  getAnalyticsDebugSessions,
 };

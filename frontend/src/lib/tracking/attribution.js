@@ -1,10 +1,7 @@
-const PAID_SEARCH_PATTERN = /(cpc|ppc|paid|paidsearch|paid-search|paid_search|sem)/i;
-
 const getSafeWindow = () => (typeof window === 'undefined' ? null : window);
 
-export function resolveSourceType({ gclid, utmMedium, utmSource, referrer }) {
-  if (gclid) return 'google_paid';
-  if (utmMedium && PAID_SEARCH_PATTERN.test(utmMedium)) return 'paid_search_other';
+export function resolveSourceType({ gclid, gbraid, wbraid, referrer }) {
+  if (gclid || gbraid || wbraid) return 'google_paid';
 
   try {
     const host = referrer ? new URL(referrer).hostname.toLowerCase() : '';
@@ -14,7 +11,6 @@ export function resolveSourceType({ gclid, utmMedium, utmSource, referrer }) {
     if (!referrer) return 'direct';
   }
 
-  if (utmSource) return 'tagged_other';
   return 'referral_or_other';
 }
 

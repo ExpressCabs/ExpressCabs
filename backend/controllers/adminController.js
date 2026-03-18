@@ -1,6 +1,7 @@
 // controllers/adminController.js
 const prisma = require('../lib/prisma');
 const bcrypt = require('bcrypt');
+const { getAnalyticsDebugSessions } = require('./analyticsController');
 
 exports.adminLogin = async (req, res) => {
     const email = String(req.body.email || '').trim().toLowerCase();
@@ -26,3 +27,20 @@ exports.adminLogin = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+
+exports.requireAdminDebugAccess = (req, res, next) => {
+    const expectedKey = String(process.env.ADMIN_DEBUG_KEY || '').trim();
+    const providedKey = String(req.headers['x-admin-debug-key'] || '').trim();
+
+    if (!expectedKey) {
+        return res.status(503).json({ message: 'Admin debug access is not configured' });
+    }
+
+    if (!providedKey || providedKey !== expectedKey) {
+        return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    next();
+};
+
+exports.getAnalyticsDebugSessions = getAnalyticsDebugSessions;

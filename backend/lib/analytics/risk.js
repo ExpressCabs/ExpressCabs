@@ -16,61 +16,74 @@ const bandForScore = (score) => {
   return 'block_candidate';
 };
 
+const FUNNEL_EVENTS = ['pickup_entered', 'dropoff_entered', 'fare_calculated', 'vehicle_selected', 'booking_submit_attempt', 'booking_submit_success'];
+
 const computeSessionRisk = ({ session, events, relatedSessions = [] }) => {
-  const reasons = new Set();
+  const reasons = [];
   let score = 0;
 
   const eventNames = events.map((event) => event.eventName);
-  const hasFunnelDepth = eventNames.some((name) =>
-    ['pickup_entered', 'dropoff_entered', 'fare_calculated', 'vehicle_selected', 'booking_submit_attempt', 'booking_submit_success'].includes(name)
-  );
+  const hasFunnelDepth = eventNames.some((name) => FUNNEL_EVENTS.includes(name));
   const clickOnlyCount = eventNames.filter((name) => name === 'tel_click' || name === 'whatsapp_click').length;
   const pageViewsOnly =
     eventNames.length > 0 && eventNames.every((name) => ['session_started', 'page_view', 'engaged_view', 'session_ended'].includes(name));
 
   const repeatedPaidSessions = relatedSessions.filter((item) => item.sourceType === 'google_paid');
-  const sameLandingBurstCount = relatedSessions.filter(
-    (item) => item.sourceType === 'google_paid' && item.landingPath && item.landingPath === session.landingPath
-  ).length;
+  const repeatedShortNoDepthSessions = relatedSessions.filter((item) => (item.sessionDurationSec || 0) < 10 && !item.hasFunnelDepth);
+  const sameLandingBurstCount = relatedSessions.filter((item) => item.landingPath && item.landingPath === session.landingPath && (item.sessionDurationSec || 0) < 10).length;
+  const repeatedEngagedSessions = relatedSessions.filter((item) => item.hasFunnelDepth);
+  const addReason = (code, points, details = {}) => {
+    score += points;
+    reasons.push({ code, points, ...details });
+  };
 
   if (session.sourceType === 'google_paid' && repeatedPaidSessions.length >= 3) {
-    score += 30;
-    reasons.add('repeat_paid_ip');
+    addReason('repeat_paid_ip', 25, { repeatPaidSessions: repeatedPaidSessions.length });
   }
 
   if ((session.sessionDurationSec || 0) < 5 && pageViewsOnly) {
-    score += 15;
-    reasons.add('very_short_session');
+    addReason('very_short_session', 15, { sessionDurationSec: session.sessionDurationSec || 0 });
   }
 
   if (!hasFunnelDepth) {
-    score += 15;
-    reasons.add('no_funnel_depth');
+    addReason('no_funnel_depth', 15);
   }
 
   if (clickOnlyCount >= 2 && !hasFunnelDepth) {
-    score += 12;
-    reasons.add('click_only_pattern');
+    addReason('click_only_pattern', 12, { clickOnlyCount });
   }
 
-  if (sameLandingBurstCount >= 4) {
-    score += 10;
-    reasons.add('burst_paid_landing');
+  if (repeatedShortNoDepthSessions.length >= 2) {
+    addReason('repeat_short_no_depth_ip', 18, { repeatedShortNoDepthSessions: repeatedShortNoDepthSessions.length });
+  }
+
+  if (sameLandingBurstCount >= 3) {
+    addReason('repeat_same_landing_quick_exit', 12, { sameLandingBurstCount });
   }
 
   if (BOT_PATTERN.test(session.userAgent || '')) {
-    score += 20;
-    reasons.add('suspicious_user_agent');
+    addReason('suspicious_user_agent', 24, { userAgent: session.userAgent || '' });
   }
 
   for (const event of events) {
     score += NEGATIVE_EVENT_SCORES[event.eventName] || 0;
   }
 
+  if (repeatedEngagedSessions.length >= 1) {
+    addReason('repeat_engaged_return', -12, { repeatedEngagedSessions: repeatedEngagedSessions.length });
+  }
+
+  if (hasFunnelDepth) {
+    addReason('current_session_engaged', -8, { funnelEvents: eventNames.filter((name) => FUNNEL_EVENTS.includes(name)) });
+  }
+
+  const riskReasons = reasons.filter((reason) => reason.points > 0).map((reason) => reason.code);
+
   return {
     riskScore: score,
     riskBand: bandForScore(score),
-    riskReasons: Array.from(reasons),
+    riskReasons,
+    riskReasonDetails: reasons,
   };
 };
 

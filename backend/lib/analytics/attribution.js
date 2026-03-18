@@ -1,5 +1,3 @@
-const paidSearchPattern = /(cpc|ppc|paid|paidsearch|paid-search|paid_search|sem)/i;
-
 const sanitizeAttributionValue = (value, max = 255) => {
   if (typeof value !== 'string') {
     return null;
@@ -21,15 +19,25 @@ const getReferrerHost = (referrer) => {
   }
 };
 
-const resolveSourceType = ({ gclid, utmMedium, utmSource, referrer }) => {
-  if (gclid) return 'google_paid';
-  if (utmMedium && paidSearchPattern.test(utmMedium)) return 'paid_search_other';
+const hasPaidClickId = ({ gclid, gbraid, wbraid }) => Boolean(gclid || gbraid || wbraid);
 
+const resolveSourceType = ({ gclid, gbraid, wbraid, referrer }) => {
+  if (hasPaidClickId({ gclid, gbraid, wbraid })) return 'google_paid';
   const referrerHost = getReferrerHost(referrer);
   if (referrerHost.includes('google.')) return 'google_organic';
   if (!referrerHost) return 'direct';
-  if (utmSource) return 'tagged_other';
   return 'referral_or_other';
+};
+
+const getSourceClassificationReason = ({ gclid, gbraid, wbraid, referrer }) => {
+  if (gclid) return 'gclid';
+  if (gbraid) return 'gbraid';
+  if (wbraid) return 'wbraid';
+
+  const referrerHost = getReferrerHost(referrer);
+  if (referrerHost.includes('google.')) return 'google_referrer';
+  if (!referrerHost) return 'empty_referrer';
+  return 'non_google_referrer';
 };
 
 const extractAttribution = (payload = {}) => {
@@ -48,10 +56,13 @@ const extractAttribution = (payload = {}) => {
   };
 
   attribution.sourceType = resolveSourceType(attribution);
+  attribution.sourceClassificationReason = getSourceClassificationReason(attribution);
   return attribution;
 };
 
 module.exports = {
   extractAttribution,
+  getSourceClassificationReason,
+  hasPaidClickId,
   resolveSourceType,
 };
