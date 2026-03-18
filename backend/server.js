@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const { spawnSync } = require('child_process');
 const prisma = require('./lib/prisma');
 const securityHeaders = require('./middleware/securityHeaders');
 const { createRateLimiter } = require('./middleware/rateLimit');
@@ -19,6 +20,7 @@ const airportMetricsRouter = require('./routes/airportMetrics');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 
 const app = express();
+let server;
 
 const isProduction = process.env.NODE_ENV === 'production';
 const allowedOrigins = (process.env.CORS_ALLOWED_ORIGINS || '')
@@ -86,10 +88,41 @@ app.use(notFoundHandler);
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
-const server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+const runStartupMigrations = () => {
+  if (process.env.RUN_STARTUP_MIGRATIONS === 'false') {
+    return;
+  }
+
+  const prismaCliPath = require.resolve('prisma/build/index.js');
+  const result = spawnSync(process.execPath, [prismaCliPath, 'migrate', 'deploy'], {
+    cwd: __dirname,
+    env: process.env,
+    stdio: 'inherit',
+  });
+
+  if (result.status !== 0) {
+    throw new Error(`Prisma migrate deploy failed with exit code ${result.status}`);
+  }
+};
+
+const startServer = async () => {
+  try {
+    runStartupMigrations();
+    server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+};
 
 const shutdown = async () => {
   console.log('Shutting down server...');
+  if (!server) {
+    await prisma.$disconnect();
+    process.exit(0);
+    return;
+  }
   server.close(async () => {
     await prisma.$disconnect();
     process.exit(0);
@@ -104,3 +137,5 @@ process.on('unhandledRejection', (reason) => {
 process.on('uncaughtException', (error) => {
   console.error('Uncaught exception:', error);
 });
+
+startServer();
