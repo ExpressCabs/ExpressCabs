@@ -57,6 +57,8 @@ const BookingForm = ({
   const [dropoffLoc, setDropoffLoc] = useState(null);
   const [pickupAddress, setPickupAddress] = useState('');
   const [dropoffAddress, setDropoffAddress] = useState('');
+  const [pickupSuburb, setPickupSuburb] = useState('');
+  const [dropoffSuburb, setDropoffSuburb] = useState('');
   const [bookingType, setBookingType] = useState('now');
   const [passengerCount, setPassengerCount] = useState('');
   const [scheduledDateTime, setScheduledDateTime] = useState('');
@@ -81,9 +83,7 @@ const BookingForm = ({
     trackAnalyticsEvent('booking_started', {
       stepName: 'address_entry',
       bookingType,
-      metadata: {
-        entrySurface: embedded ? 'embedded_booking_form' : 'booking_form',
-      },
+      entrySurface: embedded ? 'embedded_booking_form' : 'booking_form',
     });
   }, [bookingType, embedded]);
 
@@ -170,6 +170,7 @@ const BookingForm = ({
         });
         setPickupLoc(location);
         setPickupAddress(place.formatted_address || place.name);
+        setPickupSuburb(pickupSuburb);
         gMap.setCenter(location);
 
         const pickupSuburb = extractSuburbFromPlace(place);
@@ -215,6 +216,7 @@ const BookingForm = ({
         });
         setDropoffLoc(location);
         setDropoffAddress(place.formatted_address || place.name);
+        setDropoffSuburb(dropoffSuburb);
         gMap.setCenter(location);
 
         const dropoffSuburb = extractSuburbFromPlace(place);
@@ -326,6 +328,8 @@ const BookingForm = ({
     const fareKey = [
       routePreview.minFare,
       routePreview.maxFare,
+      pickupSuburb,
+      dropoffSuburb,
       bookingType,
       passengerCount,
       pickupAddress,
@@ -340,6 +344,8 @@ const BookingForm = ({
     trackAnalyticsEvent('fare_calculated', {
       stepName: 'vehicle_quote',
       estimatedFare: Number(((routePreview.minFare + routePreview.maxFare) / 2).toFixed(2)),
+      pickupSuburb: pickupSuburb || undefined,
+      dropoffSuburb: dropoffSuburb || undefined,
       bookingType,
       passengerCount: Number(passengerCount) || undefined,
       isAirportPickup: isMelbourneAirport(pickupAddress),
@@ -351,7 +357,7 @@ const BookingForm = ({
         hasTolls: routePreview.hasTolls,
       },
     });
-  }, [bookingType, dropoffAddress, passengerCount, pickupAddress, routePreview]);
+  }, [bookingType, dropoffAddress, dropoffSuburb, passengerCount, pickupAddress, pickupSuburb, routePreview]);
 
   const handlePassengerSubmit = (details) => {
     trackAnalyticsEvent('passenger_details_submitted', {
@@ -397,6 +403,8 @@ const BookingForm = ({
     try {
       trackAnalyticsEvent('booking_submit_attempt', {
         stepName: 'booking_submit',
+        pickupSuburb: pickupSuburb || undefined,
+        dropoffSuburb: dropoffSuburb || undefined,
         bookingType,
         passengerCount: Number(passengerCount) || undefined,
         vehicleType: selectedVehicle?.id || null,
@@ -427,6 +435,9 @@ const BookingForm = ({
 
         trackAnalyticsEvent('booking_submit_success', {
           stepName: 'booking_submit',
+          rideId: result?.id,
+          pickupSuburb: pickupSuburb || undefined,
+          dropoffSuburb: dropoffSuburb || undefined,
           bookingType,
           passengerCount: Number(passengerCount) || undefined,
           vehicleType: selectedVehicle?.id || null,
@@ -448,6 +459,9 @@ const BookingForm = ({
       } else {
         trackAnalyticsEvent('booking_submit_error', {
           stepName: 'booking_submit',
+          errorType: res.status >= 500 ? 'server_error' : 'validation_error',
+          pickupSuburb: pickupSuburb || undefined,
+          dropoffSuburb: dropoffSuburb || undefined,
           bookingType,
           passengerCount: Number(passengerCount) || undefined,
           vehicleType: selectedVehicle?.id || null,
@@ -463,6 +477,9 @@ const BookingForm = ({
       console.error('Booking error:', err);
       trackAnalyticsEvent('booking_submit_error', {
         stepName: 'booking_submit',
+        errorType: 'network_error',
+        pickupSuburb: pickupSuburb || undefined,
+        dropoffSuburb: dropoffSuburb || undefined,
         bookingType,
         passengerCount: Number(passengerCount) || undefined,
         vehicleType: selectedVehicle?.id || null,
@@ -505,13 +522,15 @@ const BookingForm = ({
       stepName: 'vehicle_selection',
       vehicleType: selectedVehicle.id,
       estimatedFare: Number(fare),
+      pickupSuburb: pickupSuburb || undefined,
+      dropoffSuburb: dropoffSuburb || undefined,
       bookingType,
       passengerCount: Number(passengerCount) || undefined,
       metadata: {
         vehicleName: selectedVehicle.name || selectedVehicle.id,
       },
     });
-  }, [bookingType, fare, passengerCount, selectedVehicle]);
+  }, [bookingType, dropoffSuburb, fare, passengerCount, pickupSuburb, selectedVehicle]);
 
   const handleContinueToVehicle = () => {
     trackBookingStarted();

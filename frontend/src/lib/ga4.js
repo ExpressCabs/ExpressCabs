@@ -15,6 +15,7 @@ const GA4_EVENT_MAP = {
   fare_calculated: 'fare_calculated',
   vehicle_selected: 'vehicle_selected',
   booking_submit_success: 'booking_success',
+  booking_submit_error: 'booking_error',
   tel_click: 'call_click',
   whatsapp_click: 'whatsapp_click',
 };
@@ -52,7 +53,7 @@ const getGtag = () => {
   return window.gtag;
 };
 
-const emitGa4Event = (eventName, params = {}) => {
+export const trackGa4Event = (eventName, params = {}) => {
   if (!getGa4MeasurementId() || shouldSkipAnalyticsTracking()) {
     return false;
   }
@@ -72,6 +73,8 @@ const emitGa4Event = (eventName, params = {}) => {
   return true;
 };
 
+const emitGa4Event = trackGa4Event;
+
 const getSourceType = () => getTrackingContext()?.attribution?.sourceType || 'direct';
 
 const buildCommonParams = (payload = {}) => {
@@ -84,10 +87,14 @@ const buildCommonParams = (payload = {}) => {
   if (payload.vehicleType) params.vehicle_type = payload.vehicleType;
   if (isFiniteNumber(payload.estimatedFare)) params.estimated_fare = Number(payload.estimatedFare);
   if (payload.bookingType) params.booking_type = payload.bookingType;
+  if (isFiniteNumber(payload.passengerCount)) params.passenger_count = Number(payload.passengerCount);
   if (typeof payload.isAirportPickup === 'boolean') params.is_airport_pickup = payload.isAirportPickup;
   if (typeof payload.isAirportDropoff === 'boolean') params.is_airport_dropoff = payload.isAirportDropoff;
   if (payload.riskBand) params.risk_band = payload.riskBand;
   if (payload.clickLocation) params.click_location = payload.clickLocation;
+  if (payload.entrySurface || payload.metadata?.entrySurface) params.entry_surface = payload.entrySurface || payload.metadata?.entrySurface;
+  if (payload.stepName) params.step_name = payload.stepName;
+  if (payload.errorType || payload.metadata?.errorType) params.error_type = payload.errorType || payload.metadata?.errorType;
 
   return params;
 };
@@ -135,10 +142,16 @@ export function trackMappedGA4Event(internalEventName, payload = {}) {
   }
 
   const params = buildCommonParams(payload);
-  if (ga4EventName === 'booking_success') {
+  if (['fare_calculated', 'vehicle_selected', 'booking_success'].includes(ga4EventName)) {
     params.currency = 'AUD';
     if (isFiniteNumber(payload.estimatedFare)) {
       params.value = Number(payload.estimatedFare);
+    }
+  }
+
+  if (ga4EventName === 'booking_success') {
+    if (payload.rideId || payload.metadata?.rideId) {
+      params.ride_id = payload.rideId || payload.metadata?.rideId;
     }
   }
 
