@@ -4,6 +4,8 @@ const api = axios.create({
   baseURL: `${import.meta.env.VITE_API_BASE_URL}/api/admin/analytics`,
 });
 
+let authFailureHandled = false;
+
 const getStoredAdmin = () => {
   try {
     const raw = localStorage.getItem('admin');
@@ -21,6 +23,39 @@ const getAuthHeaders = () => {
       }
     : {};
 };
+
+const clearAdminSession = () => {
+  try {
+    localStorage.removeItem('admin');
+  } catch (error) {
+    // Ignore storage errors and still try to redirect.
+  }
+};
+
+const handleAuthFailure = () => {
+  if (authFailureHandled || typeof window === 'undefined') {
+    return;
+  }
+
+  authFailureHandled = true;
+  clearAdminSession();
+
+  const nextPath = `${window.location.pathname}${window.location.search || ''}`;
+  const redirect = `/admin/login?next=${encodeURIComponent(nextPath)}`;
+  window.location.replace(redirect);
+};
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error?.response?.status;
+    if (status === 401 || status === 403) {
+      handleAuthFailure();
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 export async function fetchAdminAnalytics(path, params = {}) {
   const response = await api.get(path, {

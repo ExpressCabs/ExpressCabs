@@ -9,7 +9,9 @@ const AdminLogin = ({ onLogin }) => {
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
-    const redirectTo = location.state?.from?.pathname || '/admin/analytics';
+    const nextParam = new URLSearchParams(location.search).get('next');
+    const stateRedirect = location.state?.from?.pathname;
+    const redirectTo = nextParam || stateRedirect || '/admin/analytics';
 
     // If already logged in, redirect away from login page
     useEffect(() => {
