@@ -62,11 +62,13 @@ const emitGa4Event = (eventName, params = {}) => {
     return false;
   }
 
+  const payload = DEBUG_GA4 ? { ...params, debug_mode: true } : params;
+
   if (DEBUG_GA4) {
-    console.info('[GA4]', eventName, params);
+    console.info('[GA4]', eventName, payload);
   }
 
-  gtag('event', eventName, params);
+  gtag('event', eventName, payload);
   return true;
 };
 
