@@ -1,4 +1,6 @@
 import { trackAnalyticsEvent } from './tracking/events';
+import { shouldSkipAnalyticsTracking } from './tracking/adminExclusion';
+import { trackGA4PageView } from './ga4';
 
 const DEFAULT_GOOGLE_ADS_ID = 'AW-17249057389';
 const DEFAULT_BOOKING_CONVERSION_LABEL = 'OwxRCP63nOAaEO30_qBA';
@@ -63,7 +65,7 @@ function configureGoogleTargets() {
 }
 
 export function loadGoogleAdsTag() {
-  if (typeof document === 'undefined') {
+  if (typeof document === 'undefined' || shouldSkipAnalyticsTracking()) {
     return Promise.resolve(false);
   }
 
@@ -107,11 +109,18 @@ export function loadGoogleAdsTag() {
 }
 
 export function primeGoogleAdsTagLoad() {
-  if (typeof window === 'undefined' || googleTagPrimeInstalled) {
+  if (typeof window === 'undefined' || googleTagPrimeInstalled || shouldSkipAnalyticsTracking()) {
     return;
   }
 
   googleTagPrimeInstalled = true;
+
+  if (getGa4MeasurementId()) {
+    loadGoogleAdsTag().catch((error) => {
+      console.error('Google Ads tag failed to load:', error);
+    });
+    return;
+  }
 
   const startLoad = () => {
     if (googleTagPrimeTimeoutId) {
@@ -190,16 +199,7 @@ function emitEvent(eventName, params = {}) {
 }
 
 export function trackPageView({ path, title, location } = {}) {
-  const ga4MeasurementId = getGa4MeasurementId();
-  if (!ga4MeasurementId) {
-    return false;
-  }
-
-  return emitEvent('page_view', {
-    page_path: path,
-    page_title: title,
-    page_location: location,
-  });
+  return trackGA4PageView({ path, title, location });
 }
 
 function shouldSkipDuplicateEvent(key) {
@@ -316,6 +316,10 @@ export function installTelClickTracking() {
       return;
     }
 
+    if (shouldSkipAnalyticsTracking()) {
+      return;
+    }
+
     loadGoogleAdsTag().catch(() => {});
 
     const href = link.getAttribute('href') || '';
@@ -358,6 +362,10 @@ export function installWhatsappClickTracking() {
         : null;
 
     if (!link) {
+      return;
+    }
+
+    if (shouldSkipAnalyticsTracking()) {
       return;
     }
 

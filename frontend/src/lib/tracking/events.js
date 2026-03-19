@@ -1,5 +1,6 @@
 import { getTrackingContext, getTrackingPageContext } from './session';
 import { shouldSkipAnalyticsTracking } from './adminExclusion';
+import { trackMappedGA4Event } from '../ga4';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 const BATCH_SIZE = 10;
@@ -157,6 +158,11 @@ export function trackAnalyticsEvent(eventName, payload = {}) {
     clickTarget: payload.clickTarget || null,
     clickLocation: payload.clickLocation || null,
     metadata: payload.metadata || null,
+  });
+
+  trackMappedGA4Event(eventName, {
+    ...payload,
+    sourceType: payload.sourceType || getTrackingContext()?.attribution?.sourceType || '',
   });
 
   if (queue.length >= BATCH_SIZE) {

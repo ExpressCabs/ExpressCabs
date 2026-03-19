@@ -23,6 +23,7 @@ import {
   trackPageView,
 } from "./lib/adsTracking";
 import { initializeAnalyticsTracking, trackAnalyticsEvent } from "./lib/tracking/events";
+import { shouldSkipAnalyticsTracking } from "./lib/tracking/adminExclusion";
 
 // Keep these as direct imports if they are used immediately on homepage/mode switching
 import DriverDashboard from "./components/DriverDashboard";
@@ -73,6 +74,10 @@ const App = () => {
   const [mode, setMode] = useState("passenger");
 
   useEffect(() => {
+    if (shouldSkipAnalyticsTracking()) {
+      return undefined;
+    }
+
     const cleanupTelTracking = installTelClickTracking();
     const cleanupWhatsappTracking = installWhatsappClickTracking();
     primeGoogleAdsTagLoad();
@@ -85,6 +90,10 @@ const App = () => {
   }, []);
 
   useEffect(() => {
+    if (shouldSkipAnalyticsTracking()) {
+      return undefined;
+    }
+
     const path = `${location.pathname}${location.search}`;
 
     trackPageView({
