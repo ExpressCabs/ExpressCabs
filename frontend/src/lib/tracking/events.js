@@ -1,4 +1,5 @@
 import { getTrackingContext, getTrackingPageContext } from './session';
+import { shouldSkipAnalyticsTracking } from './adminExclusion';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 const BATCH_SIZE = 10;
@@ -79,6 +80,12 @@ const installUnloadHandlers = () => {
 };
 
 export function initializeAnalyticsTracking() {
+  if (shouldSkipAnalyticsTracking()) {
+    initialized = false;
+    startPromise = null;
+    return Promise.resolve(false);
+  }
+
   if (initialized) {
     return Promise.resolve(true);
   }
@@ -125,7 +132,7 @@ export function initializeAnalyticsTracking() {
 }
 
 export function trackAnalyticsEvent(eventName, payload = {}) {
-  if (!eventName) {
+  if (!eventName || shouldSkipAnalyticsTracking()) {
     return false;
   }
 
@@ -162,6 +169,11 @@ export function trackAnalyticsEvent(eventName, payload = {}) {
 }
 
 export async function flushAnalyticsQueue(options = {}) {
+  if (shouldSkipAnalyticsTracking()) {
+    queue = [];
+    return false;
+  }
+
   if (flushInFlight || queue.length === 0) {
     return false;
   }
@@ -194,6 +206,11 @@ export async function flushAnalyticsQueue(options = {}) {
 }
 
 export function endAnalyticsSession({ reason = 'manual', useBeacon = false } = {}) {
+  if (shouldSkipAnalyticsTracking()) {
+    queue = [];
+    return false;
+  }
+
   if (sessionEndSent) {
     return false;
   }

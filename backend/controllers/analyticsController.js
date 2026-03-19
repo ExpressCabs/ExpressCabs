@@ -4,6 +4,12 @@ const { extractAttribution } = require('../lib/analytics/attribution');
 const { extractRequestContext } = require('../lib/analytics/requestMeta');
 const { computeSessionRisk } = require('../lib/analytics/risk');
 const { getMelbourneClassification, isAirportText, normalizeSuburb } = require('../lib/analytics/suburbs');
+const {
+  isAdminAnalyticsPath,
+  isAdminEventPayload,
+  isAdminSessionPayload,
+  isAdminSessionRecord,
+} = require('../lib/analytics/adminExclusion');
 
 const safeString = (value, max = MAX_STRING_LENGTH) => {
   if (typeof value !== 'string') {
@@ -68,6 +74,10 @@ const sanitizeMetadata = (input) => {
 };
 
 const buildEventCreateInput = (session, rawEvent) => {
+  if (isAdminSessionRecord(session) || isAdminEventPayload(rawEvent)) {
+    return null;
+  }
+
   const eventName = safeString(rawEvent?.eventName, 80);
   if (!eventName || !ALLOWED_EVENT_NAMES.includes(eventName)) {
     return null;
@@ -240,6 +250,10 @@ const refreshSessionState = async (sessionId, sessionEndedAt) => {
 
 const startSession = async (req, res) => {
   try {
+    if (isAdminAnalyticsPath(req) || isAdminSessionPayload(req.body || {})) {
+      return res.status(204).end();
+    }
+
     const visitorToken = safeToken(req.body?.visitorToken);
     const sessionToken = safeToken(req.body?.sessionToken);
 
@@ -249,6 +263,10 @@ const startSession = async (req, res) => {
 
     const existingSession = await prisma.visitSession.findUnique({ where: { sessionToken } });
     if (existingSession) {
+      if (isAdminSessionRecord(existingSession)) {
+        return res.status(204).end();
+      }
+
       const updated = await refreshSessionState(existingSession.id, existingSession.endedAt);
       return res.json({
         ok: true,
@@ -352,6 +370,10 @@ const startSession = async (req, res) => {
 
 const ingestEventsBatch = async (req, res) => {
   try {
+    if (isAdminAnalyticsPath(req)) {
+      return res.status(204).end();
+    }
+
     const sessionToken = safeToken(req.body?.sessionToken);
     if (!sessionToken) {
       return res.status(400).json({ error: 'sessionToken is required.' });
@@ -374,9 +396,13 @@ const ingestEventsBatch = async (req, res) => {
       return res.status(404).json({ error: 'Analytics session not found.' });
     }
 
+    if (isAdminSessionRecord(session)) {
+      return res.status(204).end();
+    }
+
     const createInputs = events.map((event) => buildEventCreateInput(session, event)).filter(Boolean);
     if (createInputs.length === 0) {
-      return res.status(400).json({ error: 'No valid analytics events in batch.' });
+      return res.status(204).end();
     }
 
     await prisma.$transaction(createInputs.map((data) => prisma.visitEvent.create({ data })));
@@ -400,6 +426,10 @@ const ingestEventsBatch = async (req, res) => {
 
 const endSession = async (req, res) => {
   try {
+    if (isAdminAnalyticsPath(req) || isAdminEventPayload(req.body || {})) {
+      return res.status(204).end();
+    }
+
     const sessionToken = safeToken(req.body?.sessionToken);
     if (!sessionToken) {
       return res.status(400).json({ error: 'sessionToken is required.' });
@@ -411,6 +441,10 @@ const endSession = async (req, res) => {
 
     if (!session) {
       return res.status(404).json({ error: 'Analytics session not found.' });
+    }
+
+    if (isAdminSessionRecord(session)) {
+      return res.status(204).end();
     }
 
     const endedAt = safeDate(req.body?.endedAt) || new Date();

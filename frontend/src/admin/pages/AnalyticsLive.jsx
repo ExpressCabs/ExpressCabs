@@ -24,7 +24,7 @@ export default function AnalyticsLive() {
     };
 
     load();
-    const timer = window.setInterval(load, 8000);
+    const timer = window.setInterval(load, 3000);
     return () => {
       cancelled = true;
       window.clearInterval(timer);
@@ -36,7 +36,7 @@ export default function AnalyticsLive() {
       <AnalyticsNav />
       <div className="mb-4">
         <h1 className="text-3xl font-extrabold text-slate-900">Live Traffic</h1>
-        <p className="mt-1 text-sm text-slate-500">Active sessions refreshed every few seconds.</p>
+        <p className="mt-1 text-sm text-slate-500">Active sessions refresh every 3 seconds.</p>
       </div>
 
       <div className="mb-4 grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm md:grid-cols-4">

@@ -1,4 +1,10 @@
 const prisma = require('../lib/prisma');
+const {
+  getNonAdminEventWhere,
+  getNonAdminNestedEventWhere,
+  getNonAdminSessionWhere,
+  isAdminSessionRecord,
+} = require('../lib/analytics/adminExclusion');
 
 const VALID_RANGES = new Set(['today', '24h', '7d', '30d']);
 const VALID_SOURCE_TYPES = new Set(['google_paid', 'google_organic', 'direct', 'referral_or_other']);
@@ -48,7 +54,7 @@ const parseBool = (value) => {
 };
 
 const buildSessionWhere = (query = {}, { activeOnly = false } = {}) => {
-  const where = {};
+  const where = getNonAdminSessionWhere({});
   if (activeOnly) {
     where.updatedAt = { gte: new Date(Date.now() - 5 * 60 * 1000) };
   } else if (query.range) {
@@ -104,12 +110,28 @@ const summarizeSession = (session) => {
   };
 };
 
+const getNonAdminIpHashWhere = (extraWhere = {}) =>
+  getNonAdminSessionWhere({
+    ...extraWhere,
+    ipHash: { not: null },
+  });
+
+const getKnownNonAdminIpHashes = async (extraWhere = {}) => {
+  const rows = await prisma.visitSession.findMany({
+    where: getNonAdminIpHashWhere(extraWhere),
+    distinct: ['ipHash'],
+    select: { ipHash: true },
+  });
+
+  return rows.map((row) => row.ipHash).filter(Boolean);
+};
+
 const getOverview = async (req, res) => {
   try {
     const range = VALID_RANGES.has(req.query.range) ? req.query.range : 'today';
     const since = getRangeStart(range);
-    const sessionWhere = { startedAt: { gte: since } };
-    const eventWhere = { eventTime: { gte: since } };
+    const sessionWhere = getNonAdminSessionWhere({ startedAt: { gte: since } });
+    const eventWhere = getNonAdminEventWhere({ eventTime: { gte: since } });
 
     const [sessions, events] = await Promise.all([
       prisma.visitSession.findMany({
@@ -118,6 +140,7 @@ const getOverview = async (req, res) => {
         take: 10,
         include: {
           events: {
+            where: getNonAdminNestedEventWhere(),
             orderBy: { eventTime: 'desc' },
             take: 3,
           },
@@ -162,7 +185,7 @@ const getOverview = async (req, res) => {
     return res.json({
       range,
       activeSessions: await prisma.visitSession.count({
-        where: { updatedAt: { gte: new Date(Date.now() - 5 * 60 * 1000) } },
+        where: getNonAdminSessionWhere({ updatedAt: { gte: new Date(Date.now() - 5 * 60 * 1000) } }),
       }),
       sessionsToday: allSessions.length,
       googlePaid: allSessions.filter((session) => session.sourceType === 'google_paid').length,
@@ -195,6 +218,7 @@ const getLiveSessions = async (req, res) => {
       take: limit,
       include: {
         events: {
+          where: getNonAdminNestedEventWhere(),
           orderBy: { eventTime: 'desc' },
           take: 5,
         },
@@ -213,8 +237,10 @@ const getFunnel = async (req, res) => {
     const since = getRangeStart(req.query.range || 'today');
     const events = await prisma.visitEvent.findMany({
       where: {
-        eventTime: { gte: since },
-        eventName: { in: FUNNEL_STEPS },
+        ...getNonAdminEventWhere({
+          eventTime: { gte: since },
+          eventName: { in: FUNNEL_STEPS },
+        }),
       },
       select: {
         sessionId: true,
@@ -263,11 +289,13 @@ const getSuburbInsights = async (req, res) => {
     const airportOnly = parseBool(req.query.airportOnly);
     const events = await prisma.visitEvent.findMany({
       where: {
-        eventTime: { gte: since },
-        OR: [
-          { pickupSuburb: { not: null } },
-          { dropoffSuburb: { not: null } },
-        ],
+        ...getNonAdminEventWhere({
+          eventTime: { gte: since },
+          OR: [
+            { pickupSuburb: { not: null } },
+            { dropoffSuburb: { not: null } },
+          ],
+        }),
       },
       select: {
         sessionId: true,
@@ -311,12 +339,16 @@ const getSuburbInsights = async (req, res) => {
     const paidTrafficBySuburb = tally(filteredEvents.filter((event) => event.sourceTypeSnapshot === 'google_paid'), 'pickupSuburb');
     const suspiciousSessions = await prisma.visitSession.findMany({
       where: {
-        startedAt: { gte: since },
-        riskBand: { in: ['suspicious', 'block_candidate'] },
+        ...getNonAdminSessionWhere({
+          startedAt: { gte: since },
+          riskBand: { in: ['suspicious', 'block_candidate'] },
+        }),
       },
       include: {
         events: {
-          where: { OR: [{ pickupSuburb: { not: null } }, { dropoffSuburb: { not: null } }] },
+          where: getNonAdminNestedEventWhere({
+            OR: [{ pickupSuburb: { not: null } }, { dropoffSuburb: { not: null } }],
+          }),
           take: 5,
         },
       },
@@ -345,12 +377,15 @@ const getTrafficQuality = async (req, res) => {
     const since = getRangeStart(req.query.range || 'today');
     const sessions = await prisma.visitSession.findMany({
       where: {
-        startedAt: { gte: since },
-        ...buildSessionWhere(req.query),
+        ...getNonAdminSessionWhere({
+          startedAt: { gte: since },
+          ...buildSessionWhere(req.query),
+        }),
       },
       orderBy: { startedAt: 'desc' },
       include: {
         events: {
+          where: getNonAdminNestedEventWhere(),
           orderBy: { eventTime: 'desc' },
           take: 5,
         },
@@ -358,6 +393,11 @@ const getTrafficQuality = async (req, res) => {
     });
 
     const signals = await prisma.trafficBlockSignal.findMany({
+      where: {
+        ipHash: {
+          in: await getKnownNonAdminIpHashes({ startedAt: { gte: since } }),
+        },
+      },
       orderBy: { lastSeenAt: 'desc' },
       take: 100,
     });
@@ -440,6 +480,7 @@ const getSessions = async (req, res) => {
         take: limit,
         include: {
           events: {
+            where: getNonAdminNestedEventWhere(),
             orderBy: { eventTime: 'desc' },
             take: 5,
           },
@@ -472,12 +513,17 @@ const getSessionDetail = async (req, res) => {
       include: {
         visitor: true,
         events: {
+          where: getNonAdminNestedEventWhere(),
           orderBy: { eventTime: 'asc' },
         },
       },
     });
 
     if (!session) {
+      return res.status(404).json({ error: 'Session not found.' });
+    }
+
+    if (isAdminSessionRecord(session)) {
       return res.status(404).json({ error: 'Session not found.' });
     }
 
@@ -518,17 +564,25 @@ const getBlockSignals = async (req, res) => {
       where.status = String(req.query.status);
     }
 
-    const [rows, total] = await Promise.all([
+    const allowedIpHashes = await getKnownNonAdminIpHashes();
+    const signalWhere = {
+      ...where,
+      ipHash: {
+        in: allowedIpHashes,
+      },
+    };
+
+    const [blockSignals, total] = await Promise.all([
       prisma.trafficBlockSignal.findMany({
-        where,
+        where: signalWhere,
         orderBy: { lastSeenAt: 'desc' },
         skip,
         take: limit,
       }),
-      prisma.trafficBlockSignal.count({ where }),
+      prisma.trafficBlockSignal.count({ where: signalWhere }),
     ]);
 
-    return res.json({ page, limit, total, blockSignals: rows });
+    return res.json({ page, limit, total, blockSignals });
   } catch (error) {
     console.error('Failed to fetch block signals:', error);
     return res.status(500).json({ error: 'Failed to fetch block signals.' });

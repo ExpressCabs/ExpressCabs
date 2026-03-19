@@ -24,7 +24,7 @@ export default function AnalyticsOverview() {
     };
 
     load();
-    const timer = window.setInterval(load, 10000);
+    const timer = window.setInterval(load, 5000);
     return () => {
       cancelled = true;
       window.clearInterval(timer);

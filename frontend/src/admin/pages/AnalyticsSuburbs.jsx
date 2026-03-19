@@ -33,7 +33,7 @@ export default function AnalyticsSuburbs() {
     load().catch(() => {
       if (!cancelled) setData(null);
     });
-    const timer = window.setInterval(load, 45000);
+    const timer = window.setInterval(load, 15000);
     return () => {
       cancelled = true;
       window.clearInterval(timer);

@@ -51,7 +51,7 @@ export default function AnalyticsTrafficQuality() {
     load().catch(() => {
       if (!cancelled) setData(null);
     });
-    const timer = window.setInterval(load, 15000);
+    const timer = window.setInterval(load, 5000);
     return () => {
       cancelled = true;
       window.clearInterval(timer);
