@@ -74,18 +74,27 @@ const BookingForm = ({
 
   const { ready: mapsReady } = useGoogleMapsReady({ enabled: mapsEnabled });
 
+  const fireDirectGa4Event = useCallback((eventName, params = {}) => {
+    if (typeof window === 'undefined' || typeof window.gtag !== 'function') {
+      return;
+    }
+
+    window.gtag('event', eventName, params);
+  }, []);
+
   const trackBookingStarted = useCallback(() => {
     if (bookingStartedTrackedRef.current) {
       return;
     }
 
     bookingStartedTrackedRef.current = true;
+    fireDirectGa4Event('booking_started');
     trackAnalyticsEvent('booking_started', {
       stepName: 'address_entry',
       bookingType,
       entrySurface: embedded ? 'embedded_booking_form' : 'booking_form',
     });
-  }, [bookingType, embedded]);
+  }, [bookingType, embedded, fireDirectGa4Event]);
 
   const extractSuburbFromPlace = useCallback((place) => {
     const components = Array.isArray(place?.address_components) ? place.address_components : [];
@@ -177,6 +186,9 @@ const BookingForm = ({
         const eventKey = `${pickupSuburb}:${place.formatted_address || place.name || ''}`;
         if (pickupTrackedRef.current !== eventKey) {
           pickupTrackedRef.current = eventKey;
+          fireDirectGa4Event('pickup_entered', {
+            pickup_suburb: pickupSuburb,
+          });
           trackAnalyticsEvent('pickup_entered', {
             stepName: 'address_entry',
             pickupSuburb,
@@ -223,6 +235,9 @@ const BookingForm = ({
         const eventKey = `${dropoffSuburb}:${place.formatted_address || place.name || ''}`;
         if (dropoffTrackedRef.current !== eventKey) {
           dropoffTrackedRef.current = eventKey;
+          fireDirectGa4Event('dropoff_entered', {
+            dropoff_suburb: dropoffSuburb,
+          });
           trackAnalyticsEvent('dropoff_entered', {
             stepName: 'address_entry',
             dropoffSuburb,
@@ -341,9 +356,14 @@ const BookingForm = ({
     }
 
     fareTrackedRef.current = fareKey;
+    const ga4FareValue = Number(((routePreview.minFare + routePreview.maxFare) / 2).toFixed(2));
+    fireDirectGa4Event('fare_calculated', {
+      value: ga4FareValue,
+      currency: 'AUD',
+    });
     trackAnalyticsEvent('fare_calculated', {
       stepName: 'vehicle_quote',
-      estimatedFare: Number(((routePreview.minFare + routePreview.maxFare) / 2).toFixed(2)),
+      estimatedFare: ga4FareValue,
       pickupSuburb: pickupSuburb || undefined,
       dropoffSuburb: dropoffSuburb || undefined,
       bookingType,
@@ -357,7 +377,7 @@ const BookingForm = ({
         hasTolls: routePreview.hasTolls,
       },
     });
-  }, [bookingType, dropoffAddress, dropoffSuburb, passengerCount, pickupAddress, pickupSuburb, routePreview]);
+  }, [bookingType, dropoffAddress, dropoffSuburb, fireDirectGa4Event, passengerCount, pickupAddress, pickupSuburb, routePreview]);
 
   const handlePassengerSubmit = (details) => {
     trackAnalyticsEvent('passenger_details_submitted', {
@@ -518,6 +538,9 @@ const BookingForm = ({
     }
 
     vehicleTrackedRef.current = vehicleKey;
+    fireDirectGa4Event('vehicle_selected', {
+      vehicle_type: selectedVehicle.id,
+    });
     trackAnalyticsEvent('vehicle_selected', {
       stepName: 'vehicle_selection',
       vehicleType: selectedVehicle.id,
@@ -530,7 +553,7 @@ const BookingForm = ({
         vehicleName: selectedVehicle.name || selectedVehicle.id,
       },
     });
-  }, [bookingType, dropoffSuburb, fare, passengerCount, pickupSuburb, selectedVehicle]);
+  }, [bookingType, dropoffSuburb, fare, fireDirectGa4Event, passengerCount, pickupSuburb, selectedVehicle]);
 
   const handleContinueToVehicle = () => {
     trackBookingStarted();
