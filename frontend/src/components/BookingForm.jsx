@@ -170,10 +170,10 @@ const BookingForm = ({
         });
         setPickupLoc(location);
         setPickupAddress(place.formatted_address || place.name);
+        const pickupSuburb = extractSuburbFromPlace(place);
         setPickupSuburb(pickupSuburb);
         gMap.setCenter(location);
 
-        const pickupSuburb = extractSuburbFromPlace(place);
         const eventKey = `${pickupSuburb}:${place.formatted_address || place.name || ''}`;
         if (pickupTrackedRef.current !== eventKey) {
           pickupTrackedRef.current = eventKey;
@@ -216,10 +216,10 @@ const BookingForm = ({
         });
         setDropoffLoc(location);
         setDropoffAddress(place.formatted_address || place.name);
+        const dropoffSuburb = extractSuburbFromPlace(place);
         setDropoffSuburb(dropoffSuburb);
         gMap.setCenter(location);
 
-        const dropoffSuburb = extractSuburbFromPlace(place);
         const eventKey = `${dropoffSuburb}:${place.formatted_address || place.name || ''}`;
         if (dropoffTrackedRef.current !== eventKey) {
           dropoffTrackedRef.current = eventKey;
