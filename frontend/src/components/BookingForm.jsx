@@ -90,12 +90,15 @@ const BookingForm = ({
     }
 
     bookingStartedTrackedRef.current = true;
+    fireSubmitGa4Event('booking_started', {
+      debug_mode: true,
+    });
     trackAnalyticsEvent('booking_started', {
       stepName: 'address_entry',
       bookingType,
       entrySurface: embedded ? 'embedded_booking_form' : 'booking_form',
     });
-  }, [bookingType, embedded]);
+  }, [bookingType, embedded, fireSubmitGa4Event]);
 
   const extractSuburbFromPlace = useCallback((place) => {
     const components = Array.isArray(place?.address_components) ? place.address_components : [];
@@ -187,6 +190,10 @@ const BookingForm = ({
         const eventKey = `${pickupSuburb}:${place.formatted_address || place.name || ''}`;
         if (pickupTrackedRef.current !== eventKey) {
           pickupTrackedRef.current = eventKey;
+          fireSubmitGa4Event('pickup_entered', {
+            pickup_suburb: pickupSuburb,
+            debug_mode: true,
+          });
           trackAnalyticsEvent('pickup_entered', {
             stepName: 'address_entry',
             pickupSuburb,
@@ -233,6 +240,10 @@ const BookingForm = ({
         const eventKey = `${dropoffSuburb}:${place.formatted_address || place.name || ''}`;
         if (dropoffTrackedRef.current !== eventKey) {
           dropoffTrackedRef.current = eventKey;
+          fireSubmitGa4Event('dropoff_entered', {
+            dropoff_suburb: dropoffSuburb,
+            debug_mode: true,
+          });
           trackAnalyticsEvent('dropoff_entered', {
             stepName: 'address_entry',
             dropoffSuburb,
@@ -352,6 +363,11 @@ const BookingForm = ({
 
     fareTrackedRef.current = fareKey;
     const ga4FareValue = Number(((routePreview.minFare + routePreview.maxFare) / 2).toFixed(2));
+    fireSubmitGa4Event('fare_calculated', {
+      value: ga4FareValue,
+      currency: 'AUD',
+      debug_mode: true,
+    });
     trackAnalyticsEvent('fare_calculated', {
       stepName: 'vehicle_quote',
       estimatedFare: ga4FareValue,
@@ -368,7 +384,7 @@ const BookingForm = ({
           hasTolls: routePreview.hasTolls,
         },
       });
-  }, [bookingType, dropoffAddress, dropoffSuburb, passengerCount, pickupAddress, pickupSuburb, routePreview]);
+  }, [bookingType, dropoffAddress, dropoffSuburb, fireSubmitGa4Event, passengerCount, pickupAddress, pickupSuburb, routePreview]);
 
   const handlePassengerSubmit = (details) => {
     trackAnalyticsEvent('passenger_details_submitted', {
@@ -563,6 +579,10 @@ const BookingForm = ({
     }
 
     vehicleTrackedRef.current = vehicleKey;
+    fireSubmitGa4Event('vehicle_selected', {
+      vehicle_type: selectedVehicle.id,
+      debug_mode: true,
+    });
     trackAnalyticsEvent('vehicle_selected', {
       stepName: 'vehicle_selection',
       vehicleType: selectedVehicle.id,
@@ -575,7 +595,7 @@ const BookingForm = ({
         vehicleName: selectedVehicle.name || selectedVehicle.id,
       },
     });
-  }, [bookingType, dropoffSuburb, fare, passengerCount, pickupSuburb, selectedVehicle]);
+  }, [bookingType, dropoffSuburb, fare, fireSubmitGa4Event, passengerCount, pickupSuburb, selectedVehicle]);
 
   const handleContinueToVehicle = () => {
     trackBookingStarted();

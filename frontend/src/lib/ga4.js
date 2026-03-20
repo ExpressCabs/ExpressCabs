@@ -9,11 +9,6 @@ let lastPageView = { key: '', at: 0 };
 const recentEvents = new Map();
 
 const GA4_EVENT_MAP = {
-  booking_started: 'booking_started',
-  pickup_entered: 'pickup_entered',
-  dropoff_entered: 'dropoff_entered',
-  fare_calculated: 'fare_calculated',
-  vehicle_selected: 'vehicle_selected',
   booking_submit_error: 'booking_error',
   tel_click: 'call_click',
   whatsapp_click: 'whatsapp_click',
