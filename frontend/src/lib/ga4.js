@@ -14,7 +14,6 @@ const GA4_EVENT_MAP = {
   dropoff_entered: 'dropoff_entered',
   fare_calculated: 'fare_calculated',
   vehicle_selected: 'vehicle_selected',
-  booking_submit_success: 'booking_success',
   booking_submit_error: 'booking_error',
   tel_click: 'call_click',
   whatsapp_click: 'whatsapp_click',

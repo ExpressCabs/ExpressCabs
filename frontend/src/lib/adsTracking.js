@@ -330,6 +330,11 @@ export function installTelClickTracking() {
       link.textContent?.trim() ||
       'tel_link';
 
+    const clickDedupeKey = `tel-click:${phone || 'unknown'}:${location || 'unknown'}`;
+    if (shouldSkipDuplicateEvent(clickDedupeKey)) {
+      return;
+    }
+
     firePhoneClickConversion({ phone, location });
     trackAnalyticsEvent('tel_click', {
       clickTarget: phone,
@@ -376,6 +381,11 @@ export function installWhatsappClickTracking() {
       link.getAttribute('aria-label') ||
       link.textContent?.trim() ||
       'whatsapp_link';
+
+    const clickDedupeKey = `whatsapp-click:${location || 'unknown'}`;
+    if (shouldSkipDuplicateEvent(clickDedupeKey)) {
+      return;
+    }
 
     fireWhatsappClickConversion({ location });
     trackAnalyticsEvent('whatsapp_click', {
