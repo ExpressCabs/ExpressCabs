@@ -342,7 +342,15 @@ const BookingForm = ({
   }, [bookingType, dropoffLoc, map, passengerCount, pickupAddress, pickupLoc, scheduledDateTime]);
 
   useEffect(() => {
-    if (!routePreview?.minFare || !routePreview?.maxFare || !pickupAddress || !dropoffAddress) {
+    const quoteReadyForTracking = Number(passengerCount) > 0 && (bookingType === 'now' || Boolean(scheduledDateTime));
+
+    if (
+      !routePreview?.minFare ||
+      !routePreview?.maxFare ||
+      !pickupAddress ||
+      !dropoffAddress ||
+      !quoteReadyForTracking
+    ) {
       return;
     }
 
@@ -352,7 +360,6 @@ const BookingForm = ({
       pickupSuburb,
       dropoffSuburb,
       bookingType,
-      passengerCount,
       pickupAddress,
       dropoffAddress,
     ].join(':');
@@ -384,7 +391,17 @@ const BookingForm = ({
           hasTolls: routePreview.hasTolls,
         },
       });
-  }, [bookingType, dropoffAddress, dropoffSuburb, fireSubmitGa4Event, passengerCount, pickupAddress, pickupSuburb, routePreview]);
+  }, [
+    bookingType,
+    dropoffAddress,
+    dropoffSuburb,
+    fireSubmitGa4Event,
+    passengerCount,
+    pickupAddress,
+    pickupSuburb,
+    routePreview,
+    scheduledDateTime,
+  ]);
 
   const handlePassengerSubmit = (details) => {
     trackAnalyticsEvent('passenger_details_submitted', {
@@ -573,7 +590,13 @@ const BookingForm = ({
       return;
     }
 
-    const vehicleKey = `${selectedVehicle.id}:${fare}:${passengerCount}:${bookingType}`;
+    const vehicleKey = [
+      selectedVehicle.id,
+      pickupAddress,
+      dropoffAddress,
+      bookingType,
+      scheduledDateTime || 'now',
+    ].join(':');
     if (vehicleTrackedRef.current === vehicleKey) {
       return;
     }
@@ -595,7 +618,18 @@ const BookingForm = ({
         vehicleName: selectedVehicle.name || selectedVehicle.id,
       },
     });
-  }, [bookingType, dropoffSuburb, fare, fireSubmitGa4Event, passengerCount, pickupSuburb, selectedVehicle]);
+  }, [
+    bookingType,
+    dropoffAddress,
+    fireSubmitGa4Event,
+    pickupAddress,
+    pickupSuburb,
+    scheduledDateTime,
+    selectedVehicle,
+    dropoffSuburb,
+    fare,
+    passengerCount,
+  ]);
 
   const handleContinueToVehicle = () => {
     trackBookingStarted();
