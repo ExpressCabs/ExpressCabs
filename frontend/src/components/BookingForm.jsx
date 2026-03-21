@@ -321,6 +321,8 @@ const BookingForm = ({
                 passengerCount: Number(passengerCount) || 1,
                 airportPickup: isMelbourneAirport(pickupAddress),
                 hasTolls,
+                pickupSuburb,
+                dropoffSuburb,
               });
 
               setRoutePreview({
@@ -339,7 +341,7 @@ const BookingForm = ({
         }
       );
     }
-  }, [bookingType, dropoffLoc, map, passengerCount, pickupAddress, pickupLoc, scheduledDateTime]);
+  }, [bookingType, dropoffLoc, dropoffSuburb, map, passengerCount, pickupAddress, pickupLoc, pickupSuburb, scheduledDateTime]);
 
   useEffect(() => {
     const quoteReadyForTracking = Number(passengerCount) > 0 && (bookingType === 'now' || Boolean(scheduledDateTime));
@@ -901,6 +903,8 @@ const BookingForm = ({
           <VehicleSelection
             pickupLoc={pickupLoc}
             dropoffLoc={dropoffLoc}
+            pickupSuburb={pickupSuburb}
+            dropoffSuburb={dropoffSuburb}
             passengerCount={passengerCount}
             bookingType={bookingType}
             scheduledDateTime={scheduledDateTime}

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef, lazy, Suspense } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 
 import BookingForm from '../components/BookingForm';
@@ -7,11 +7,46 @@ import BookingForm from '../components/BookingForm';
 const ContactUs = lazy(() => import('./ContactUs'));
 const BlogPreviewCarousel = lazy(() => import('../components/BlogPreviewCarousel'));
 
+const HERO_DESKTOP_IMAGE = '/assets/images/home-hero-paid-pc.webp';
+const HERO_MOBILE_IMAGE = '/assets/images/home-hero-paid-mob.webp';
+const HERO_FALLBACK_IMAGE = '/assets/images/airport-hero.webp';
+
 const fleet = [
-  { name: 'Sedan', seats: 4, image: '/assets/vehicles/sedan-modern.png' },
-  { name: 'Luxury', seats: 4, image: '/assets/vehicles/luxury-modern.png' },
-  { name: 'SUV', seats: 6, image: '/assets/vehicles/suv-modern.png' },
-  { name: 'Van', seats: 11, image: '/assets/vehicles/van-modern.png' },
+  {
+    name: 'Lexus ES300h',
+    seats: 4,
+    image: '/assets/vehicles/lexus300h.webp',
+    tag: 'Executive sedan',
+    summary: 'Quiet, refined airport travel for business trips and premium pickups.',
+  },
+  {
+    name: 'Lexus 450HL',
+    seats: 6,
+    image: '/assets/vehicles/lexus450hl.webp',
+    tag: 'Premium SUV',
+    summary: 'Luxury space for families, luggage-heavy bookings, and longer transfers.',
+  },
+  {
+    name: 'Toyota Kluger',
+    seats: 6,
+    image: '/assets/vehicles/toyota kluger.webp',
+    tag: 'Family SUV',
+    summary: 'Comfortable group travel with extra room for bags and airport gear.',
+  },
+  {
+    name: 'Mercedes Van',
+    seats: 11,
+    image: '/assets/vehicles/van.webp',
+    tag: 'Group transfer',
+    summary: 'Ideal for larger groups, event travel, and airport shuttle-style bookings.',
+  },
+  {
+    name: 'GLE300D',
+    seats: 5,
+    image: '/assets/vehicles/GLE300D.webp',
+    tag: 'Luxury SUV',
+    summary: 'A polished high-comfort option for travellers who want extra presence and space.',
+  },
 ];
 
 const fadeUp = {
@@ -109,7 +144,7 @@ export default function AddressScreen({ loggedInUser }) {
   useEffect(() => {
     const fleetTimer = setInterval(() => {
       setFleetIndex((prev) => (prev + 1) % fleet.length);
-    }, 2000);
+    }, 4500);
     return () => clearInterval(fleetTimer);
   }, []);
 
@@ -134,6 +169,10 @@ export default function AddressScreen({ loggedInUser }) {
     // small reset so clicking same pill twice still triggers effect in child
     setTimeout(() => setRequestedStep(null), 0);
   };
+
+  const activeFleet = fleet[fleetIndex];
+  const prevFleet = () => setFleetIndex((prev) => (prev - 1 + fleet.length) % fleet.length);
+  const nextFleet = () => setFleetIndex((prev) => (prev + 1) % fleet.length);
 
   return (
     <div className="min-h-screen bg-white">
@@ -280,7 +319,21 @@ export default function AddressScreen({ loggedInUser }) {
 
 
       <section className="relative min-h-[100vh] overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(211,84,0,0.18),_transparent_34%),radial-gradient(circle_at_bottom_right,_rgba(14,116,144,0.14),_transparent_32%),linear-gradient(180deg,_#101114_0%,_#16181c_42%,_#242933_100%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,_#101114_0%,_#16181c_42%,_#242933_100%)]" />
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-50 md:hidden"
+          style={{
+            backgroundImage: `url('${HERO_MOBILE_IMAGE}'), url('${HERO_FALLBACK_IMAGE}')`,
+          }}
+        />
+        <div
+          className="absolute inset-0 hidden bg-cover bg-center bg-no-repeat opacity-56 md:block"
+          style={{
+            backgroundImage: `url('${HERO_DESKTOP_IMAGE}'), url('${HERO_FALLBACK_IMAGE}')`,
+          }}
+        />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(211,84,0,0.18),_transparent_32%),radial-gradient(circle_at_bottom_right,_rgba(14,116,144,0.12),_transparent_30%),linear-gradient(90deg,_rgba(10,11,14,0.76)_0%,_rgba(15,17,21,0.56)_42%,_rgba(15,17,21,0.34)_100%)]" />
+        <div className="absolute inset-y-0 left-0 hidden w-[58%] lg:block bg-[radial-gradient(circle_at_left,_rgba(255,255,255,0.1),_transparent_58%)]" />
         <div className="absolute inset-0">
           <div className="absolute inset-x-0 top-0 h-px bg-white/10" />
           <div className="absolute inset-x-0 bottom-0 h-px bg-black/20" />
@@ -294,17 +347,33 @@ export default function AddressScreen({ loggedInUser }) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, ease: 'easeOut' }}
             >
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 backdrop-blur">
                 <span className="text-xs font-semibold tracking-wide">MELBOURNE AIRPORT TRANSFERS</span>
               </div>
 
               <h1 className="mt-5 text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.05]">
-                Book a reliable taxi in minutes.
+                Reach the airport on time, without the stress.
               </h1>
 
               <p className="mt-5 text-lg md:text-xl text-white/85 max-w-xl">
-                Fixed fare airport transfers with professional drivers and comfortable vehicles.
+                Professional Melbourne airport transfers with fixed fares, clean vehicles, and quick online booking.
               </p>
+
+              <div className="mt-6 max-w-xl rounded-3xl border border-white/12 bg-black/20 px-4 py-4 backdrop-blur-sm shadow-[0_24px_60px_-34px_rgba(0,0,0,0.75)]">
+                <div className="flex flex-wrap gap-2">
+                  {['Trusted by Melbourne travellers', 'No surprise surge pricing', 'Fast online booking'].map((item) => (
+                    <span
+                      key={item}
+                      className="rounded-full border border-white/12 bg-white/8 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/85"
+                    >
+                      {item}
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-3 text-sm leading-6 text-white/82 md:text-[15px]">
+                  Book in a few steps and travel with confidence, whether you are heading to the airport, arriving late, or planning an early pickup.
+                </p>
+              </div>
 
               <div className="mt-7 flex flex-wrap gap-2">
                 {['24/7 Available', 'Fixed Upfront Quotes', 'Airport Specialists', 'Clean Vehicles'].map((t) => (
@@ -363,53 +432,97 @@ export default function AddressScreen({ loggedInUser }) {
           <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }} variants={fadeUp} className="text-center">
             <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900">Our Fleet</h2>
             <p className="mt-3 text-gray-600 max-w-2xl mx-auto">
-              Choose the right vehicle for your trip - from standard sedans to group vans.
+              Browse the vehicles most often chosen for airport pickups, executive transfers, and group travel.
             </p>
           </motion.div>
 
-          <div className="mt-10">
-            <div className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-6">
-              {fleet.map((car, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 14 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-80px' }}
-                  transition={{ duration: 0.5, delay: 0.05 * index, ease: 'easeOut' }}
-                  className="group bg-white rounded-3xl border border-gray-200 shadow-sm hover:shadow-xl transition overflow-hidden"
-                >
-                  <div className="p-6">
-                    <div className="rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 p-4">
-                      <img src={car.image} alt={car.name} className="mx-auto h-40 object-contain transition-transform duration-300 group-hover:scale-[1.03]" loading="lazy" />
-                    </div>
-                    <div className="mt-5 flex items-start justify-between gap-3">
-                      <div>
-                        <h3 className="text-lg font-extrabold text-gray-900">{car.name}</h3>
-                        <p className="text-sm text-gray-600 mt-1">Seats up to {car.seats}</p>
-                      </div>
-                      <span className="text-xs font-semibold px-3 py-1.5 rounded-full bg-gray-900 text-white">Popular</span>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-80px' }}
+            transition={{ duration: 0.55, ease: 'easeOut' }}
+            className="relative mt-10 overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-[0_30px_80px_-30px_rgba(0,0,0,0.25)]"
+          >
+            <div className="relative h-[420px] md:h-[500px]">
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={activeFleet.name}
+                  src={activeFleet.image}
+                  alt={activeFleet.name}
+                  initial={{ opacity: 0, scale: 1.03 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.99 }}
+                  transition={{ duration: 0.45, ease: 'easeOut' }}
+                  className="absolute inset-0 h-full w-full object-cover"
+                  loading="lazy"
+                />
+              </AnimatePresence>
+
+              <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.03)_0%,rgba(15,23,42,0.08)_100%)]" />
             </div>
 
-            <div className="block md:hidden bg-white p-6 rounded-3xl border border-gray-200 shadow-sm max-w-md mx-auto">
+            <div className="border-t border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] px-5 py-5 md:px-8 md:py-6">
               <motion.div
-                key={fleetIndex}
+                key={`${activeFleet.name}-details`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.45, ease: 'easeOut' }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+                className="flex flex-col gap-5"
               >
-                <div className="rounded-2xl bg-gradient-to-br from-gray-50 to-white border border-gray-100 p-4">
-                  <img src={fleet[fleetIndex].image} alt={fleet[fleetIndex].name} className="mx-auto h-40 object-contain" loading="lazy" />
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                  <div>
+                    <div className="inline-flex items-center rounded-full bg-slate-900 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-white">
+                      {activeFleet.tag}
+                    </div>
+                    <h3 className="mt-3 text-2xl font-extrabold tracking-tight text-slate-900 md:text-[2rem]">
+                      {activeFleet.name}
+                    </h3>
+                    <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600 md:text-[15px]">
+                      {activeFleet.summary}
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2 md:pt-1">
+                  </div>
                 </div>
-                <h3 className="text-xl font-extrabold text-gray-900 mt-5">{fleet[fleetIndex].name}</h3>
-                <p className="text-sm text-gray-600 mt-1">Seats up to {fleet[fleetIndex].seats} passengers</p>
+
+                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                  <div className="flex flex-wrap gap-2">
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
+                      Seats up to {activeFleet.seats}
+                    </span>
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
+                      Airport ready
+                    </span>
+                    <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-700">
+                      Professional transfer
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {fleet.map((car, index) => {
+                      const active = index === fleetIndex;
+                      return (
+                        <button
+                          key={car.name}
+                          type="button"
+                          onClick={() => setFleetIndex(index)}
+                          className="group"
+                          aria-label={`Show ${car.name}`}
+                        >
+                          <span
+                            className={`block h-2.5 rounded-full transition-all ${
+                              active ? 'w-10 bg-slate-900' : 'w-2.5 bg-slate-300 group-hover:bg-slate-500'
+                            }`}
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </motion.div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
@@ -425,4 +538,3 @@ export default function AddressScreen({ loggedInUser }) {
     </div>
   );
 }
-

@@ -1,3 +1,5 @@
+import suburbsData from '../data/melbourneSuburbs.json';
+
 const VEHICLES = [
   { id: 'sedan', seats: 4, multiplier: 1.0 },
   { id: 'luxury', seats: 4, multiplier: 1.0, luxurySurcharge: 11.0 },
@@ -7,14 +9,51 @@ const VEHICLES = [
 
 export const BOOKING_FEE = 2.7;
 export const DEFAULT_TOLL_CHARGE = 10.0;
+export const SOUTH_EAST_TOLL_CHARGE = 10.0;
+export const OTHER_TOLL_CHARGE = 6.0;
 export const GLOBAL_TRIP_MULTIPLIER = 1.1;
 export const SHORT_TRIP_DISTANCE_THRESHOLD_KM = 35;
 export const SHORT_TRIP_SURCHARGE = 10.0;
+export const SHORT_TRIP_SURCHARGE_CBD = 5.0;
 export const SHORT_TRIP_MULTIPLIER = 1.025;
 export const MEL_AIRPORT_PICKUP_FEE = 5.15;
 export const TIME_RATE_MULTIPLIER = 1.2;
 export const GOVERNMENT_LEVY = 1.2;
 export const HIGH_OCCUPANCY_FEE = 17.8;
+
+const suburbRegionMap = new Map(
+  suburbsData
+    .filter((suburb) => suburb && suburb.name)
+    .map((suburb) => [String(suburb.name).toLowerCase().trim(), String(suburb.region || '').trim()])
+);
+
+function normalizeSuburbName(suburb) {
+  if (!suburb) return '';
+  return String(suburb).toLowerCase().trim();
+}
+
+function isMelbourneCBDSuburb(suburb) {
+  const normalized = normalizeSuburbName(suburb);
+  if (!normalized) return false;
+  return (
+    normalized === 'melbourne' ||
+    normalized === 'melbourne cbd' ||
+    normalized.includes('melbourne') && (normalized.includes('cbd') || normalized.includes('3000'))
+  );
+}
+
+function isSouthEastSuburb(suburb) {
+  const normalized = normalizeSuburbName(suburb);
+  if (!normalized) return false;
+
+  const region = suburbRegionMap.get(normalized);
+  if (region) {
+    return region.toLowerCase().includes('south-east');
+  }
+
+  // fallback: string hints
+  return /south[-\s]*east|south\s*east|south[-\s]*east\s*&\s*bayside/.test(normalized);
+}
 
 export const TARIFFS = {
   day: { name: 'Day', flagfall: 5.25, perKm: 2.037, perMin: 0.713 },
@@ -102,11 +141,14 @@ export function computeVehicleFare({
   passengerCount,
   airportPickup,
   hasTolls,
+  pickupSuburb,
+  dropoffSuburb,
 }) {
   let total = computeSwitchFare({ distanceKm, durationMin, tariff }) + GOVERNMENT_LEVY + BOOKING_FEE;
 
   if (distanceKm < SHORT_TRIP_DISTANCE_THRESHOLD_KM) {
-    total += SHORT_TRIP_SURCHARGE;
+    const applicableShortTripSurcharge = isMelbourneCBDSuburb(pickupSuburb) ? SHORT_TRIP_SURCHARGE_CBD : SHORT_TRIP_SURCHARGE;
+    total += applicableShortTripSurcharge;
     total *= SHORT_TRIP_MULTIPLIER;
   } else {
     total *= GLOBAL_TRIP_MULTIPLIER;
@@ -115,7 +157,12 @@ export function computeVehicleFare({
   if (passengerCount > 4 && vehicle.seats > 4) total += HIGH_OCCUPANCY_FEE;
   if (vehicle.luxurySurcharge) total += vehicle.luxurySurcharge;
   if (airportPickup) total += MEL_AIRPORT_PICKUP_FEE;
-  if (hasTolls) total += DEFAULT_TOLL_CHARGE;
+
+  if (hasTolls) {
+    const sourceSuburb = pickupSuburb || dropoffSuburb;
+    const tollCharge = isSouthEastSuburb(sourceSuburb) ? SOUTH_EAST_TOLL_CHARGE : OTHER_TOLL_CHARGE;
+    total += tollCharge;
+  }
 
   total *= vehicle.multiplier;
 
@@ -129,6 +176,8 @@ export function estimateFareRange({
   passengerCount = 1,
   airportPickup = false,
   hasTolls = false,
+  pickupSuburb = '',
+  dropoffSuburb = '',
 }) {
   const tariff = pickTariff(rideDate);
   const eligibleVehicles = VEHICLES.filter((vehicle) => {
@@ -146,6 +195,8 @@ export function estimateFareRange({
       passengerCount,
       airportPickup,
       hasTolls,
+      pickupSuburb,
+      dropoffSuburb,
     })
   );
 

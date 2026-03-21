@@ -14,15 +14,90 @@ import {
 } from '../lib/ridePricing';
 
 const VEHICLES = [
-  { id: 'sedan', name: 'Sedan', seats: 4, image: sedanImg, multiplier: 1.0 },
-  { id: 'luxury', name: 'Luxury', seats: 4, image: luxuryImg, multiplier: 1.0, luxurySurcharge: 11.0 },
-  { id: 'suv', name: 'SUV', seats: 6, image: suvImg, multiplier: 1.0 },
-  { id: 'van', name: 'Van', seats: 11, image: vanImg, multiplier: 1.0 },
+  {
+    id: 'sedan',
+    name: 'Sedan',
+    seats: 4,
+    image: sedanImg,
+    multiplier: 1.0,
+    badge: 'Most popular',
+    summary: 'Smooth everyday airport and city transfers.',
+    idealFor: 'Best for solo travellers, couples, and light luggage.',
+    luggage: '2 large + 2 cabin bags',
+    comfort: 'Balanced comfort',
+    rideStyle: 'Everyday transfer',
+    accent: {
+      badge: 'bg-slate-900',
+      tint: 'from-slate-200 via-slate-150 to-stone-300/95',
+      chip: 'border-slate-200 bg-slate-100 text-slate-700',
+      panel: 'border-slate-200 bg-slate-100/80',
+    },
+  },
+  {
+    id: 'luxury',
+    name: 'Luxury',
+    seats: 4,
+    image: luxuryImg,
+    multiplier: 1.0,
+    luxurySurcharge: 11.0,
+    badge: 'Premium ride',
+    summary: 'A quieter, more polished ride for business or special occasions.',
+    idealFor: 'Best for executive pickups and elevated comfort.',
+    luggage: '2 large + 2 cabin bags',
+    comfort: 'Premium cabin',
+    rideStyle: 'Executive transfer',
+    accent: {
+      badge: 'bg-slate-900',
+      tint: 'from-slate-200 via-slate-150 to-stone-300/95',
+      chip: 'border-slate-200 bg-slate-100 text-slate-700',
+      panel: 'border-slate-200 bg-slate-100/80',
+    },
+  },
+  {
+    id: 'suv',
+    name: 'SUV',
+    seats: 6,
+    image: suvImg,
+    multiplier: 1.0,
+    badge: 'Extra room',
+    summary: 'More cabin space for families and bulky bags.',
+    idealFor: 'Best for groups needing flexibility and comfort.',
+    luggage: '4 large + 3 cabin bags',
+    comfort: 'Spacious seating',
+    rideStyle: 'Family transfer',
+    accent: {
+      badge: 'bg-slate-900',
+      tint: 'from-slate-200 via-slate-150 to-stone-300/95',
+      chip: 'border-slate-200 bg-slate-100 text-slate-700',
+      panel: 'border-slate-200 bg-slate-100/80',
+    },
+  },
+  {
+    id: 'van',
+    name: 'Van',
+    seats: 11,
+    image: vanImg,
+    multiplier: 1.0,
+    badge: 'Group transfer',
+    summary: 'Built for larger groups, airport teams, and event travel.',
+    idealFor: 'Best for 7+ passengers or substantial luggage.',
+    luggage: 'Up to 8 large bags',
+    comfort: 'Large group layout',
+    rideStyle: 'Group transfer',
+    accent: {
+      badge: 'bg-slate-900',
+      tint: 'from-slate-200 via-slate-150 to-stone-300/95',
+      chip: 'border-slate-200 bg-slate-100 text-slate-700',
+      panel: 'border-slate-200 bg-slate-100/80',
+    },
+  },
 ];
 
 const VehicleSelection = ({
   pickupLoc,
   dropoffLoc,
+  pickupSuburb,
+  dropoffSuburb,
   passengerCount,
   bookingType,
   scheduledDateTime,
@@ -70,7 +145,9 @@ const VehicleSelection = ({
             origin: pickupLoc,
             destination: dropoffLoc,
             travelMode: 'DRIVING',
-            ...(avoidTolls ? { avoid: ['tolls'] } : {}),
+            avoidTolls: Boolean(avoidTolls),
+            avoidHighways: false,
+            avoidFerries: false,
           },
           (result, status) => {
             if (status === 'OK') resolve(result);
@@ -142,6 +219,8 @@ const VehicleSelection = ({
         passengerCount,
         airportPickup,
         hasTolls,
+        pickupSuburb,
+        dropoffSuburb,
       });
 
       newFares[vehicle.id] = total.toFixed(2);
@@ -167,7 +246,19 @@ const VehicleSelection = ({
         setFareType(parts.join(' | '));
       }
     }
-  }, [airportPickup, distanceKm, durationMin, hasTolls, passengerCount, selectedId, setFare, setFareType, tariff]);
+  }, [
+    airportPickup,
+    distanceKm,
+    durationMin,
+    dropoffSuburb,
+    hasTolls,
+    passengerCount,
+    pickupSuburb,
+    selectedId,
+    setFare,
+    setFareType,
+    tariff,
+  ]);
 
   const handleSelect = (vehicle) => {
     setSelectedId(vehicle.id);
@@ -225,6 +316,11 @@ const VehicleSelection = ({
           (passengerCount > 4 && vehicle.seats <= 4) ||
           (vehicle.id === 'suv' && passengerCount > 6);
         const isSelected = selectedId === vehicle.id;
+        const fitLabel = Number(passengerCount) > 0
+          ? vehicle.seats >= Number(passengerCount)
+            ? `Comfortably fits ${Number(passengerCount)} passenger${Number(passengerCount) === 1 ? '' : 's'}`
+            : `Not suitable for ${Number(passengerCount)} passengers`
+          : `Seats up to ${vehicle.seats}`;
 
         return (
           <motion.div
@@ -233,44 +329,106 @@ const VehicleSelection = ({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 * index }}
-            className={`mb-4 flex items-center justify-between rounded-xl border p-4 shadow-sm transition-all duration-200 ${
+            className={`mb-3 overflow-hidden rounded-2xl border shadow-sm transition-all duration-200 ${
               disabled
                 ? 'cursor-not-allowed bg-gray-200 opacity-50'
                 : isSelected
-                ? 'cursor-pointer border-blue-500 bg-white ring-2 ring-blue-400'
-                : 'cursor-pointer bg-white hover:ring-1 hover:ring-gray-400'
+                ? 'cursor-pointer border-slate-950 bg-slate-50 ring-2 ring-slate-900/20 shadow-[0_22px_44px_-24px_rgba(15,23,42,0.72),0_10px_18px_-14px_rgba(15,23,42,0.35)]'
+                : 'cursor-pointer bg-white shadow-[0_14px_28px_-22px_rgba(15,23,42,0.42),0_6px_12px_-10px_rgba(15,23,42,0.18)] hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_20px_40px_-24px_rgba(15,23,42,0.46),0_10px_18px_-12px_rgba(15,23,42,0.22)]'
             }`}
           >
-            <div className="flex items-center gap-4">
-              <img src={vehicle.image} alt={vehicle.name} className="h-16 w-16 object-contain" />
-              <div>
-                <div className="text-lg font-semibold">{vehicle.name}</div>
-                <div className="text-sm text-gray-500">Seats: {vehicle.seats}</div>
+            <div
+              className={`border-b border-slate-300/70 bg-gradient-to-br ${vehicle.accent.tint} px-3.5 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.75),inset_0_-1px_0_rgba(148,163,184,0.18)]`}
+            >
+              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-xl border border-white/80 bg-[linear-gradient(180deg,#ffffff_0%,#f3f4f6_100%)] shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_12px_22px_-16px_rgba(15,23,42,0.55)]">
+                    <img src={vehicle.image} alt={vehicle.name} className="h-11 w-11 object-contain" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="text-base font-bold tracking-tight text-slate-900">{vehicle.name}</div>
+                      <span className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_8px_14px_-10px_rgba(15,23,42,0.45)] ${vehicle.accent.badge}`}>
+                        {vehicle.badge}
+                      </span>
+                    </div>
+                    <p className="mt-0.5 text-xs leading-5 text-slate-600 md:text-[13px]">{vehicle.summary}</p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5 md:justify-end">
+                  <span className="rounded-full border border-white/80 bg-white/85 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_12px_-10px_rgba(15,23,42,0.3)]">
+                    {vehicle.rideStyle}
+                  </span>
+                  <span className="rounded-full border border-white/80 bg-white/85 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_8px_12px_-10px_rgba(15,23,42,0.3)]">
+                    {vehicle.comfort}
+                  </span>
+                </div>
               </div>
             </div>
-            <div className="text-lg font-bold text-black">${fares[vehicle.id] || '--'}</div>
+
+            <div className="grid gap-2.5 px-3.5 py-2.5 md:grid-cols-[1.5fr,1fr] md:items-start">
+              <div className="space-y-2">
+                <div>
+                  <p className="text-[13px] leading-5 text-slate-700">{vehicle.idealFor}</p>
+                </div>
+
+                <div className="flex flex-wrap gap-2 text-xs font-medium">
+                  <span className={`rounded-full border px-2.5 py-1 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_8px_14px_-12px_rgba(15,23,42,0.28)] ${vehicle.accent.chip}`}>
+                    Seats up to {vehicle.seats}
+                  </span>
+                  <span className={`rounded-full border px-2.5 py-1 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.8),0_8px_14px_-12px_rgba(15,23,42,0.28)] ${vehicle.accent.chip}`}>
+                    {vehicle.luggage}
+                  </span>
+                </div>
+              </div>
+
+              <div className={`rounded-xl border p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.75),0_12px_22px_-18px_rgba(15,23,42,0.26)] ${
+                disabled
+                  ? 'border-red-200 bg-red-50/70'
+                  : isSelected
+                  ? 'border-slate-300 bg-slate-100/80'
+                  : vehicle.accent.panel
+              }`}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-500">Trip Fit</p>
+                    <p className="mt-1 text-[13px] font-semibold leading-5 text-slate-900">{fitLabel}</p>
+                  </div>
+                  <span className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${
+                    disabled
+                      ? 'bg-red-100 text-red-700'
+                      : isSelected
+                      ? 'bg-slate-950 text-white ring-2 ring-white/70'
+                      : 'bg-white/80 text-slate-700'
+                  }`}>
+                    {disabled ? 'Not suitable' : isSelected ? 'Selected' : 'Available'}
+                  </span>
+                </div>
+              </div>
+            </div>
           </motion.div>
         );
       })}
 
-      <div className="flex justify-between pt-6">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={() => {
             setMap(null);
             setStep(1);
           }}
-          className="rounded bg-gray-500 px-6 py-2 text-white hover:bg-gray-600"
+          className="h-11 rounded-xl border border-gray-200 bg-white font-semibold text-gray-900 transition hover:bg-gray-50"
         >
-          {'<- Back'}
+          Back
         </motion.button>
 
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={() => setStep(3)}
           disabled={!selectedId}
-          className={`rounded px-6 py-2 font-semibold text-white transition-all ${
-            selectedId ? 'bg-green-600 hover:bg-green-700' : 'cursor-not-allowed bg-gray-400'
+          className={`h-11 rounded-xl font-semibold text-white transition ${
+            selectedId ? 'bg-gray-900 hover:bg-black' : 'cursor-not-allowed bg-gray-400'
           }`}
         >
           Next
