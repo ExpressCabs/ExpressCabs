@@ -681,18 +681,17 @@ const BookingForm = ({
       type="button"
       onClick={handleMapIntent}
       onTouchStart={handleMapIntent}
-      className="h-64 mt-4 w-full rounded-2xl overflow-hidden border border-gray-200 bg-gray-50 text-left shadow-sm"
+      className="mt-4 h-64 w-full overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 text-left shadow-sm"
+      aria-label="Activate live map"
     >
-      <div className="flex h-full w-full items-center justify-center p-6">
-        <div className="text-center">
-          <div className="mx-auto mb-3 h-10 w-10 rounded-full bg-gray-200 animate-pulse" />
-          <p className="text-sm font-semibold text-gray-700">
-            {!mapsEnabled ? 'Tap to load live map' : !mapsReady ? 'Loading live map...' : 'Preparing map...'}
-          </p>
-          <p className="mt-1 text-xs text-gray-500">
-            Start typing or tap here to activate live suggestions and routing.
-          </p>
-        </div>
+      <div className="relative h-full w-full">
+        <img
+          src="/assets/images/map.webp"
+          alt="Melbourne route map preview"
+          className="h-full w-full object-cover"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.04)_0%,rgba(15,23,42,0.18)_100%)]" />
       </div>
     </button>
   );
