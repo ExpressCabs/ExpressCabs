@@ -3,6 +3,14 @@
   "trailingSlash": false,
   "routes": [
     { "handle": "filesystem" },
-    { "src": "/.*", "dest": "/index.html" }
+    { "src": "/admin", "dest": "/index.html" },
+    { "src": "/admin/(.*)", "dest": "/index.html" },
+    { "src": "/driver", "dest": "/index.html" },
+    { "src": "/driver-register", "dest": "/index.html" },
+    { "src": "/driver-forgot-password", "dest": "/index.html" },
+    { "src": "/user-forgot-password", "dest": "/index.html" },
+    { "src": "/reset-password", "dest": "/index.html" },
+    { "src": "/register", "dest": "/index.html" },
+    { "src": "/ride-success", "dest": "/index.html" }
   ]
 }
