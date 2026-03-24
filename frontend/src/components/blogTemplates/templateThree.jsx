@@ -223,7 +223,7 @@ export default function TemplateThree({ blog }) {
         </div>
 
         {/* STICKY BOOKING (BookingForm unchanged) + TOC */}
-        <aside className="lg:col-span-1">
+        <aside className="lg:col-span-4">
           <div className="sticky top-24 space-y-6">
             <motion.div
               initial={{ opacity: 0, y: 14 }}
@@ -236,7 +236,7 @@ export default function TemplateThree({ blog }) {
               <p className="text-sm text-gray-600 text-center mb-4">
                 Fast quote • 24/7 availability
               </p>
-              <BookingForm />
+              <BookingForm embedded />
             </motion.div>
 
             <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-6">

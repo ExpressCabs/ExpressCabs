@@ -239,7 +239,7 @@ export default function TemplateOne({ blog }) {
             </div>
           </div>
 
-          <BookingForm />
+          <BookingForm embedded />
         </motion.div>
       </div>
 

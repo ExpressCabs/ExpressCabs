@@ -228,7 +228,7 @@ export default function TemplateTwo({ blog }) {
               </div>
             </div>
 
-            <BookingForm />
+            <BookingForm embedded />
           </motion.div>
         </div>
 
