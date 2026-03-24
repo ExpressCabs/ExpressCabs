@@ -8,6 +8,8 @@ import BookingForm from "../components/BookingForm";
 import Footer from "../components/Footer";
 import AirportTransferCoreContent from "../components/AirportTransferCoreContent";
 import NearbySuburbs from "../components/NearbySuburbs";
+import { buildMeta } from "../lib/seo/buildMeta";
+import { buildSuburbSeo } from "../lib/seo/suburbSeo";
 
 const CANONICAL_BASE =
   import.meta.env.VITE_CANONICAL_BASE_URL ||
@@ -188,13 +190,22 @@ export default function AirportTransferSuburb() {
     };
   }, [suburb?.slug, suburb?.postcode]);
 
+  const seo = suburb ? buildSuburbSeo(suburb) : null;
+  const missingSuburbMeta = buildMeta({
+    title: "Suburb Not Found | Prime Cabs Melbourne",
+    description: "The requested airport transfer suburb page could not be found.",
+    canonicalPath: "/airport-transfer/melbourne",
+    robots: "noindex, nofollow",
+  });
+
   if (!suburb) {
     return (
       <>
         <Helmet>
-          <title>Suburb Not Found | Prime Cabs Melbourne</title>
-          <meta name="robots" content="noindex, nofollow" />
-          <link rel="canonical" href={`${CANONICAL_BASE}/airport-transfer/melbourne`} />
+          <title>{missingSuburbMeta.title}</title>
+          <meta name="description" content={missingSuburbMeta.description} />
+          <meta name="robots" content={missingSuburbMeta.robots} />
+          <link rel="canonical" href={missingSuburbMeta.canonical} />
         </Helmet>
         <div className="max-w-5xl mx-auto px-6 py-16">
           <h1 className="text-3xl font-bold">Suburb not found</h1>
@@ -221,10 +232,7 @@ export default function AirportTransferSuburb() {
   const durationText =
     metrics?.durationText ?? (suburb.etaMin ? `${suburb.etaMin} mins` : "—");
 
-  // Canonical URL must match the live route format to avoid duplicate/canonical mismatches.
-  const canonicalPath = `/airport-transfer/melbourne/${suburb.slug}`;
-
-  const canonicalUrl = `${CANONICAL_BASE}${canonicalPath}`;
+  const canonicalUrl = seo.canonicalUrl;
 
   // FAQ schema JSON-LD
   const faqs = suburb?.content?.faqs || [];

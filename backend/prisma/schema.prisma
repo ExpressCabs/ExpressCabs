@@ -69,21 +69,32 @@ model DriverInvite {
 }
 
 model Blog {
-  id         Int      @id @default(autoincrement())
-  slug       String   @unique
-  title      String
-  subtitle   String?
-  template   String
-  image1     String
-  image1Alt  String
-  image2     String?
-  image2Alt  String?
-  image3     String?
-  image3Alt  String?
-  body1      String
-  body2      String
-  conclusion String
-  createdAt  DateTime @default(now())
+  id                 Int      @id @default(autoincrement())
+  slug               String   @unique
+  title              String
+  subtitle           String?
+  template           String
+  image1             String
+  image1Alt          String
+  image2             String?
+  image2Alt          String?
+  image3             String?
+  image3Alt          String?
+  body1              String
+  body2              String
+  conclusion         String
+  metaTitle          String?
+  metaDescription    String?
+  excerpt            String?
+  ogImage            String?
+  publishedAt        DateTime?
+  updatedAt          DateTime @updatedAt
+  authorName         String?
+  isPublished        Boolean  @default(true)
+  readingTimeMinutes Int?
+  keywords           String?
+  faqJson            Json?
+  createdAt          DateTime @default(now())
 }
 
 model Admin {
