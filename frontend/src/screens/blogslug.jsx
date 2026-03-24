@@ -12,8 +12,14 @@ import { getCanonicalPathForBlog } from '../lib/seo/routes';
 
 export default function BlogSlug() {
     const { slug } = useParams();
-    const [blog, setBlog] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const prerenderedBlog =
+        typeof window !== 'undefined' &&
+        window.__PRERENDER_DATA__?.routeType === 'blog' &&
+        window.__PRERENDER_DATA__?.blog?.slug === slug
+            ? window.__PRERENDER_DATA__.blog
+            : null;
+    const [blog, setBlog] = useState(prerenderedBlog);
+    const [loading, setLoading] = useState(!prerenderedBlog);
     const [notFound, setNotFound] = useState(false);
     const notFoundMeta = buildMeta({
         title: 'Blog Not Found | Prime Cabs Melbourne',
@@ -23,6 +29,11 @@ export default function BlogSlug() {
     });
 
     useEffect(() => {
+        if (prerenderedBlog) {
+            setLoading(false);
+            return undefined;
+        }
+
         const fetchBlog = async () => {
             try {
                 const res = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/blogs/${slug}`);
@@ -40,7 +51,7 @@ export default function BlogSlug() {
         };
 
         fetchBlog();
-    }, [slug]);
+    }, [slug, prerenderedBlog]);
 
     if (loading) return <div className="p-8 text-center">Loading...</div>;
     if (notFound || !blog) {

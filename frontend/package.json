@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "postbuild": "node scripts/prerender.mjs",
+    "build": "vite build && node scripts/prerender.mjs && node scripts/verify-prerender.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

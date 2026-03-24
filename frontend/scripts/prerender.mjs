@@ -13,6 +13,7 @@ const baseUrl = String(
   process.env.VITE_CANONICAL_BASE_URL || 'https://www.primecabsmelbourne.com.au'
 ).replace(/\/+$/, '');
 const apiBaseUrl = String(process.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
+const NOW_ISO = new Date().toISOString();
 
 function escapeHtml(value = '') {
   return String(value)
@@ -57,9 +58,9 @@ async function loadSuburbs() {
   return JSON.parse(raw);
 }
 
-function injectHtmlDocument(shellHtml, { headMarkup, bodyMarkup }) {
+function injectHtmlDocument(shellHtml, { headMarkup, bodyMarkup, dataScript = '' }) {
   let output = shellHtml;
-  output = output.replace('</head>', `${headMarkup}\n  </head>`);
+  output = output.replace('</head>', `${headMarkup}\n${dataScript}\n  </head>`);
   output = output.replace('<div id="root"></div>', `<div id="root">${bodyMarkup}</div>`);
   return output;
 }
@@ -76,13 +77,15 @@ function formatPublishedDate(value) {
   });
 }
 
-function buildMetaTags({ title, description, canonicalUrl, ogImage, type = 'website', schema }) {
+function buildMetaTags({ title, description, canonicalUrl, ogImage, type = 'website', schema, robots }) {
   const image = absoluteUrl(ogImage);
   return `
     <title>${escapeHtml(title)}</title>
     <meta name="description" content="${escapeHtml(description)}" />
     <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
-    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+    <meta name="robots" content="${escapeHtml(
+      robots || 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'
+    )}" />
     <meta property="og:type" content="${escapeHtml(type)}" />
     <meta property="og:site_name" content="Prime Cabs Melbourne" />
     <meta property="og:url" content="${escapeHtml(canonicalUrl)}" />
@@ -96,14 +99,77 @@ function buildMetaTags({ title, description, canonicalUrl, ogImage, type = 'webs
     <script type="application/ld+json">${JSON.stringify(schema)}</script>`;
 }
 
+function buildDataScript(payload) {
+  if (!payload) return '';
+  return `    <script>window.__PRERENDER_DATA__ = ${JSON.stringify(payload)};</script>`;
+}
+
+function renderShellPage({ eyebrow, title, description, bullets = [], ctaLabel = 'Book now', ctaHref = '/' }) {
+  return `
+    <main style="font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fff;color:#111827;">
+      <section style="padding:80px 24px 56px;background:linear-gradient(180deg,#111827 0%,#1f2937 52%,#ffffff 100%);">
+        <div style="max-width:1100px;margin:0 auto;">
+          <p style="display:inline-block;margin:0;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.16);color:#f9fafb;font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;">${escapeHtml(
+            eyebrow
+          )}</p>
+          <h1 style="margin:22px 0 18px;font-size:clamp(2.4rem,5vw,4.8rem);line-height:1.02;color:#ffffff;max-width:780px;">${escapeHtml(
+            title
+          )}</h1>
+          <p style="margin:0;max-width:760px;font-size:1.1rem;line-height:1.8;color:rgba(255,255,255,0.84);">${escapeHtml(
+            description
+          )}</p>
+          ${
+            bullets.length
+              ? `<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:28px;">
+              ${bullets
+                .map(
+                  (bullet) =>
+                    `<span style="padding:8px 14px;border-radius:999px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.16);color:#ffffff;font-size:13px;font-weight:600;">${escapeHtml(
+                      bullet
+                    )}</span>`
+                )
+                .join('')}
+            </div>`
+              : ''
+          }
+          <div style="margin-top:34px;">
+            <a href="${escapeHtml(
+              ctaHref
+            )}" style="display:inline-block;padding:14px 22px;border-radius:999px;background:#ffffff;color:#111827;text-decoration:none;font-weight:700;">${escapeHtml(
+    ctaLabel
+  )}</a>
+          </div>
+        </div>
+      </section>
+    </main>`;
+}
+
+function buildOrganizationSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'LocalBusiness',
+    name: 'Prime Cabs Melbourne',
+    url: `${baseUrl}/`,
+    telephone: '+61488797233',
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: '29 Bayswater Rd',
+      addressLocality: 'Croydon',
+      addressRegion: 'VIC',
+      postalCode: '3136',
+      addressCountry: 'AU',
+    },
+  };
+}
+
 function buildBlogSchema(blog, canonicalUrl) {
   return {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: blog.metaTitle || blog.title,
     description: blog.metaDescription || blog.excerpt || blog.subtitle || '',
-    datePublished: blog.publishedAt || blog.createdAt,
-    dateModified: blog.updatedAt || blog.publishedAt || blog.createdAt,
+    datePublished: blog.publishedAt || blog.createdAt || NOW_ISO,
+    dateModified: blog.updatedAt || blog.publishedAt || blog.createdAt || NOW_ISO,
     author: {
       '@type': 'Person',
       name: blog.authorName || 'Prime Cabs Melbourne',
@@ -230,6 +296,110 @@ function buildSuburbBody(suburb) {
     </main>`;
 }
 
+function buildStaticRoutes() {
+  return [
+    {
+      routePath: '/',
+      title: 'Melbourne Airport Taxi | Fixed Fare Airport Transfers - Prime Cabs Melbourne',
+      description:
+        'Book a reliable Melbourne Airport taxi with Prime Cabs Melbourne. 24/7 airport transfers, fixed fares, no surge pricing, professional drivers.',
+      ogImage: '/assets/images/home-hero-paid-pc.webp',
+      schema: {
+        ...buildOrganizationSchema(),
+        '@type': 'TaxiService',
+        serviceType: 'Airport Transfer Taxi',
+        description:
+          '24/7 airport transfer taxi service in Melbourne with fixed fares, clean vehicles, and professional drivers.',
+      },
+      bodyMarkup: renderShellPage({
+        eyebrow: 'Melbourne Airport Transfers',
+        title: 'Reach the airport on time, without the stress.',
+        description:
+          'Professional Melbourne airport transfers with fixed fares, clean vehicles, and quick online booking.',
+        bullets: ['Trusted by Melbourne travellers', 'No surprise surge pricing', 'Fast online booking'],
+      }),
+    },
+    {
+      routePath: '/airport-taxi-melbourne',
+      title: 'Melbourne Airport Taxi Transfers | Prime Cabs Melbourne',
+      description:
+        'Book affordable, fast and professional airport taxis in Melbourne. Fixed fares, 24/7 service to Tullamarine and Avalon Airport.',
+      ogImage: '/assets/images/airport-hero.webp',
+      schema: {
+        ...buildOrganizationSchema(),
+        '@type': 'Service',
+        serviceType: 'Airport Transfer Taxi',
+        name: 'Melbourne Airport Taxi Transfers - Prime Cabs',
+        areaServed: ['Melbourne', 'Tullamarine Airport', 'Avalon Airport'],
+      },
+      bodyMarkup: renderShellPage({
+        eyebrow: 'Airport Taxi Melbourne',
+        title: 'Melbourne Airport Taxi Transfers',
+        description:
+          'Tullamarine, Avalon, family travel, executive pickups, and 24/7 fixed-fare airport rides across Melbourne.',
+        bullets: ['Fixed fares', '24/7 service', 'Professional drivers', 'Group vehicles available'],
+      }),
+    },
+    {
+      routePath: '/airport-transfer/melbourne',
+      title: 'Melbourne Airport Transfers by Suburb | Prime Cabs Melbourne',
+      description:
+        'Browse all Melbourne suburbs for airport transfer taxi bookings. Reliable pickups, fixed fares, and 24/7 availability.',
+      ogImage: '/assets/images/prime-cabs-og.webp',
+      schema: {
+        ...buildOrganizationSchema(),
+        '@type': 'CollectionPage',
+        name: 'Melbourne Airport Transfers by Suburb',
+        url: `${baseUrl}/airport-transfer/melbourne`,
+      },
+      bodyMarkup: renderShellPage({
+        eyebrow: 'Airport Transfer Hub',
+        title: 'Melbourne Airport Transfers by Suburb',
+        description:
+          'Explore suburb-specific airport transfer pages across Melbourne with fixed fares, local route coverage, and fast online booking.',
+        bullets: ['Suburb landing pages', 'Fixed-fare quotes', '24/7 Melbourne coverage'],
+      }),
+    },
+    {
+      routePath: '/services',
+      title: 'Our Taxi Services | Prime Cabs Melbourne',
+      description:
+        'Explore our Melbourne taxi services including airport transfers, hotel pickups, business rides, and long-distance travel.',
+      ogImage: '/assets/images/prime-cabs-og.webp',
+      schema: {
+        ...buildOrganizationSchema(),
+        '@type': 'Service',
+        serviceType: 'Taxi services',
+        name: 'Prime Cabs Melbourne Services',
+      },
+      bodyMarkup: renderShellPage({
+        eyebrow: 'Services',
+        title: 'Transport services designed for comfort, reliability and time-saving.',
+        description:
+          'From airport transfers to corporate bookings and private tours, choose a service that fits your trip.',
+        bullets: ['Airport specialists', 'Business travel', 'Private tours', 'Group transport'],
+      }),
+    },
+    {
+      routePath: '/contact',
+      title: 'Contact Prime Cabs Melbourne | 24/7 Airport Taxi Booking and Support',
+      description:
+        'Contact Prime Cabs for reliable Melbourne airport taxi bookings. 24/7 support for Tullamarine, Avalon, and Melbourne suburbs.',
+      ogImage: '/assets/images/prime-cabs-og.webp',
+      schema: buildOrganizationSchema(),
+      bodyMarkup: renderShellPage({
+        eyebrow: 'Contact',
+        title: 'Contact Prime Cabs Melbourne',
+        description:
+          'Reach out for 24/7 Melbourne airport transfers, ride bookings, or fare quotes. We are here to help fast and clearly.',
+        bullets: ['24/7 support', 'Fast response', 'Fixed fare quotes'],
+        ctaLabel: 'Contact us',
+        ctaHref: '/contact',
+      }),
+    },
+  ];
+}
+
 function requestJson(url) {
   return new Promise((resolve, reject) => {
     const client = url.startsWith('https://') ? https : http;
@@ -262,29 +432,40 @@ async function loadPublishedBlogs() {
     return [];
   }
 
-  try {
-    const listResponse = await requestJson(`${apiBaseUrl}/api/blogs`);
-    const blogs = Array.isArray(listResponse?.blogs) ? listResponse.blogs : [];
-    const detailedBlogs = [];
+  const listResponse = await requestJson(`${apiBaseUrl}/api/blogs`);
+  const blogs = Array.isArray(listResponse?.blogs) ? listResponse.blogs : [];
+  const detailedBlogs = [];
 
-    for (const blog of blogs) {
-      if (!blog?.slug) continue;
-
-      try {
-        const detailResponse = await requestJson(`${apiBaseUrl}/api/blogs/${blog.slug}`);
-        if (detailResponse?.success && detailResponse.blog) {
-          detailedBlogs.push(detailResponse.blog);
-        }
-      } catch (error) {
-        console.warn(`[prerender] Skipping blog ${blog.slug}: ${error.message}`);
-      }
+  for (const blog of blogs) {
+    if (!blog?.slug) continue;
+    const detailResponse = await requestJson(`${apiBaseUrl}/api/blogs/${blog.slug}`);
+    if (detailResponse?.success && detailResponse.blog) {
+      detailedBlogs.push(detailResponse.blog);
     }
-
-    return detailedBlogs;
-  } catch (error) {
-    console.warn(`[prerender] Unable to load blog data: ${error.message}`);
-    return [];
   }
+
+  return detailedBlogs;
+}
+
+async function prerenderStaticRoutes(shellHtml) {
+  const routes = buildStaticRoutes();
+
+  for (const route of routes) {
+    const canonicalUrl = `${baseUrl}${route.routePath === '/' ? '/' : route.routePath}`;
+    const html = injectHtmlDocument(shellHtml, {
+      headMarkup: buildMetaTags({
+        title: route.title,
+        description: route.description,
+        canonicalUrl,
+        ogImage: route.ogImage,
+        schema: route.schema,
+      }),
+      bodyMarkup: route.bodyMarkup,
+    });
+    await writeRouteHtml(route.routePath, html);
+  }
+
+  console.log(`[prerender] Generated ${routes.length} core route snapshots.`);
 }
 
 async function prerenderBlogs(shellHtml) {
@@ -306,6 +487,11 @@ async function prerenderBlogs(shellHtml) {
         schema: buildBlogSchema(blog, canonicalUrl),
       }),
       bodyMarkup: buildBlogBody(blog),
+      dataScript: buildDataScript({
+        routeType: 'blog',
+        routePath,
+        blog,
+      }),
     });
 
     await writeRouteHtml(routePath, html);
@@ -339,6 +525,11 @@ async function prerenderSuburbs(shellHtml) {
         schema: buildSuburbSchema(suburb, canonicalUrl, description),
       }),
       bodyMarkup: buildSuburbBody(suburb),
+      dataScript: buildDataScript({
+        routeType: 'suburb',
+        routePath,
+        suburb,
+      }),
     });
 
     await writeRouteHtml(routePath, html);
@@ -350,6 +541,7 @@ async function prerenderSuburbs(shellHtml) {
 
 async function main() {
   const shellHtml = await loadShellTemplate();
+  await prerenderStaticRoutes(shellHtml);
   await prerenderSuburbs(shellHtml);
   await prerenderBlogs(shellHtml);
 }
