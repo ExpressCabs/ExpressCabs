@@ -5,6 +5,7 @@ export const routeInventory = {
     '/airport-transfer/melbourne',
     '/contact',
     '/services',
+    '/blogs',
   ],
   dynamicIndexable: [
     '/airport-transfer/melbourne/:suburbSlug',

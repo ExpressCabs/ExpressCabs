@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import suburbs from "../data/melbourneSuburbs.json";
-import Footer from "../components/Footer";
 
 export default function AirportTransfersMelbourne() {
   return (
@@ -30,8 +29,6 @@ export default function AirportTransfersMelbourne() {
           ))}
         </div>
       </div>
-
-      <Footer />
     </>
   );
 }

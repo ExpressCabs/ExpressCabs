@@ -1,8 +1,8 @@
 import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import BookingForm from "../BookingForm";
-import Footer from "../Footer";
 import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 18 },
@@ -110,6 +110,10 @@ export default function TemplateOne({ blog }) {
   const readMins = blog?.readTime || estimateReadTime([blog?.subtitle, blog?.body1, blog?.body2, blog?.conclusion].filter(Boolean).join(" "));
   const category = blog?.category || "Travel Tips";
   const sections = useMemo(() => buildSections(blog), [blog]);
+  const scrollToBooking = () => {
+    const el = document.getElementById("blog-booking-form");
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <>
@@ -160,9 +164,9 @@ export default function TemplateOne({ blog }) {
         <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-28 md:pt-24 md:pb-32">
           <motion.div initial="hidden" animate="show" variants={fadeUp} className="max-w-3xl">
             <div className="flex flex-wrap items-center gap-2 text-white/85">
-              <a href="/blog" className="text-xs md:text-sm hover:text-white transition">
+              <Link to="/blogs" className="text-xs md:text-sm hover:text-white transition">
                 Blog
-              </a>
+              </Link>
               <span className="text-white/40">/</span>
               <span className="text-xs md:text-sm">{slugToText(blog?.slug)}</span>
 
@@ -214,7 +218,7 @@ export default function TemplateOne({ blog }) {
       </section>
 
       {/* BOOKING (kept as-is, wrapped only) */}
-      <div className="max-w-6xl mx-auto px-6 -mt-20 md:-mt-24 relative z-20">
+      <div id="blog-booking-form" className="max-w-6xl mx-auto px-6 -mt-20 md:-mt-24 relative z-20">
         <motion.div
           initial="hidden"
           whileInView="show"
@@ -287,17 +291,13 @@ export default function TemplateOne({ blog }) {
                             Flight delays? No worries — add your flight number and we’ll track it.
                           </p>
                         </div>
-                        <a
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            const el = document.querySelector("form");
-                            el?.scrollIntoView({ behavior: "smooth", block: "start" });
-                          }}
+                        <button
+                          type="button"
+                          onClick={scrollToBooking}
                           className="inline-flex justify-center px-5 py-2.5 rounded-full bg-gray-900 text-white text-sm font-semibold hover:bg-black transition"
                         >
                           Jump to booking
-                        </a>
+                        </button>
                       </div>
                     </div>
                   ) : null}
@@ -316,17 +316,13 @@ export default function TemplateOne({ blog }) {
                         Book in minutes with Prime Cabs Melbourne — professional drivers and clean vehicles.
                       </p>
                     </div>
-                    <a
-                      href="#"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        const el = document.querySelector("form");
-                        el?.scrollIntoView({ behavior: "smooth", block: "start" });
-                      }}
+                    <button
+                      type="button"
+                      onClick={scrollToBooking}
                       className="inline-flex justify-center px-6 py-3 rounded-full bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition"
                     >
                       Book now
-                    </a>
+                    </button>
                   </div>
                 </div>
               </motion.div>
@@ -373,10 +369,8 @@ export default function TemplateOne({ blog }) {
                   Smooth pickups, spacious luggage room, and friendly service — every time.
                 </p>
                 <button
-                  onClick={() => {
-                    const el = document.querySelector("form");
-                    el?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  }}
+                  type="button"
+                  onClick={scrollToBooking}
                   className="mt-5 w-full px-5 py-2.5 rounded-full bg-white text-gray-900 font-semibold hover:bg-gray-100 transition"
                 >
                   Get a quote
@@ -386,8 +380,6 @@ export default function TemplateOne({ blog }) {
           </aside>
         </div>
       </section>
-
-      <Footer />
     </>
   );
 }

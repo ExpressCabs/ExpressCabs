@@ -238,10 +238,7 @@ export default function AddressScreen({ loggedInUser }) {
                             "telephone": "+61488797233",
                             "address": {
                                 "@type": "PostalAddress",
-                                "streetAddress": "29 Bayswater Rd",
-                                "addressLocality": "Croydon",
                                 "addressRegion": "VIC",
-                                "postalCode": "3136",
                                 "addressCountry": "AU"
                             }
                         },

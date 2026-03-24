@@ -7,8 +7,8 @@ import logo from '/assets/images/logo.png';
 const PRIMARY_PHONE = '+61488797233';
 const WHATSAPP_LINK = 'https://wa.me/61482038902';
 const EMAIL = 'bookmelbourneairporttaxis@gmail.com';
-const ADDRESS = '29 Bayswater Rd, Croydon VIC 3136';
-const GOOGLE_MAPS_LINK = 'https://www.google.com/maps?q=29+Bayswater+Rd,+Croydon+VIC+3136,+Australia';
+const ADDRESS = 'Melbourne, VIC';
+const GOOGLE_MAPS_LINK = 'https://www.google.com/maps?q=Melbourne+VIC,+Australia';
 
 export default function HeaderFooter({ mode, setMode, loggedInDriver, loggedInUser, setShowUserPopup }) {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -94,7 +94,11 @@ export default function HeaderFooter({ mode, setMode, loggedInDriver, loggedInUs
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mt-3 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] backdrop-blur-xl shadow-[0_18px_60px_-28px_rgba(0,0,0,0.3)]">
             <div className="flex items-center justify-between px-4 sm:px-5 py-3">
-              <button onClick={() => navigate('/')} className="flex items-center gap-2 text-left" aria-label="Go to homepage">
+              <button
+                onClick={() => handleSetMode('passenger')}
+                className="flex items-center gap-2 text-left"
+                aria-label="Go to homepage"
+              >
                 <img src={logo} alt="Prime Cabs Logo" className="h-9 w-auto" />
                 <div className="leading-tight">
                   <div className="text-base sm:text-lg font-extrabold tracking-tight text-slate-900">Prime Cabs</div>
@@ -120,11 +124,11 @@ export default function HeaderFooter({ mode, setMode, loggedInDriver, loggedInUs
               </nav>
 
               <div className="flex items-center gap-2">
-                {loggedInUser && typeof setShowUserPopup === 'function' ? (
+                {loggedInUser ? (
                   <button
-                    onClick={() => setShowUserPopup(true)}
+                    onClick={() => handleSetMode('myrides')}
                     className="hidden sm:inline-flex px-4 py-2 rounded-full border border-[var(--border-soft)] bg-[var(--surface-solid)] hover:bg-slate-50 text-sm font-semibold text-slate-700 transition"
-                    aria-label="Open user menu"
+                    aria-label="Open my rides"
                   >
                     Account
                   </button>

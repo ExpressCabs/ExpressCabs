@@ -43,6 +43,7 @@ const ContactUs = lazy(() => import("./screens/ContactUs"));
 const OurServices = lazy(() => import("./screens/OurServices"));
 const DriverRegister = lazy(() => import("./screens/DriverRegister"));
 const BlogSlug = lazy(() => import("./screens/blogslug"));
+const AllBlogs = lazy(() => import("./screens/AllBlogs"));
 
 const DriverForgotPassword = lazy(() => import("./components/DriverForgetPassword"));
 const UserForgotPassword = lazy(() => import("./components/UserForgotPassword"));
@@ -354,6 +355,7 @@ const App = () => {
           </Route>
 
           <Route path="/blog/:slug" element={<BlogSlug />} />
+          <Route path="/blogs" element={<AllBlogs />} />
         </Routes>
       </Suspense>
 

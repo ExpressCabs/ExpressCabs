@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import BookingForm from "../BookingForm";
-import Footer from "../Footer";
+import { Link } from "react-router-dom";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 14 },
@@ -71,6 +71,10 @@ export default function TemplateThree({ blog }) {
     blog?.readTime ||
     estimateReadTime([blog?.subtitle, blog?.body1, blog?.body2, blog?.conclusion].filter(Boolean).join(" "));
   const sections = useMemo(() => buildSections(blog), [blog]);
+  const scrollToBooking = () => {
+    const el = document.getElementById("blog-booking-form");
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <>
@@ -102,9 +106,9 @@ export default function TemplateThree({ blog }) {
       <div className="bg-gradient-to-b from-gray-50 via-white to-white border-b border-gray-100">
         <div className="max-w-7xl mx-auto px-6 pt-12 pb-10">
           <div className="flex flex-wrap items-center gap-3">
-            <a href="/blog" className="text-sm font-semibold text-gray-700 hover:text-gray-900 transition">
+            <Link to="/blogs" className="text-sm font-semibold text-gray-700 hover:text-gray-900 transition">
               Blog
-            </a>
+            </Link>
             <span className="text-gray-300">•</span>
             <span className="text-sm text-gray-600">{blog?.category || "Airport Transfers"}</span>
             <span className="ml-auto inline-flex gap-2">
@@ -211,10 +215,8 @@ export default function TemplateThree({ blog }) {
               Quick booking, upfront quotes, and friendly local drivers — Prime Cabs Melbourne.
             </p>
             <button
-              onClick={() => {
-                const el = document.querySelector("form");
-                el?.scrollIntoView({ behavior: "smooth", block: "start" });
-              }}
+              type="button"
+              onClick={scrollToBooking}
               className="mt-5 px-6 py-3 rounded-full bg-gray-900 text-white font-semibold hover:bg-black transition"
             >
               Get a quote
@@ -226,6 +228,7 @@ export default function TemplateThree({ blog }) {
         <aside className="lg:col-span-4">
           <div className="sticky top-24 space-y-6">
             <motion.div
+              id="blog-booking-form"
               initial={{ opacity: 0, y: 14 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -261,10 +264,8 @@ export default function TemplateThree({ blog }) {
                   <div key={r} className="flex items-center justify-between gap-3">
                     <span className="text-white/90">{r}</span>
                     <button
-                      onClick={() => {
-                        const el = document.querySelector("form");
-                        el?.scrollIntoView({ behavior: "smooth", block: "start" });
-                      }}
+                      type="button"
+                      onClick={scrollToBooking}
                       className="text-xs font-semibold px-3 py-1.5 rounded-full bg-white text-gray-900 hover:bg-gray-100 transition"
                     >
                       Quote
@@ -276,8 +277,6 @@ export default function TemplateThree({ blog }) {
           </div>
         </aside>
       </article>
-
-      <Footer />
     </>
   );
 }

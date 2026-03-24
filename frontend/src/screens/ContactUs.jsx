@@ -178,7 +178,7 @@ export default function ContactUs({ showMap = true }) {
                   <FaMapMarkerAlt className="text-gray-900 mt-1" />
                   <div>
                     <p className="text-sm font-semibold text-gray-900">Address</p>
-                    <p className="text-sm text-gray-600">29 Bayswater Rd, Croydon VIC 3136</p>
+                    <p className="text-sm text-gray-600">Melbourne, VIC</p>
                   </div>
                 </div>
 
@@ -446,7 +446,7 @@ export default function ContactUs({ showMap = true }) {
                 <p className="font-semibold">Find us</p>
                 <a
                   className="text-sm text-white/80 hover:text-white transition"
-                  href="https://www.google.com/maps?q=29+Bayswater+Rd,+Croydon+VIC+3136,+Australia"
+                  href="https://www.google.com/maps?q=Melbourne+VIC,+Australia"
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -454,7 +454,7 @@ export default function ContactUs({ showMap = true }) {
                 </a>
               </div>
               <iframe
-                src="https://www.google.com/maps?q=29+Bayswater+Rd,+Croydon+VIC+3136,+Australia&output=embed"
+                src="https://www.google.com/maps?q=Melbourne+VIC,+Australia&output=embed"
                 width="100%"
                 height="340"
                 allowFullScreen=""

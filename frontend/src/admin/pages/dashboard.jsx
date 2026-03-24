@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 import AdminSidebar from "../components/adminSidebar";
 
 export default function Dashboard() {
@@ -29,6 +29,21 @@ export default function Dashboard() {
                     <div>
                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Admin Dashboard</p>
                         <h1 className="text-lg font-bold text-slate-900">Operations Console</h1>
+                    </div>
+
+                    <div className="hidden items-center gap-2 md:flex">
+                        <Link
+                            to="/admin/blogs"
+                            className="inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                        >
+                            All Blogs
+                        </Link>
+                        <Link
+                            to="/admin/blogs/new"
+                            className="inline-flex items-center justify-center rounded-xl bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-black"
+                        >
+                            Write Blog
+                        </Link>
                     </div>
 
                     <button

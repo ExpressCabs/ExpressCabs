@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 
 import suburbs from "../data/melbourneSuburbs.json";
 import BookingForm from "../components/BookingForm";
-import Footer from "../components/Footer";
 import AirportTransferCoreContent from "../components/AirportTransferCoreContent";
 import NearbySuburbs from "../components/NearbySuburbs";
 import { buildMeta } from "../lib/seo/buildMeta";
@@ -219,7 +218,6 @@ export default function AirportTransferSuburb() {
             View all suburbs
           </Link>
         </div>
-        <Footer />
       </>
     );
   }
@@ -770,9 +768,6 @@ export default function AirportTransferSuburb() {
 
       {/* LINKS TO OTHER SUBURBS */}
       <NearbySuburbs suburb={suburb} />
-
-      {/* FOOTER */}
-      <Footer />
     </>
   );
 }

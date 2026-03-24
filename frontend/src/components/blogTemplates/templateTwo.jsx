@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import BookingForm from "../BookingForm";
-import Footer from "../Footer";
+import { Link } from "react-router-dom";
 
 const fade = {
   hidden: { opacity: 0, y: 14 },
@@ -71,6 +71,10 @@ export default function TemplateTwo({ blog }) {
     blog?.readTime ||
     estimateReadTime([blog?.subtitle, blog?.body1, blog?.body2, blog?.conclusion].filter(Boolean).join(" "));
   const sections = useMemo(() => buildSections(blog), [blog]);
+  const scrollToBooking = () => {
+    const el = document.getElementById("blog-booking-form");
+    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <>
@@ -102,9 +106,9 @@ export default function TemplateTwo({ blog }) {
         {/* Top bar */}
         <div className="max-w-7xl mx-auto px-6 pt-10">
           <div className="flex flex-wrap items-center gap-3">
-            <a href="/blog" className="text-sm font-semibold text-gray-700 hover:text-gray-900 transition">
+            <Link to="/blogs" className="text-sm font-semibold text-gray-700 hover:text-gray-900 transition">
               Blog
-            </a>
+            </Link>
             <span className="text-gray-300">•</span>
             <span className="text-sm text-gray-600">{blog?.category || "Travel & Transfers"}</span>
 
@@ -203,7 +207,7 @@ export default function TemplateTwo({ blog }) {
         </div>
 
         {/* Booking CTA (BookingForm unchanged) */}
-        <div className="max-w-7xl mx-auto px-6 mt-10">
+        <div id="blog-booking-form" className="max-w-7xl mx-auto px-6 mt-10">
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -296,10 +300,8 @@ export default function TemplateTwo({ blog }) {
                     </p>
                   </div>
                   <button
-                    onClick={() => {
-                      const el = document.querySelector("form");
-                      el?.scrollIntoView({ behavior: "smooth", block: "start" });
-                    }}
+                    type="button"
+                    onClick={scrollToBooking}
                     className="px-6 py-3 rounded-full bg-white text-gray-900 font-semibold hover:bg-gray-100 transition"
                   >
                     Book now
@@ -310,8 +312,6 @@ export default function TemplateTwo({ blog }) {
           </div>
         </div>
       </article>
-
-      <Footer />
     </>
   );
 }

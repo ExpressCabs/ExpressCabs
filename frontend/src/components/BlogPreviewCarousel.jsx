@@ -9,6 +9,10 @@ export default function BlogPreviewCarousel() {
   const [imageIndex, setImageIndex] = useState(0);
   const navigate = useNavigate();
 
+  const goToBooking = () => {
+    navigate('/', { state: { nextMode: 'passenger' } });
+  };
+
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
@@ -259,7 +263,7 @@ export default function BlogPreviewCarousel() {
             </button>
             <button
               type="button"
-              onClick={() => navigate('/')}
+              onClick={goToBooking}
               className="h-10 px-4 rounded-full bg-gray-900 text-white font-semibold hover:bg-black transition"
             >
               Book a ride
