@@ -1149,7 +1149,7 @@ const BookingForm = ({
                 </div>
 
                 <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-900 px-4 py-4 text-white">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/55">Approx Fare</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/55">Approx Fare On Meter Will Be</p>
                   <p className="mt-1 text-2xl font-extrabold tracking-tight">
                     {routePreview.minFareText}
                     {routePreview.maxFareText !== routePreview.minFareText ? ` - ${routePreview.maxFareText}` : ''}
