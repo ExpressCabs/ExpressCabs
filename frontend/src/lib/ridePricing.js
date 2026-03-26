@@ -56,8 +56,8 @@ function isSouthEastSuburb(suburb) {
 }
 
 export const TARIFFS = {
-  day: { name: 'Day', flagfall: 5.25, perKm: 2.037, perMin: 0.713 },
-  evening: { name: 'Evening', flagfall: 6.55, perKm: 2.265, perMin: 0.792 },
+  day: { name: 'Tarrif 1', flagfall: 5.25, perKm: 1.917, perMin: 0.713 },
+  evening: { name: 'Tarrif 2', flagfall: 6.55, perKm: 2.145, perMin: 0.792 },
 };
 
 const SPEED_SWITCH_KMH = 27;
@@ -186,27 +186,28 @@ export function estimateFareRange({
     return true;
   });
 
-  const fareValues = eligibleVehicles.map((vehicle) =>
-    computeVehicleFare({
-      vehicle,
-      distanceKm,
-      durationMin,
-      tariff,
-      passengerCount,
-      airportPickup,
-      hasTolls,
-      pickupSuburb,
-      dropoffSuburb,
-    })
-  );
+  const sedanVehicle = eligibleVehicles.find((vehicle) => vehicle.id === 'sedan');
+  const baseVehicle = sedanVehicle || eligibleVehicles[0];
 
-  if (fareValues.length === 0) {
+  if (!baseVehicle) {
     return null;
   }
 
+  const baseFare = computeVehicleFare({
+    vehicle: baseVehicle,
+    distanceKm,
+    durationMin,
+    tariff,
+    passengerCount,
+    airportPickup,
+    hasTolls,
+    pickupSuburb,
+    dropoffSuburb,
+  });
+
   return {
-    minFare: Math.min(...fareValues),
-    maxFare: Math.max(...fareValues),
+    minFare: roundMoney(Math.max(0, baseFare - 4)),
+    maxFare: roundMoney(baseFare + 4),
     tariff,
   };
 }
