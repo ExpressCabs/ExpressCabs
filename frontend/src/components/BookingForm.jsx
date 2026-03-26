@@ -971,7 +971,7 @@ const BookingForm = ({
       type="button"
       onClick={handleMapIntent}
       onTouchStart={handleMapIntent}
-      className="mt-4 h-64 w-full overflow-hidden rounded-2xl border border-gray-200 bg-gray-50 text-left shadow-sm"
+      className="mt-4 h-64 w-full overflow-hidden rounded-[28px] border border-white/32 bg-[linear-gradient(180deg,rgba(255,255,255,0.42)_0%,rgba(203,213,225,0.32)_100%)] text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.34),0_26px_55px_-34px_rgba(15,23,42,0.42)] backdrop-blur-xl"
       aria-label="Activate live map"
     >
       <div className="relative h-full w-full">
@@ -987,7 +987,7 @@ const BookingForm = ({
   );
 
   const stepFallback = (
-    <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 text-sm text-gray-600">
+    <div className="rounded-[28px] border border-white/30 bg-[linear-gradient(180deg,rgba(71,85,105,0.24)_0%,rgba(51,65,85,0.2)_100%)] p-6 text-sm text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.22),0_24px_55px_-34px_rgba(15,23,42,0.42)] backdrop-blur-xl">
       Loading...
     </div>
   );
@@ -998,8 +998,8 @@ const BookingForm = ({
         <>
           <div className="flex items-start justify-between gap-4">
             <div>
-              <h2 className="text-xl font-extrabold text-gray-900 md:text-2xl">Book Your Ride</h2>
-              <p className="mt-1 text-sm text-gray-600">
+              <h2 className="text-xl font-extrabold text-slate-900 md:text-2xl">Book Your Ride</h2>
+              <p className="mt-1 text-sm text-slate-700">
                 Enter pickup and dropoff, then choose vehicle and passenger details.
               </p>
             </div>
@@ -1009,7 +1009,7 @@ const BookingForm = ({
             </div>
           </div>
 
-          <div className="mt-5">
+          <div className="mt-5 rounded-[30px] border border-white/30 bg-[linear-gradient(180deg,rgba(255,255,255,0.66)_0%,rgba(226,232,240,0.54)_100%)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_32px_72px_-36px_rgba(15,23,42,0.42)] backdrop-blur-2xl">
             <div className="relative mb-3" aria-live="polite">
               <input
                 ref={pickupInputRef}
@@ -1024,12 +1024,12 @@ const BookingForm = ({
                 }}
                 onFocus={handleMapIntent}
                 onChangeCapture={handleMapIntent}
-                className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 pr-12 text-sm text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/20"
+                className="h-11 w-full rounded-2xl border border-slate-300/70 bg-white/84 px-3 pr-12 text-sm text-slate-900 placeholder-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_20px_38px_-30px_rgba(15,23,42,0.3)] backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-slate-900/15"
               />
               <button
                 type="button"
                 onClick={handleUseCurrentLocation}
-                className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:text-slate-400"
+                className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full border border-slate-300/70 bg-white/88 text-slate-600 shadow-[0_14px_28px_-18px_rgba(15,23,42,0.48)] transition hover:bg-white hover:text-slate-900 disabled:cursor-not-allowed disabled:text-slate-400"
                 disabled={isResolvingCurrentLocation}
                 aria-label={isResolvingCurrentLocation ? 'Detecting current location' : 'Use current location'}
                 title={isResolvingCurrentLocation ? 'Detecting location...' : 'Use my current location'}
@@ -1048,15 +1048,15 @@ const BookingForm = ({
               onChange={(e) => setDropoffAddress(e.target.value)}
               onFocus={handleMapIntent}
               onChangeCapture={handleMapIntent}
-              className="mb-3 h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/20"
+              className="mb-3 h-11 w-full rounded-2xl border border-slate-300/70 bg-white/84 px-3 text-sm text-slate-900 placeholder-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_20px_38px_-30px_rgba(15,23,42,0.3)] backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-slate-900/15"
             />
 
             {showBookingOptions && (
-              <div className="mb-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 text-black">
+              <div className="mb-3 rounded-[26px] border border-white/30 bg-[linear-gradient(180deg,rgba(255,255,255,0.56)_0%,rgba(226,232,240,0.44)_100%)] p-4 text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.74),0_24px_48px_-34px_rgba(15,23,42,0.3)] backdrop-blur-xl">
                 <div className="mb-3">
-                  <label className="mb-2 block text-sm font-semibold text-gray-800">Book for:</label>
-                  <div className="flex gap-4">
-                    <label className="flex items-center gap-2 text-sm">
+                  <label className="mb-2 block text-sm font-semibold text-slate-800">Book for:</label>
+                  <div className="flex gap-3">
+                    <label className="inline-flex items-center gap-2 rounded-full border border-slate-300/60 bg-white/72 px-3 py-1.5 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_22px_-18px_rgba(15,23,42,0.18)]">
                       <input
                         type="radio"
                         name="bookingType"
@@ -1069,7 +1069,7 @@ const BookingForm = ({
                       />
                       Now
                     </label>
-                    <label className="flex items-center gap-2 text-sm">
+                    <label className="inline-flex items-center gap-2 rounded-full border border-slate-300/60 bg-white/72 px-3 py-1.5 text-sm shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_10px_22px_-18px_rgba(15,23,42,0.18)]">
                       <input
                         type="radio"
                         name="bookingType"
@@ -1092,8 +1092,8 @@ const BookingForm = ({
                         if (input) input.showPicker?.() || input.focus();
                       }}
                     >
-                      <div className="mb-2 flex items-center gap-2 text-sm text-gray-700">
-                        <MdCalendarToday className="pointer-events-none text-gray-600" size={18} />
+                      <div className="mb-2 flex items-center gap-2 text-sm text-slate-700">
+                        <MdCalendarToday className="pointer-events-none text-slate-600" size={18} />
                         <span className="pointer-events-none font-semibold">Date and Time</span>
                       </div>
                       <input
@@ -1101,7 +1101,7 @@ const BookingForm = ({
                         type="datetime-local"
                         value={scheduledDateTime}
                         onChange={(e) => setScheduledDateTime(e.target.value)}
-                        className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/20"
+                        className="h-11 w-full rounded-2xl border border-slate-300/70 bg-white/86 px-3 text-sm text-slate-900 placeholder-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_20px_38px_-30px_rgba(15,23,42,0.24)] backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-slate-900/15"
                         placeholder="Select date and time"
                       />
                     </label>
@@ -1117,7 +1117,7 @@ const BookingForm = ({
                       const value = parseInt(e.target.value, 10);
                       setPassengerCount(Number.isNaN(value) ? '' : value);
                     }}
-                    className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/20"
+                    className="h-11 w-full rounded-2xl border border-slate-300/70 bg-white/86 px-3 text-sm text-slate-900 placeholder-slate-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.96),0_20px_38px_-30px_rgba(15,23,42,0.24)] backdrop-blur-md focus:outline-none focus:ring-2 focus:ring-slate-900/15"
                     placeholder="Number of passengers"
                   />
                 </div>
@@ -1127,7 +1127,7 @@ const BookingForm = ({
             {canContinueToVehicle && routePreview ? (
               <div
                 ref={tripEstimateRef}
-                className="mb-4 scroll-mt-28 rounded-[22px] border border-slate-200 bg-[linear-gradient(135deg,#ffffff_0%,#f8fafc_58%,#eef2ff_100%)] px-4 py-4 shadow-[0_18px_40px_-30px_rgba(15,23,42,0.35)]"
+                className="mb-4 scroll-mt-28 rounded-[28px] border border-white/30 bg-[linear-gradient(180deg,rgba(255,255,255,0.68)_0%,rgba(226,232,240,0.56)_100%)] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_26px_56px_-34px_rgba(15,23,42,0.34)] backdrop-blur-xl"
               >
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
@@ -1148,7 +1148,7 @@ const BookingForm = ({
                   </div>
                 </div>
 
-                <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-900 px-4 py-4 text-white">
+                <div className="mt-3 rounded-[24px] border border-slate-700/70 bg-[linear-gradient(180deg,rgba(30,41,59,0.96)_0%,rgba(15,23,42,0.95)_100%)] px-4 py-4 text-white shadow-[0_24px_46px_-32px_rgba(15,23,42,0.85)]">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/55">Approx Fare</p>
                   <p className="mt-1 text-2xl font-extrabold tracking-tight">
                     {routePreview.minFareText}
@@ -1157,22 +1157,22 @@ const BookingForm = ({
                 </div>
 
                 <div className="mt-3 grid grid-cols-2 gap-2">
-                  <div className="rounded-2xl border border-slate-200 bg-white/80 px-3 py-3">
+                  <div className="rounded-[22px] border border-slate-300/55 bg-white/85 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_14px_28px_-24px_rgba(15,23,42,0.2)]">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Trip Distance</p>
                     <p className="mt-1 text-lg font-extrabold tracking-tight text-slate-900">{routePreview.distanceText}</p>
                   </div>
 
-                  <div className="rounded-2xl border border-slate-200 bg-white/80 px-3 py-3">
+                  <div className="rounded-[22px] border border-slate-300/55 bg-white/85 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_14px_28px_-24px_rgba(15,23,42,0.2)]">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">Trip Time</p>
                     <p className="mt-1 text-lg font-extrabold tracking-tight text-slate-900">{routePreview.durationText}</p>
                   </div>
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-2 text-[11px] font-medium text-slate-600">
-                  <span className="rounded-full border border-slate-200 bg-white/80 px-3 py-1.5">
+                  <span className="rounded-full border border-slate-300/55 bg-white/84 px-3 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_12px_24px_-20px_rgba(15,23,42,0.16)]">
                     {Number(passengerCount)} passenger{Number(passengerCount) === 1 ? '' : 's'}
                   </span>
-                  <span className="rounded-full border border-slate-200 bg-white/80 px-3 py-1.5">
+                  <span className="rounded-full border border-slate-300/55 bg-white/84 px-3 py-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.9),0_12px_24px_-20px_rgba(15,23,42,0.16)]">
                     {routePreview.tollsText}
                   </span>
                 </div>
@@ -1181,8 +1181,10 @@ const BookingForm = ({
 
             <button
               onClick={handleContinueToVehicle}
-              className={`h-11 w-full rounded-xl font-semibold text-white transition ${
-                canContinueToVehicle ? 'bg-gray-900 hover:bg-black' : 'bg-gray-500 hover:bg-gray-600'
+              className={`h-12 w-full rounded-2xl border font-semibold text-white shadow-[0_20px_46px_-30px_rgba(15,23,42,0.65)] transition ${
+                canContinueToVehicle
+                  ? 'border-slate-800/70 bg-[linear-gradient(180deg,rgba(30,41,59,0.98)_0%,rgba(15,23,42,1)_100%)] hover:brightness-105'
+                  : 'cursor-not-allowed border-slate-400/40 bg-slate-400/70'
               }`}
               title={
                 !pickupLoc || !dropoffLoc
@@ -1201,7 +1203,7 @@ const BookingForm = ({
 
             <div
               ref={mapRef}
-              className={`${mapsReady && mapInitialized ? 'block' : 'hidden'} mt-4 h-64 overflow-hidden rounded-2xl border border-gray-200 shadow-sm`}
+              className={`${mapsReady && mapInitialized ? 'block' : 'hidden'} mt-4 h-64 overflow-hidden rounded-[28px] border border-white/22 shadow-[0_26px_55px_-34px_rgba(15,23,42,0.42)] backdrop-blur-xl`}
             />
           </div>
         </>
@@ -1260,7 +1262,7 @@ const BookingForm = ({
         <div className="py-4">
           <button
             onClick={handleBookRide}
-            className="h-11 w-full rounded-xl bg-gray-900 font-semibold text-white transition hover:bg-black"
+            className="h-12 w-full rounded-2xl border border-slate-800/70 bg-[linear-gradient(180deg,rgba(30,41,59,0.98)_0%,rgba(15,23,42,1)_100%)] font-semibold text-white shadow-[0_20px_46px_-30px_rgba(15,23,42,0.65)] transition hover:brightness-105"
           >
             Confirm Booking
           </button>
@@ -1272,8 +1274,13 @@ const BookingForm = ({
   if (embedded) return content;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,#dbeafe_0%,#f8fafc_42%,#e2e8f0_100%)] p-4">
-      <div className="w-full max-w-xl rounded-3xl border border-white/45 bg-white/70 p-4 shadow-[0_24px_80px_-28px_rgba(15,23,42,0.45)] backdrop-blur-xl md:p-7">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_top,#cbd5e1_0%,#e2e8f0_38%,#cbd5e1_100%)] p-4">
+      <div className="pointer-events-none absolute inset-0 opacity-90">
+        <div className="absolute -left-20 top-8 h-48 w-48 rounded-full bg-white/30 blur-3xl" />
+        <div className="absolute right-[-3rem] top-24 h-64 w-64 rounded-full bg-slate-400/18 blur-3xl" />
+        <div className="absolute bottom-[-5rem] left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-white/18 blur-3xl" />
+      </div>
+      <div className="relative w-full max-w-xl rounded-[36px] border border-white/22 bg-[linear-gradient(180deg,rgba(248,250,252,0.48)_0%,rgba(203,213,225,0.34)_100%)] p-4 shadow-[0_30px_90px_-34px_rgba(15,23,42,0.42)] backdrop-blur-2xl md:p-7">
         {content}
       </div>
     </div>
