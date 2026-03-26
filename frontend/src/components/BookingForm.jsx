@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo, lazy, Suspense } from 'react';
-import { MdCalendarToday } from 'react-icons/md';
+import { MdCalendarToday, MdMyLocation } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 
 import { fireBookingConversion } from '../lib/adsTracking';
@@ -7,6 +7,7 @@ import { trackAnalyticsEvent } from '../lib/tracking/events';
 import { getOrCreateSessionToken } from '../lib/tracking/session';
 import { estimateFareRange, isMelbourneAirport } from '../lib/ridePricing';
 import { toast } from './ToastProvider';
+import { loadGoogleMaps } from '../utils/loadGoogleMaps';
 import { useGoogleMapsReady } from '../utils/useGoogleMapsReady';
 
 const VehicleSelection = lazy(() => import('../screens/VehicleSelection'));
@@ -53,6 +54,7 @@ const BookingForm = ({
   const vehicleTrackedRef = useRef('');
   const submitAttemptTrackedRef = useRef(false);
   const submitSuccessTrackedRef = useRef(false);
+  const pickupAddressSyncRef = useRef({ value: '', source: 'idle' });
 
   const [map, setMap] = useState(null);
   const [pickupLoc, setPickupLoc] = useState(null);
@@ -73,6 +75,8 @@ const BookingForm = ({
   const [mapInitialized, setMapInitialized] = useState(false);
   const [mapsEnabled, setMapsEnabled] = useState(false);
   const [routePreview, setRoutePreview] = useState(null);
+  const [isResolvingCurrentLocation, setIsResolvingCurrentLocation] = useState(false);
+  const [currentLocationError, setCurrentLocationError] = useState('');
 
   const { ready: mapsReady } = useGoogleMapsReady({ enabled: mapsEnabled });
 
@@ -125,12 +129,91 @@ const BookingForm = ({
     }
   }, [mapsEnabled, trackBookingStarted]);
 
+  const createMarker = useCallback(({ location, targetMap, markerRef, label, fillColor }) => {
+    if (!window.google?.maps || !location || !targetMap) {
+      return;
+    }
+
+    if (markerRef.current) {
+      markerRef.current.setMap(null);
+    }
+
+    markerRef.current = new window.google.maps.Marker({
+      position: location,
+      map: targetMap,
+      label: { text: label, color: '#ffffff', fontWeight: '700' },
+      icon: {
+        path: window.google.maps.SymbolPath.CIRCLE,
+        fillColor,
+        fillOpacity: 1,
+        strokeColor: '#ffffff',
+        strokeWeight: 3,
+        scale: 11,
+      },
+    });
+  }, []);
+
+  const applyPickupSelection = useCallback(({ location, address, place, targetMap, recenter = true }) => {
+    if (!location) {
+      return;
+    }
+
+    const activeMap = targetMap || map;
+    const resolvedAddress = address || place?.formatted_address || place?.name || '';
+    const resolvedSuburb = extractSuburbFromPlace(place || { formatted_address: resolvedAddress });
+
+    createMarker({
+      location,
+      targetMap: activeMap,
+      markerRef: pickupMarker,
+      label: 'P',
+      fillColor: '#0f172a',
+    });
+
+    setPickupLoc(location);
+    setPickupAddress(resolvedAddress);
+    setPickupSuburb(resolvedSuburb);
+    pickupAddressSyncRef.current = {
+      value: resolvedAddress,
+      source: place?.geometry ? 'place' : 'geocode',
+    };
+
+    if (activeMap && recenter) {
+      activeMap.setCenter(location);
+    }
+  }, [createMarker, extractSuburbFromPlace, map]);
+
+  const applyDropoffSelection = useCallback(({ location, address, place, targetMap, recenter = true }) => {
+    if (!location) {
+      return;
+    }
+
+    const activeMap = targetMap || map;
+    const resolvedAddress = address || place?.formatted_address || place?.name || '';
+    const resolvedSuburb = extractSuburbFromPlace(place || { formatted_address: resolvedAddress });
+
+    createMarker({
+      location,
+      targetMap: activeMap,
+      markerRef: dropoffMarker,
+      label: 'D',
+      fillColor: '#2563eb',
+    });
+
+    setDropoffLoc(location);
+    setDropoffAddress(resolvedAddress);
+    setDropoffSuburb(resolvedSuburb);
+
+    if (activeMap && recenter) {
+      activeMap.setCenter(location);
+    }
+  }, [createMarker, extractSuburbFromPlace, map]);
+
   const initMapAndAutocomplete = useCallback(() => {
-    if (gmapsInitRef.current) return;
-    if (step !== 1) return;
-    if (!mapsReady) return;
-    if (!window.google?.maps?.Map || !window.google?.maps?.places?.Autocomplete) return;
-    if (!mapRef.current || !pickupInputRef.current || !dropoffInputRef.current) return;
+    if (gmapsInitRef.current) return map;
+    if (step !== 1) return null;
+    if (!window.google?.maps?.Map || !window.google?.maps?.places?.Autocomplete) return null;
+    if (!mapRef.current || !pickupInputRef.current || !dropoffInputRef.current) return null;
 
     gmapsInitRef.current = true;
 
@@ -167,27 +250,16 @@ const BookingForm = ({
       if (place?.geometry) {
         trackBookingStarted();
         const location = place.geometry.location;
-        if (pickupMarker.current) pickupMarker.current.setMap(null);
-        pickupMarker.current = new window.google.maps.Marker({
-          position: location,
-          map: gMap,
-          label: { text: 'P', color: '#ffffff', fontWeight: '700' },
-          icon: {
-            path: window.google.maps.SymbolPath.CIRCLE,
-            fillColor: '#0f172a',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 3,
-            scale: 11,
-          },
+        const resolvedAddress = place.formatted_address || place.name || '';
+        applyPickupSelection({
+          location,
+          address: resolvedAddress,
+          place,
+          targetMap: gMap,
         });
-        setPickupLoc(location);
-        setPickupAddress(place.formatted_address || place.name);
         const pickupSuburb = extractSuburbFromPlace(place);
-        setPickupSuburb(pickupSuburb);
-        gMap.setCenter(location);
 
-        const eventKey = `${pickupSuburb}:${place.formatted_address || place.name || ''}`;
+        const eventKey = `${pickupSuburb}:${resolvedAddress}`;
         if (pickupTrackedRef.current !== eventKey) {
           pickupTrackedRef.current = eventKey;
           fireSubmitGa4Event('pickup_entered', {
@@ -197,11 +269,11 @@ const BookingForm = ({
           trackAnalyticsEvent('pickup_entered', {
             stepName: 'address_entry',
             pickupSuburb,
-            isAirportPickup: isMelbourneAirport(place.formatted_address || place.name || ''),
+            isAirportPickup: isMelbourneAirport(resolvedAddress),
             bookingType,
             passengerCount: Number(passengerCount) || undefined,
             metadata: {
-              pickupAddress: place.formatted_address || place.name || '',
+              pickupAddress: resolvedAddress,
             },
           });
         }
@@ -217,27 +289,16 @@ const BookingForm = ({
       if (place?.geometry) {
         trackBookingStarted();
         const location = place.geometry.location;
-        if (dropoffMarker.current) dropoffMarker.current.setMap(null);
-        dropoffMarker.current = new window.google.maps.Marker({
-          position: location,
-          map: gMap,
-          label: { text: 'D', color: '#ffffff', fontWeight: '700' },
-          icon: {
-            path: window.google.maps.SymbolPath.CIRCLE,
-            fillColor: '#2563eb',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 3,
-            scale: 11,
-          },
+        const resolvedAddress = place.formatted_address || place.name || '';
+        applyDropoffSelection({
+          location,
+          address: resolvedAddress,
+          place,
+          targetMap: gMap,
         });
-        setDropoffLoc(location);
-        setDropoffAddress(place.formatted_address || place.name);
         const dropoffSuburb = extractSuburbFromPlace(place);
-        setDropoffSuburb(dropoffSuburb);
-        gMap.setCenter(location);
 
-        const eventKey = `${dropoffSuburb}:${place.formatted_address || place.name || ''}`;
+        const eventKey = `${dropoffSuburb}:${resolvedAddress}`;
         if (dropoffTrackedRef.current !== eventKey) {
           dropoffTrackedRef.current = eventKey;
           fireSubmitGa4Event('dropoff_entered', {
@@ -247,17 +308,144 @@ const BookingForm = ({
           trackAnalyticsEvent('dropoff_entered', {
             stepName: 'address_entry',
             dropoffSuburb,
-            isAirportDropoff: isMelbourneAirport(place.formatted_address || place.name || ''),
+            isAirportDropoff: isMelbourneAirport(resolvedAddress),
             bookingType,
             passengerCount: Number(passengerCount) || undefined,
             metadata: {
-              dropoffAddress: place.formatted_address || place.name || '',
+              dropoffAddress: resolvedAddress,
             },
           });
         }
       }
     });
-  }, [bookingType, extractSuburbFromPlace, mapsReady, passengerCount, step, trackBookingStarted]);
+
+    return gMap;
+  }, [
+    applyDropoffSelection,
+    applyPickupSelection,
+    bookingType,
+    extractSuburbFromPlace,
+    map,
+    passengerCount,
+    step,
+    trackBookingStarted,
+  ]);
+
+  const getCurrentLocationErrorMessage = useCallback((error) => {
+    if (!error) {
+      return 'We could not detect your location. Please try again or enter the address manually.';
+    }
+
+    if (error?.code === 'unsupported') {
+      return 'Location is not supported on this device or browser.';
+    }
+
+    if (error?.code === 1) {
+      return 'Location permission was denied. You can still enter the pickup address manually.';
+    }
+
+    if (error?.code === 2 || error?.code === 3) {
+      return 'We could not detect your location. Please try again or enter the address manually.';
+    }
+
+    return 'We could not use your current location right now. Please enter the pickup address manually.';
+  }, []);
+
+  const handleUseCurrentLocation = useCallback(async () => {
+    trackBookingStarted();
+    setCurrentLocationError('');
+    setIsResolvingCurrentLocation(true);
+
+    try {
+      if (typeof navigator === 'undefined' || !navigator.geolocation) {
+        throw { code: 'unsupported' };
+      }
+
+      if (!mapsEnabled) {
+        setMapsEnabled(true);
+      }
+
+      const googleMapsPromise = loadGoogleMaps();
+      const positionPromise = new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          // Prioritize a fast fix so the field and marker update immediately after permission is granted.
+          enableHighAccuracy: false,
+          timeout: 8000,
+          maximumAge: 300000,
+        });
+      });
+      const position = await positionPromise;
+
+      await googleMapsPromise;
+      const initializedMap = initMapAndAutocomplete();
+      const activeMap = initializedMap || map;
+
+      const latitude = position?.coords?.latitude;
+      const longitude = position?.coords?.longitude;
+
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+        throw new Error('Invalid coordinates returned from geolocation.');
+      }
+
+      const location = new window.google.maps.LatLng(latitude, longitude);
+      const geocoder = new window.google.maps.Geocoder();
+      const quickAddress = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+
+      applyPickupSelection({
+        location,
+        address: quickAddress,
+        place: { formatted_address: quickAddress },
+        targetMap: activeMap,
+      });
+
+      let address = 'Current location selected';
+      let geocodePlace = { formatted_address: address };
+
+      try {
+        const results = await new Promise((resolve, reject) => {
+          geocoder.geocode({ location: { lat: latitude, lng: longitude } }, (geocodeResults, status) => {
+            if (status === 'OK') {
+              resolve(geocodeResults || []);
+              return;
+            }
+            reject(new Error(status || 'GEOCODER_FAILED'));
+          });
+        });
+
+        if (results[0]?.formatted_address) {
+          address = results[0].formatted_address;
+          geocodePlace = results[0];
+        }
+      } catch (geocodeError) {
+        console.warn('Reverse geocoding failed for current location:', geocodeError);
+      }
+
+      applyPickupSelection({
+        location,
+        address,
+        place: geocodePlace,
+        targetMap: activeMap,
+      });
+
+      if (activeMap) {
+        activeMap.setCenter(location);
+        if ((activeMap.getZoom?.() || 0) < 15) {
+          activeMap.setZoom(15);
+        }
+      }
+    } catch (error) {
+      setCurrentLocationError(getCurrentLocationErrorMessage(error));
+    } finally {
+      setIsResolvingCurrentLocation(false);
+    }
+  }, [
+    applyPickupSelection,
+    getCurrentLocationErrorMessage,
+    initMapAndAutocomplete,
+    map,
+    mapsEnabled,
+    trackBookingStarted,
+  ]);
 
   useEffect(() => {
     if (step !== 1 || !mapsReady) return;
@@ -280,6 +468,108 @@ const BookingForm = ({
       gmapsInitRef.current = false;
     }
   }, [step]);
+
+  useEffect(() => {
+    if (!map || !pickupLoc || !window.google?.maps) {
+      return;
+    }
+
+    createMarker({
+      location: pickupLoc,
+      targetMap: map,
+      markerRef: pickupMarker,
+      label: 'P',
+      fillColor: '#0f172a',
+    });
+
+    map.panTo(pickupLoc);
+  }, [createMarker, map, pickupLoc]);
+
+  useEffect(() => {
+    if (!map || !dropoffLoc || !window.google?.maps) {
+      return;
+    }
+
+    createMarker({
+      location: dropoffLoc,
+      targetMap: map,
+      markerRef: dropoffMarker,
+      label: 'D',
+      fillColor: '#2563eb',
+    });
+  }, [createMarker, dropoffLoc, map]);
+
+  useEffect(() => {
+    if (step !== 1 || !mapsEnabled || !pickupAddress.trim()) {
+      return;
+    }
+
+    const trimmedAddress = pickupAddress.trim();
+    if (trimmedAddress.length < 4) {
+      return;
+    }
+
+    if (pickupAddressSyncRef.current.value === trimmedAddress) {
+      if (pickupAddressSyncRef.current.source !== 'typing') {
+        pickupAddressSyncRef.current = { value: trimmedAddress, source: 'idle' };
+      }
+      return;
+    }
+
+    pickupAddressSyncRef.current = { value: trimmedAddress, source: 'typing' };
+
+    const timeoutId = window.setTimeout(async () => {
+      try {
+        await loadGoogleMaps();
+        const initializedMap = initMapAndAutocomplete();
+        const activeMap = initializedMap || map;
+
+        if (!window.google?.maps?.Geocoder || !activeMap) {
+          return;
+        }
+
+        const geocoder = new window.google.maps.Geocoder();
+        const results = await new Promise((resolve, reject) => {
+          geocoder.geocode(
+            {
+              address: trimmedAddress,
+              componentRestrictions: { country: 'AU' },
+            },
+            (geocodeResults, status) => {
+              if (status === 'OK' && geocodeResults?.length) {
+                resolve(geocodeResults);
+                return;
+              }
+              reject(new Error(status || 'GEOCODER_FAILED'));
+            }
+          );
+        });
+
+        if (pickupAddressSyncRef.current.value !== trimmedAddress || pickupAddressSyncRef.current.source !== 'typing') {
+          return;
+        }
+
+        const [firstResult] = results;
+        if (firstResult?.geometry?.location) {
+          applyPickupSelection({
+            location: firstResult.geometry.location,
+            address: trimmedAddress,
+            place: firstResult,
+            targetMap: activeMap,
+            recenter: true,
+          });
+        }
+      } catch (error) {
+        if (pickupAddressSyncRef.current.value === trimmedAddress && pickupAddressSyncRef.current.source === 'typing') {
+          pickupAddressSyncRef.current = { value: trimmedAddress, source: 'idle' };
+        }
+      }
+    }, 180);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [applyPickupSelection, initMapAndAutocomplete, map, mapsEnabled, pickupAddress, step]);
 
   useEffect(() => {
     if (pickupLoc && dropoffLoc && map && window.google?.maps) {
@@ -720,16 +1010,36 @@ const BookingForm = ({
           </div>
 
           <div className="mt-5">
-            <input
-              ref={pickupInputRef}
-              type="text"
-              placeholder="Pickup address"
-              value={pickupAddress}
-              onChange={(e) => setPickupAddress(e.target.value)}
-              onFocus={handleMapIntent}
-              onChangeCapture={handleMapIntent}
-              className="mb-3 h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/20"
-            />
+            <div className="relative mb-3" aria-live="polite">
+              <input
+                ref={pickupInputRef}
+                type="text"
+                placeholder="Pickup address"
+                value={pickupAddress}
+                onChange={(e) => {
+                  setPickupAddress(e.target.value);
+                  if (currentLocationError) {
+                    setCurrentLocationError('');
+                  }
+                }}
+                onFocus={handleMapIntent}
+                onChangeCapture={handleMapIntent}
+                className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 pr-12 text-sm text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/20"
+              />
+              <button
+                type="button"
+                onClick={handleUseCurrentLocation}
+                className="absolute right-2 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:text-slate-400"
+                disabled={isResolvingCurrentLocation}
+                aria-label={isResolvingCurrentLocation ? 'Detecting current location' : 'Use current location'}
+                title={isResolvingCurrentLocation ? 'Detecting location...' : 'Use my current location'}
+              >
+                <MdMyLocation size={18} />
+              </button>
+              {currentLocationError ? (
+                <p className="mt-1 text-xs font-medium text-red-600">{currentLocationError}</p>
+              ) : null}
+            </div>
             <input
               ref={dropoffInputRef}
               type="text"
@@ -962,8 +1272,8 @@ const BookingForm = ({
   if (embedded) return content;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-white p-4">
-      <div className="w-full max-w-xl rounded-3xl border border-gray-200 bg-white p-4 shadow-xl md:p-7">
+    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,#dbeafe_0%,#f8fafc_42%,#e2e8f0_100%)] p-4">
+      <div className="w-full max-w-xl rounded-3xl border border-white/45 bg-white/70 p-4 shadow-[0_24px_80px_-28px_rgba(15,23,42,0.45)] backdrop-blur-xl md:p-7">
         {content}
       </div>
     </div>
