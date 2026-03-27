@@ -5,6 +5,7 @@ import { RiskBadge, SourceBadge } from '../components/AnalyticsBadge';
 import { AnalyticsInsightList, AnalyticsPageHeader, AnalyticsPanel } from '../components/AnalyticsPageHeader';
 import SessionDetailDrawer from '../components/SessionDetailDrawer';
 import { fetchAdminAnalytics } from '../lib/analyticsApi';
+import { sanitizeLandingValue } from '../lib/landingDisplay';
 
 const formatRiskReason = (value) => String(value || 'unknown').replaceAll('_', ' ');
 
@@ -102,7 +103,7 @@ export default function AnalyticsTrafficQuality() {
       {data ? (
         <>
           <AnalyticsPanel title="Headline risk signals" description="A fast read on how noisy or risky today&apos;s traffic looks.">
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5">
               <AnalyticsCard label="Suspicious today" value={data.suspiciousSessionsToday} hint="Sessions already flagged as suspicious." tone="warn" />
               <AnalyticsCard label="Block candidates" value={data.blockCandidatesToday} hint="Highest risk band requiring attention." tone="danger" />
               <AnalyticsCard label="Repeat paid IPs" value={data.repeatPaidIpHashes?.length || 0} hint="Repeated paid traffic clusters." tone="warn" />
@@ -137,7 +138,7 @@ export default function AnalyticsTrafficQuality() {
                           <div className="text-xs text-slate-500">{session.sourceClassificationReason || 'No classification note'}</div>
                         </div>
                       </td>
-                      <td className="py-3 pr-4 text-slate-600">{session.landingPath || '-'}</td>
+                      <td className="py-3 pr-4 text-slate-600">{sanitizeLandingValue(session.landingPath)}</td>
                       <td className="py-3 pr-4 text-slate-600">{session.latestEventName || '-'}</td>
                       <td className="py-3 pr-4"><RiskBadge value={session.riskBand} /></td>
                     </tr>
@@ -151,7 +152,7 @@ export default function AnalyticsTrafficQuality() {
             </div>
           </AnalyticsPanel>
 
-          <div className="mt-6 grid gap-6">
+          <div className="mt-6 space-y-6">
             {renderIpTable(
               data.repeatPaidIpHashes,
               'Repeat paid IP summary',

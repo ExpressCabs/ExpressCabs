@@ -4,6 +4,7 @@ import { RiskBadge, SourceBadge } from '../components/AnalyticsBadge';
 import { AnalyticsPageHeader, AnalyticsPanel } from '../components/AnalyticsPageHeader';
 import SessionDetailDrawer from '../components/SessionDetailDrawer';
 import { fetchAdminAnalytics } from '../lib/analyticsApi';
+import { sanitizeLandingValue } from '../lib/landingDisplay';
 
 export default function AnalyticsLive() {
   const [filters, setFilters] = useState({ sourceType: '', riskBand: '', isLikelyMelbourne: '', paidOnly: '' });
@@ -100,7 +101,7 @@ export default function AnalyticsLive() {
                     </div>
                   </td>
                   <td className="py-3 pr-4 text-slate-600">{session.deviceType || '-'} / {session.browser || '-'}</td>
-                  <td className="py-3 pr-4 text-slate-600">{session.landingPath || '-'}</td>
+                  <td className="py-3 pr-4 text-slate-600">{sanitizeLandingValue(session.landingPath)}</td>
                   <td className="py-3 pr-4 text-slate-600">{session.pickupSuburb || '-'} to {session.dropoffSuburb || '-'}</td>
                   <td className="py-3 pr-4 text-slate-600">{session.eventCount}</td>
                   <td className="py-3 pr-4 text-slate-600">{session.latestEventName || '-'}</td>

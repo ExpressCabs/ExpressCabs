@@ -4,6 +4,7 @@ import { RiskBadge, SourceBadge } from '../components/AnalyticsBadge';
 import { AnalyticsPageHeader, AnalyticsPanel } from '../components/AnalyticsPageHeader';
 import SessionDetailDrawer from '../components/SessionDetailDrawer';
 import { fetchAdminAnalytics } from '../lib/analyticsApi';
+import { sanitizeLandingValue } from '../lib/landingDisplay';
 
 export default function AnalyticsSessions() {
   const [filters, setFilters] = useState({
@@ -118,7 +119,7 @@ export default function AnalyticsSessions() {
                 <tr key={session.id} className="cursor-pointer border-b border-slate-100 hover:bg-slate-50" onClick={() => setSelectedSessionId(session.id)}>
                   <td className="py-3 pr-4">{new Date(session.startedAt).toLocaleString()}</td>
                   <td className="py-3 pr-4"><SourceBadge value={session.sourceType} /></td>
-                  <td className="py-3 pr-4 text-slate-600">{session.landingPath || '-'}</td>
+                  <td className="py-3 pr-4 text-slate-600">{sanitizeLandingValue(session.landingPath)}</td>
                   <td className="py-3 pr-4 text-slate-600">{session.pickupSuburb || '-'} to {session.dropoffSuburb || '-'}</td>
                   <td className="py-3 pr-4 text-slate-600">{session.latestEventName || '-'}</td>
                   <td className="py-3 pr-4"><RiskBadge value={session.riskBand} /></td>
