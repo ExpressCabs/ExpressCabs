@@ -104,7 +104,7 @@ export default function AnalyticsOverview() {
             <AnalyticsPanel title="Traffic at a glance" description="Start here for the headline volume and channel mix.">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <AnalyticsCard label="Total sessions" value={totalSessions} hint="Tracked sessions in the selected range." tone="info" />
-                <AnalyticsCard label="Active right now" value={data.activeSessions} hint="Sessions updated in the last 5 minutes." />
+                <AnalyticsCard label="Active right now" value={data.activeSessions} hint="Sessions updated in the last 10 seconds." />
                 <AnalyticsCard label="Paid search" value={data.googlePaid} hint={formatPercent(getRatio(data.googlePaid, totalSessions))} />
                 <AnalyticsCard label="Organic search" value={data.googleOrganic} hint={formatPercent(getRatio(data.googleOrganic, totalSessions))} />
                 <AnalyticsCard label="Direct" value={data.direct} hint={formatPercent(getRatio(data.direct, totalSessions))} />

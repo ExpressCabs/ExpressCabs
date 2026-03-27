@@ -9,6 +9,7 @@ const {
 const VALID_RANGES = new Set(['today', '24h', '7d', '30d']);
 const VALID_SOURCE_TYPES = new Set(['google_paid', 'google_organic', 'direct', 'referral_or_other']);
 const VALID_RISK_BANDS = new Set(['good', 'watch', 'suspicious', 'block_candidate']);
+const LIVE_SESSION_WINDOW_MS = 10 * 1000;
 const FUNNEL_STEPS = [
   'session_started',
   'page_view',
@@ -56,7 +57,7 @@ const parseBool = (value) => {
 const buildSessionWhere = (query = {}, { activeOnly = false } = {}) => {
   const where = getNonAdminSessionWhere({});
   if (activeOnly) {
-    where.updatedAt = { gte: new Date(Date.now() - 5 * 60 * 1000) };
+    where.updatedAt = { gte: new Date(Date.now() - LIVE_SESSION_WINDOW_MS) };
   } else if (query.range) {
     where.startedAt = { gte: getRangeStart(query.range) };
   }
@@ -185,7 +186,7 @@ const getOverview = async (req, res) => {
     return res.json({
       range,
       activeSessions: await prisma.visitSession.count({
-        where: getNonAdminSessionWhere({ updatedAt: { gte: new Date(Date.now() - 5 * 60 * 1000) } }),
+        where: getNonAdminSessionWhere({ updatedAt: { gte: new Date(Date.now() - LIVE_SESSION_WINDOW_MS) } }),
       }),
       sessionsToday: allSessions.length,
       googlePaid: allSessions.filter((session) => session.sourceType === 'google_paid').length,
