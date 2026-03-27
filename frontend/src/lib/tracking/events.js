@@ -5,10 +5,12 @@ import { trackMappedGA4Event } from '../ga4';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 const BATCH_SIZE = 10;
 const FLUSH_INTERVAL_MS = 4000;
+const HEARTBEAT_INTERVAL_MS = 5000;
 
 let initialized = false;
 let startPromise = null;
 let flushTimerId = null;
+let heartbeatTimerId = null;
 let queue = [];
 let flushInFlight = false;
 let unloadHandlersInstalled = false;
@@ -80,6 +82,45 @@ const installUnloadHandlers = () => {
   unloadHandlersInstalled = true;
 };
 
+const stopHeartbeat = () => {
+  if (heartbeatTimerId && typeof window !== 'undefined') {
+    window.clearInterval(heartbeatTimerId);
+    heartbeatTimerId = null;
+  }
+};
+
+const pingAnalyticsSession = async () => {
+  if (shouldSkipAnalyticsTracking() || sessionEndSent) {
+    return false;
+  }
+
+  const payload = {
+    sessionToken: getTrackingContext().sessionToken,
+  };
+
+  if (!payload.sessionToken) {
+    return false;
+  }
+
+  try {
+    await sendJson(endpoint('/api/analytics/session/ping'), payload, { keepalive: true });
+    return true;
+  } catch (error) {
+    console.error('Analytics session ping failed:', error);
+    return false;
+  }
+};
+
+const ensureHeartbeat = () => {
+  if (heartbeatTimerId || typeof window === 'undefined') {
+    return;
+  }
+
+  heartbeatTimerId = window.setInterval(() => {
+    pingAnalyticsSession();
+  }, HEARTBEAT_INTERVAL_MS);
+};
+
 export function initializeAnalyticsTracking() {
   if (shouldSkipAnalyticsTracking()) {
     initialized = false;
@@ -119,6 +160,8 @@ export function initializeAnalyticsTracking() {
   })
     .then(() => {
       initialized = true;
+      sessionEndSent = false;
+      ensureHeartbeat();
       return true;
     })
     .catch((error) => {
@@ -222,6 +265,7 @@ export function endAnalyticsSession({ reason = 'manual', useBeacon = false } = {
   }
 
   sessionEndSent = true;
+  stopHeartbeat();
   const payload = {
     ...getTrackingContext(),
     ...getTrackingPageContext(),

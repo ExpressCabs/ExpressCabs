@@ -267,7 +267,21 @@ const startSession = async (req, res) => {
         return res.status(204).end();
       }
 
-      const updated = await refreshSessionState(existingSession.id, existingSession.endedAt);
+      await prisma.visitSession.update({
+        where: { id: existingSession.id },
+        data: {
+          endedAt: null,
+        },
+      });
+
+      await prisma.visitor.update({
+        where: { id: existingSession.visitorId },
+        data: {
+          lastSeenAt: new Date(),
+        },
+      }).catch(() => null);
+
+      const updated = await refreshSessionState(existingSession.id);
       return res.json({
         ok: true,
         sessionToken,
@@ -478,6 +492,50 @@ const endSession = async (req, res) => {
   }
 };
 
+const pingSession = async (req, res) => {
+  try {
+    if (isAdminAnalyticsPath(req) || isAdminEventPayload(req.body || {})) {
+      return res.status(204).end();
+    }
+
+    const sessionToken = safeToken(req.body?.sessionToken);
+    if (!sessionToken) {
+      return res.status(400).json({ error: 'sessionToken is required.' });
+    }
+
+    const session = await prisma.visitSession.findUnique({
+      where: { sessionToken },
+    });
+
+    if (!session) {
+      return res.status(404).json({ error: 'Analytics session not found.' });
+    }
+
+    if (isAdminSessionRecord(session)) {
+      return res.status(204).end();
+    }
+
+    await prisma.visitSession.update({
+      where: { sessionToken },
+      data: {
+        endedAt: null,
+      },
+    });
+
+    await prisma.visitor.update({
+      where: { id: session.visitorId },
+      data: {
+        lastSeenAt: new Date(),
+      },
+    }).catch(() => null);
+
+    return res.json({ ok: true, sessionToken });
+  } catch (error) {
+    console.error('Failed to ping analytics session:', error);
+    return res.status(500).json({ error: 'Failed to ping analytics session.' });
+  }
+};
+
 const getAnalyticsDebugSessions = async (req, res) => {
   try {
     const limit = Math.min(Math.max(Number(req.query.limit) || 25, 1), 100);
@@ -517,5 +575,6 @@ module.exports = {
   startSession,
   ingestEventsBatch,
   endSession,
+  pingSession,
   getAnalyticsDebugSessions,
 };
