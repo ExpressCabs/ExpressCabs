@@ -6,6 +6,7 @@ const twilio = require('twilio');
 
 const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 const BOOKING_MANAGER_PHONE = normalizeAuPhone('0488797233');
+const VALID_RIDE_STATUSES = new Set(['upcoming', 'completed', 'cancelled']);
 
 const formatMelbourneTime = (dateInput) => {
   const d = new Date(dateInput);
@@ -283,6 +284,52 @@ const assignRideToDriver = async (req, res) => {
   }
 };
 
+const assignRideToDriverByTaxiReg = async (req, res) => {
+  const rideId = Number(req.params.id);
+  const taxiReg = String(req.body.taxiReg || '').trim().toUpperCase();
+
+  if (!Number.isInteger(rideId)) {
+    return res.status(400).json({ error: 'Valid ride ID is required.' });
+  }
+  if (!taxiReg) {
+    return res.status(400).json({ error: 'Taxi rego is required.' });
+  }
+
+  try {
+    const ride = await prisma.ride.findUnique({ where: { id: rideId } });
+    if (!ride) return res.status(404).json({ error: 'Ride not found.' });
+
+    const driver = await prisma.driver.findFirst({
+      where: {
+        taxiReg: {
+          equals: taxiReg,
+          mode: 'insensitive',
+        },
+      },
+    });
+
+    if (!driver) {
+      return res.status(404).json({ error: 'No driver found for that car rego.' });
+    }
+
+    const updatedRide = await prisma.ride.update({
+      where: { id: rideId },
+      data: {
+        driverId: driver.id,
+        status: ride.status === 'cancelled' ? 'upcoming' : ride.status,
+      },
+      include: {
+        driver: true,
+      },
+    });
+
+    return res.json({ message: 'Ride assigned successfully.', ride: updatedRide });
+  } catch (err) {
+    console.error('Error assigning ride by taxi reg:', err);
+    return res.status(500).json({ error: 'Failed to assign ride.' });
+  }
+};
+
 const unassignRideFromDriver = async (req, res) => {
   const rideId = Number(req.params.id);
   const driverId = Number(req.body.driverId);
@@ -350,6 +397,9 @@ const getRidesForUser = async (req, res) => {
 
 const markRideCompleted = async (req, res) => {
   const rideId = Number(req.params.id);
+  const driverId = Number(req.body.driverId);
+  const actor = String(req.body.actor || 'driver').trim().toLowerCase();
+
   if (!Number.isInteger(rideId)) {
     return res.status(400).json({ error: 'Valid ride ID is required.' });
   }
@@ -357,6 +407,15 @@ const markRideCompleted = async (req, res) => {
   try {
     const ride = await prisma.ride.findUnique({ where: { id: rideId } });
     if (!ride) return res.status(404).json({ error: 'Ride not found.' });
+
+    if (actor !== 'admin') {
+      if (!Number.isInteger(driverId)) {
+        return res.status(400).json({ error: 'Valid driver ID is required.' });
+      }
+      if (ride.driverId !== driverId) {
+        return res.status(403).json({ error: 'Only the assigned driver can complete this ride.' });
+      }
+    }
 
     const updatedRide = await prisma.ride.update({
       where: { id: rideId },
@@ -370,12 +429,98 @@ const markRideCompleted = async (req, res) => {
   }
 };
 
+const updateRideStatus = async (req, res) => {
+  const rideId = Number(req.params.id);
+  const status = String(req.body.status || '').trim().toLowerCase();
+
+  if (!Number.isInteger(rideId)) {
+    return res.status(400).json({ error: 'Valid ride ID is required.' });
+  }
+
+  if (!VALID_RIDE_STATUSES.has(status)) {
+    return res.status(400).json({ error: 'Valid ride status is required.' });
+  }
+
+  try {
+    const ride = await prisma.ride.findUnique({ where: { id: rideId } });
+    if (!ride) return res.status(404).json({ error: 'Ride not found.' });
+
+    const updatedRide = await prisma.ride.update({
+      where: { id: rideId },
+      data: { status },
+      include: { driver: true },
+    });
+
+    return res.json({ message: `Ride marked as ${status}.`, ride: updatedRide });
+  } catch (err) {
+    console.error('Failed to update ride status:', err);
+    return res.status(500).json({ error: 'Failed to update ride status.' });
+  }
+};
+
+const getAdminRides = async (req, res) => {
+  const page = parsePositiveInt(req.query.page) || 1;
+  const limit = Math.min(parsePositiveInt(req.query.limit) || 50, 200);
+  const skip = (page - 1) * limit;
+  const status = String(req.query.status || '').trim().toLowerCase();
+  const assigned = String(req.query.assigned || '').trim().toLowerCase();
+  const search = String(req.query.search || '').trim();
+
+  const where = {};
+
+  if (VALID_RIDE_STATUSES.has(status)) {
+    where.status = status;
+  }
+
+  if (assigned === 'true') {
+    where.driverId = { not: null };
+  } else if (assigned === 'false') {
+    where.driverId = null;
+  }
+
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: 'insensitive' } },
+      { phone: { contains: search, mode: 'insensitive' } },
+      { pickup: { contains: search, mode: 'insensitive' } },
+      { dropoff: { contains: search, mode: 'insensitive' } },
+      { vehicleType: { contains: search, mode: 'insensitive' } },
+      { driver: { name: { contains: search, mode: 'insensitive' } } },
+      { driver: { taxiReg: { contains: search.toUpperCase(), mode: 'insensitive' } } },
+    ];
+  }
+
+  try {
+    const [rides, total] = await Promise.all([
+      prisma.ride.findMany({
+        where,
+        orderBy: [{ rideDate: 'asc' }, { createdAt: 'desc' }],
+        skip,
+        take: limit,
+        include: {
+          driver: true,
+          user: true,
+        },
+      }),
+      prisma.ride.count({ where }),
+    ]);
+
+    return res.json({ rides, total, page, limit });
+  } catch (error) {
+    console.error('Failed to fetch admin rides:', error);
+    return res.status(500).json({ error: 'Failed to fetch rides.' });
+  }
+};
+
 module.exports = {
   bookRide,
   getAssignedRides,
   getUnassignedRides,
   assignRideToDriver,
+  assignRideToDriverByTaxiReg,
   unassignRideFromDriver,
   getRidesForUser,
   markRideCompleted,
+  updateRideStatus,
+  getAdminRides,
 };

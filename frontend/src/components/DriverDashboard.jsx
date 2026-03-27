@@ -135,7 +135,7 @@ const DriverDashboard = ({ driver, onLogout }) => {
   };
 
   const myActiveRides = useMemo(
-    () => (myRides || []).filter((r) => r.status !== 'completed'),
+    () => (myRides || []).filter((r) => !['completed', 'cancelled'].includes(r.status)),
     [myRides]
   );
 
@@ -361,7 +361,11 @@ const DriverDashboard = ({ driver, onLogout }) => {
                               if (!window.confirm('Mark this ride as completed?')) return;
                               const res = await fetch(
                                 `${import.meta.env.VITE_API_BASE_URL}/api/rides/${ride.id}/complete`,
-                                { method: 'POST' }
+                                {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ driverId: driver.id }),
+                                }
                               );
                               if (res.ok) {
                                 toast.success('Ride marked as completed.');

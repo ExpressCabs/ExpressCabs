@@ -56,6 +56,7 @@ const AirportTransfersMelbourne = lazy(() => import("./pages/AirportTransfersMel
 const RequireAdmin = lazy(() => import("./admin/components/RequireAdmin"));
 const AdminDashboard = lazy(() => import("./admin/pages/dashboard"));
 const InviteDriver = lazy(() => import("./admin/pages/inviteDriver"));
+const RideManagement = lazy(() => import("./admin/pages/RideManagement"));
 const BlogNew = lazy(() => import("./admin/pages/blogNew"));
 const BlogList = lazy(() => import("./admin/pages/blogList"));
 const EmailSender = lazy(() => import("./admin/pages/emailSender"));
@@ -348,6 +349,7 @@ const App = () => {
             <Route path="analytics/suburbs" element={<AnalyticsSuburbs />} />
             <Route path="analytics/sessions" element={<AnalyticsSessions />} />
             <Route path="analytics/block-signals" element={<AnalyticsBlockSignals />} />
+            <Route path="rides" element={<RideManagement />} />
             <Route path="invite-driver" element={<InviteDriver />} />
             <Route path="blogs" element={<BlogList />} />
             <Route path="blogs/new" element={<BlogNew />} />

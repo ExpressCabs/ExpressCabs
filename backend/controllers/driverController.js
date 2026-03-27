@@ -21,6 +21,8 @@ const publicDriverFields = {
   carModel: true,
 };
 
+const normalizeTaxiReg = (value) => String(value || '').trim().toUpperCase();
+
 // POST /api/drivers/register
 exports.registerDriver = async (req, res) => {
   const { name, email, phone, password, dcNumber, taxiRegistration, carModel, token } = req.body;
@@ -251,5 +253,91 @@ exports.loginDriver = async (req, res) => {
   } catch (err) {
     console.error('Login error:', err);
     return res.status(500).json({ error: 'Server error' });
+  }
+};
+
+exports.createDriverManually = async (req, res) => {
+  const name = String(req.body.name || '').trim();
+  const email = normalizeEmail(req.body.email);
+  const phone = String(req.body.phone || '').trim();
+  const password = String(req.body.password || '');
+  const dcNumber = String(req.body.dcNumber || '').trim();
+  const taxiRegistration = normalizeTaxiReg(req.body.taxiRegistration);
+  const carModel = String(req.body.carModel || '').trim();
+
+  if (!name || !email || !phone || !password || !dcNumber || !taxiRegistration || !carModel) {
+    return res.status(400).json({ success: false, error: 'Missing required fields' });
+  }
+
+  if (!isValidEmail(email)) {
+    return res.status(400).json({ success: false, error: 'Invalid email format' });
+  }
+
+  if (password.length < 8) {
+    return res.status(400).json({ success: false, error: 'Password must be at least 8 characters' });
+  }
+
+  try {
+    const existingDriver = await prisma.driver.findFirst({
+      where: {
+        OR: [
+          { email },
+          { dcNumber },
+          { taxiReg: { equals: taxiRegistration, mode: 'insensitive' } },
+        ],
+      },
+      select: { id: true, email: true, dcNumber: true, taxiReg: true },
+    });
+
+    if (existingDriver) {
+      return res.status(409).json({ success: false, error: 'Driver email, DC number, or taxi reg already exists' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+    const driver = await prisma.driver.create({
+      data: {
+        name,
+        email,
+        phone,
+        password: hashedPassword,
+        dcNumber,
+        taxiReg: taxiRegistration,
+        carModel,
+      },
+      select: publicDriverFields,
+    });
+
+    return res.status(201).json({ success: true, driver });
+  } catch (err) {
+    console.error('Manual driver creation error:', err);
+    return res.status(500).json({ success: false, error: 'Server error' });
+  }
+};
+
+exports.listDrivers = async (req, res) => {
+  const search = String(req.query.search || '').trim();
+
+  try {
+    const drivers = await prisma.driver.findMany({
+      where: search
+        ? {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { email: { contains: search, mode: 'insensitive' } },
+              { phone: { contains: search, mode: 'insensitive' } },
+              { dcNumber: { contains: search, mode: 'insensitive' } },
+              { taxiReg: { contains: search.toUpperCase(), mode: 'insensitive' } },
+              { carModel: { contains: search, mode: 'insensitive' } },
+            ],
+          }
+        : undefined,
+      orderBy: { name: 'asc' },
+      select: publicDriverFields,
+    });
+
+    return res.json({ drivers });
+  } catch (err) {
+    console.error('List drivers error:', err);
+    return res.status(500).json({ success: false, error: 'Server error' });
   }
 };

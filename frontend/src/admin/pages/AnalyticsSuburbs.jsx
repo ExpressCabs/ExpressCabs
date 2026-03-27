@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import AnalyticsNav from '../components/AnalyticsNav';
+import { AnalyticsPageHeader, AnalyticsPanel } from '../components/AnalyticsPageHeader';
 import { fetchAdminAnalytics } from '../lib/analyticsApi';
 
-const SimpleList = ({ title, rows, nameKey = 'name' }) => (
-  <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-    <h2 className="text-lg font-bold text-slate-900">{title}</h2>
-    <div className="mt-4 space-y-2">
+const SimpleList = ({ title, rows, nameKey = 'name', description }) => (
+  <AnalyticsPanel title={title} description={description}>
+    <div className="space-y-2">
       {rows?.map((row) => (
         <div key={`${title}-${row[nameKey] || row.route}`} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-sm">
           <span className="text-slate-700">{row[nameKey] || row.route}</span>
@@ -13,7 +13,7 @@ const SimpleList = ({ title, rows, nameKey = 'name' }) => (
         </div>
       ))}
     </div>
-  </section>
+  </AnalyticsPanel>
 );
 
 export default function AnalyticsSuburbs() {
@@ -43,27 +43,29 @@ export default function AnalyticsSuburbs() {
   return (
     <div>
       <AnalyticsNav />
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-3xl font-extrabold text-slate-900">Suburb Insights</h1>
-          <p className="mt-1 text-sm text-slate-500">Melbourne pickup, dropoff, and airport-intent demand.</p>
-        </div>
-        <select value={airportOnly} onChange={(event) => setAirportOnly(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
-          <option value="false">All suburb events</option>
-          <option value="true">Airport-focused only</option>
-        </select>
-      </div>
+
+      <AnalyticsPageHeader
+        eyebrow="Suburb Insights"
+        title="See demand patterns by area and route"
+        description="This view makes it easier to spot where bookings originate, where they end, and which suburb pairs are strongest."
+        actions={(
+          <select value={airportOnly} onChange={(event) => setAirportOnly(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
+            <option value="false">All suburb events</option>
+            <option value="true">Airport-focused only</option>
+          </select>
+        )}
+      />
 
       {data ? (
         <div className="grid gap-6 xl:grid-cols-2">
-          <SimpleList title="Top Pickup Suburbs" rows={data.topPickupSuburbs} />
-          <SimpleList title="Top Dropoff Suburbs" rows={data.topDropoffSuburbs} />
-          <SimpleList title="Top Route Pairs" rows={data.topRoutePairs} nameKey="route" />
-          <SimpleList title="Paid Traffic by Suburb" rows={data.paidTrafficBySuburb} />
-          <SimpleList title="Suspicious Traffic by Suburb" rows={data.suspiciousTrafficBySuburb} />
+          <SimpleList title="Top pickup suburbs" rows={data.topPickupSuburbs} description="Use this to identify where demand starts most often." />
+          <SimpleList title="Top dropoff suburbs" rows={data.topDropoffSuburbs} description="Helpful for understanding where rides are ending." />
+          <SimpleList title="Top route pairs" rows={data.topRoutePairs} nameKey="route" description="Strong route pairs can guide landing pages and offer focus." />
+          <SimpleList title="Paid traffic by suburb" rows={data.paidTrafficBySuburb} description="Shows which suburbs attract the most paid demand." />
+          <SimpleList title="Suspicious traffic by suburb" rows={data.suspiciousTrafficBySuburb} description="Useful for checking whether bad traffic clusters around specific areas." />
         </div>
       ) : (
-        <p className="text-sm text-slate-500">Loading suburb insights…</p>
+        <p className="text-sm text-slate-500">Loading suburb insights...</p>
       )}
     </div>
   );

@@ -2,7 +2,8 @@ import { NavLink, useNavigate } from "react-router-dom";
 
 const navItems = [
     { to: "/admin/analytics", label: "Analytics", short: "A" },
-    { to: "/admin/invite-driver", label: "Invite Driver", short: "D" },
+    { to: "/admin/rides", label: "Ride Management", short: "R" },
+    { to: "/admin/invite-driver", label: "Drivers", short: "D" },
     { to: "/admin/blogs", label: "All Blogs", short: "B" },
     { to: "/admin/blogs/new", label: "Write Blog", short: "W" },
     { to: "/admin/email", label: "Send Email", short: "E" },

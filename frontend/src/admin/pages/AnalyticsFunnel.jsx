@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import AnalyticsNav from '../components/AnalyticsNav';
+import { AnalyticsPageHeader, AnalyticsPanel } from '../components/AnalyticsPageHeader';
 import { fetchAdminAnalytics } from '../lib/analyticsApi';
 
 export default function AnalyticsFunnel() {
@@ -26,24 +27,28 @@ export default function AnalyticsFunnel() {
   return (
     <div>
       <AnalyticsNav />
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-extrabold text-slate-900">Funnel</h1>
-          <p className="mt-1 text-sm text-slate-500">Session-based stage counts by source type.</p>
-        </div>
-        <select value={range} onChange={(event) => setRange(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm">
-          <option value="today">Today</option>
-          <option value="24h">24h</option>
-          <option value="7d">7d</option>
-          <option value="30d">30d</option>
-        </select>
-      </div>
+      <AnalyticsPageHeader
+        eyebrow="Funnel"
+        title="See where sessions lose momentum"
+        description="Compare each booking stage by source so drop-off points are easier to spot and explain."
+        actions={(
+          <select value={range} onChange={(event) => setRange(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
+            <option value="today">Today</option>
+            <option value="24h">24h</option>
+            <option value="7d">7d</option>
+            <option value="30d">30d</option>
+          </select>
+        )}
+      />
 
       <div className="space-y-6">
         {funnel.map((group) => (
-          <section key={group.sourceType} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <h2 className="text-lg font-bold capitalize text-slate-900">{group.sourceType.replaceAll('_', ' ')}</h2>
-            <div className="mt-4 overflow-x-auto">
+          <AnalyticsPanel
+            key={group.sourceType}
+            title={group.sourceType.replaceAll('_', ' ')}
+            description="Read conversion and drop-off row by row to find the stage that needs attention."
+          >
+            <div className="overflow-x-auto">
               <table className="min-w-full text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 text-left text-slate-500">
@@ -65,7 +70,7 @@ export default function AnalyticsFunnel() {
                 </tbody>
               </table>
             </div>
-          </section>
+          </AnalyticsPanel>
         ))}
       </div>
     </div>

@@ -85,7 +85,7 @@ const UserRidesScreen = ({ user, onLogout, setMode }) => {
       const rideTime = new Date(ride.rideDate);
       const minutesFromNow = (rideTime - now) / 60000;
 
-      if (ride.status === 'completed') {
+      if (ride.status === 'completed' || ride.status === 'cancelled') {
         past.push(ride);
       } else if (minutesFromNow >= -60) {
         upcoming.push(ride);
@@ -100,7 +100,7 @@ const UserRidesScreen = ({ user, onLogout, setMode }) => {
   }, [rides]);
 
   const RideCard = ({ ride, variant = 'upcoming' }) => {
-    const tone = variant === 'upcoming' ? 'green' : 'gray';
+    const tone = ride?.status === 'cancelled' ? 'red' : variant === 'upcoming' ? 'green' : 'gray';
     const hasDriver = Boolean(ride?.driver);
 
     return (
@@ -121,7 +121,7 @@ const UserRidesScreen = ({ user, onLogout, setMode }) => {
             </div>
 
             <div className="flex flex-col items-end gap-2">
-              <Pill tone={tone}>{variant === 'upcoming' ? 'Upcoming' : 'Past'}</Pill>
+              <Pill tone={tone}>{ride?.status === 'cancelled' ? 'Cancelled' : variant === 'upcoming' ? 'Upcoming' : 'Past'}</Pill>
               <Pill tone="blue">{money(ride?.fare)}</Pill>
             </div>
           </div>
@@ -158,7 +158,7 @@ const UserRidesScreen = ({ user, onLogout, setMode }) => {
                     <p className="mt-1 text-sm text-gray-800">{ride.driver?.phone || '—'}</p>
                     <p className="mt-2 text-sm text-gray-700">
                       <span className="font-semibold">Vehicle:</span> {ride.driver?.carModel || '—'}{' '}
-                      {ride.driver?.taxiRegistration ? `(${ride.driver.taxiRegistration})` : ''}
+                      {ride.driver?.taxiReg ? `(${ride.driver.taxiReg})` : ''}
                     </p>
                   </div>
 
