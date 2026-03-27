@@ -14,7 +14,7 @@ function RideStatusBadge({ status }) {
 }
 
 export default function RideManagement() {
-  const [filters, setFilters] = useState({ status: '', assigned: '', search: '' });
+  const [filters, setFilters] = useState({ status: 'upcoming', assigned: '', search: '' });
   const [data, setData] = useState({ rides: [], total: 0 });
   const [loading, setLoading] = useState(true);
   const [statusMessage, setStatusMessage] = useState(null);
@@ -90,7 +90,6 @@ export default function RideManagement() {
       <AnalyticsPanel title="Ride filters" description="Use these filters to narrow the booking queue before taking action.">
         <div className="grid gap-3 md:grid-cols-3">
           <select className="rounded-xl border border-slate-200 px-3 py-2 text-sm" value={filters.status} onChange={(e) => handleFilterChange({ status: e.target.value })}>
-            <option value="">All statuses</option>
             <option value="upcoming">Upcoming</option>
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>

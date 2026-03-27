@@ -21,6 +21,52 @@ const formatMelbourneTime = (dateInput) => {
   }).format(d);
 };
 
+const sendAssignmentSmsNotifications = async ({ ride, driver }) => {
+  const riderPhone = normalizeAuPhone(ride.phone);
+  const riderSmsText =
+    `Hi ${ride.name},\n` +
+    `Your Express Cabs ride has now been assigned.\n\n` +
+    `From: ${ride.pickup}\n` +
+    `To: ${ride.dropoff}\n` +
+    `Time: ${formatMelbourneTime(ride.rideDate)}\n\n` +
+    `Driver: ${driver.name}\n` +
+    `Phone: ${driver.phone}\n` +
+    `Car: ${driver.carModel} (${driver.taxiReg})\n\n` +
+    `Need help? Call 0488 797 233`;
+
+  const driverPhone = normalizeAuPhone(driver.phone);
+  const driverSmsText =
+    `New Express Cabs job assigned.\n\n` +
+    `Passenger: ${ride.name}\n` +
+    `Phone: ${riderPhone}\n` +
+    `From: ${ride.pickup}\n` +
+    `To: ${ride.dropoff}\n` +
+    `Time: ${formatMelbourneTime(ride.rideDate)}\n` +
+    `Vehicle: ${ride.vehicleType}\n` +
+    `Fare: $${Number(ride.fare || 0).toFixed(2)} (${ride.fareType})` +
+    (ride.note ? `\nNote: ${ride.note}` : '');
+
+  const notificationResults = await Promise.allSettled([
+    client.messages.create({
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: riderPhone,
+      body: riderSmsText,
+    }),
+    client.messages.create({
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: driverPhone,
+      body: driverSmsText,
+    }),
+  ]);
+
+  if (notificationResults[0].status === 'rejected') {
+    console.error('Failed to send rider assignment SMS:', notificationResults[0].reason);
+  }
+  if (notificationResults[1].status === 'rejected') {
+    console.error('Failed to send driver assignment SMS:', notificationResults[1].reason);
+  }
+};
+
 const bookRide = async (req, res) => {
   try {
     const {
@@ -196,7 +242,7 @@ const getAssignedRides = async (req, res) => {
 
   try {
     const rides = await prisma.ride.findMany({
-      where: { driverId: parsedDriverId },
+      where: { driverId: parsedDriverId, status: 'upcoming' },
       orderBy: { rideDate: 'asc' },
       skip,
       take: limit,
@@ -215,7 +261,7 @@ const getUnassignedRides = async (req, res) => {
 
   try {
     const rides = await prisma.ride.findMany({
-      where: { driverId: null },
+      where: { driverId: null, status: 'upcoming' },
       orderBy: { rideDate: 'asc' },
       skip,
       take: limit,
@@ -256,28 +302,9 @@ const assignRideToDriver = async (req, res) => {
 
     const updatedRide = await prisma.ride.findUnique({ where: { id: rideId } });
 
-    const phone = normalizeAuPhone(ride.phone);
-    const smsText =
-      `Hi ${ride.name},\n` +
-      `An assigned manager is looking after your ride.\n\n` +
-      `From: ${ride.pickup}\n` +
-      `To: ${ride.dropoff}\n` +
-      `Time: ${formatMelbourneTime(ride.rideDate)}\n\n` +
-      `Assigned Job Manager: ${driver.name}\n` +
-      `Phone: ${driver.phone}\n\n` +
-      `Need help? Call 0488 797 233`;
+    await sendAssignmentSmsNotifications({ ride, driver });
 
-    try {
-      await client.messages.create({
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: phone,
-        body: smsText,
-      });
-    } catch (smsErr) {
-      console.error('Failed to send assign SMS:', smsErr);
-    }
-
-    res.json({ message: 'Ride assigned and SMS sent.', ride: updatedRide });
+    res.json({ message: 'Ride assigned and SMS sent to rider and driver.', ride: updatedRide });
   } catch (err) {
     console.error('Error assigning ride:', err);
     res.status(500).json({ error: 'Failed to assign ride.' });
@@ -323,7 +350,9 @@ const assignRideToDriverByTaxiReg = async (req, res) => {
       },
     });
 
-    return res.json({ message: 'Ride assigned successfully.', ride: updatedRide });
+    await sendAssignmentSmsNotifications({ ride, driver });
+
+    return res.json({ message: 'Ride assigned and SMS sent to rider and driver.', ride: updatedRide });
   } catch (err) {
     console.error('Error assigning ride by taxi reg:', err);
     return res.status(500).json({ error: 'Failed to assign ride.' });
@@ -468,9 +497,7 @@ const getAdminRides = async (req, res) => {
 
   const where = {};
 
-  if (VALID_RIDE_STATUSES.has(status)) {
-    where.status = status;
-  }
+  where.status = VALID_RIDE_STATUSES.has(status) ? status : 'upcoming';
 
   if (assigned === 'true') {
     where.driverId = { not: null };
