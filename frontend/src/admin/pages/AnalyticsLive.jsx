@@ -6,6 +6,31 @@ import SessionDetailDrawer from '../components/SessionDetailDrawer';
 import { fetchAdminAnalytics } from '../lib/analyticsApi';
 import { sanitizeLandingValue } from '../lib/landingDisplay';
 
+const formatTime = (value) => {
+  try {
+    return new Date(value).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+  } catch {
+    return '-';
+  }
+};
+
+const formatRoute = (session) => {
+  const pickup = session.pickupSuburb || 'Unknown pickup';
+  const dropoff = session.dropoffSuburb || 'Unknown dropoff';
+  return `${pickup} to ${dropoff}`;
+};
+
+const formatSessionNote = (session) => {
+  const parts = [];
+
+  if (session.deviceType || session.browser) {
+    parts.push(`${session.deviceType || '-'} / ${session.browser || '-'}`);
+  }
+
+  parts.push(`${session.eventCount || 0} event${session.eventCount === 1 ? '' : 's'}`);
+  return parts.join(' | ');
+};
+
 export default function AnalyticsLive() {
   const [filters, setFilters] = useState({ sourceType: '', riskBand: '', isLikelyMelbourne: '', paidOnly: '' });
   const [sessions, setSessions] = useState([]);
@@ -71,53 +96,73 @@ export default function AnalyticsLive() {
         </div>
       </AnalyticsPanel>
 
-      <AnalyticsPanel title="Active session feed" description="Click a row to inspect the detailed session trail." className="mt-6">
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm">
-            <thead>
-              <tr className="border-b border-slate-200 text-left text-slate-500">
-                <th className="pb-3 pr-4">Started</th>
-                <th className="pb-3 pr-4">Session</th>
-                <th className="pb-3 pr-4">Source</th>
-                <th className="pb-3 pr-4">Device</th>
-                <th className="pb-3 pr-4">Landing</th>
-                <th className="pb-3 pr-4">Route</th>
-                <th className="pb-3 pr-4">Events</th>
-                <th className="pb-3 pr-4">Latest</th>
-                <th className="pb-3 pr-4">Melbourne</th>
-                <th className="pb-3 pr-4">GCLID</th>
-                <th className="pb-3 pr-4">Risk</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sessions.map((session) => (
-                <tr key={session.id} className="cursor-pointer border-b border-slate-100 hover:bg-slate-50" onClick={() => setSelectedSessionId(session.id)}>
-                  <td className="py-3 pr-4">{new Date(session.startedAt).toLocaleTimeString()}</td>
-                  <td className="py-3 pr-4 font-mono text-xs text-slate-600">{String(session.sessionToken || '').slice(0, 12)}</td>
-                  <td className="py-3 pr-4">
-                    <div className="space-y-1">
-                      <SourceBadge value={session.sourceType} />
-                      <div className="text-xs text-slate-500">{session.sourceClassificationReason || 'No classification note'}</div>
-                    </div>
-                  </td>
-                  <td className="py-3 pr-4 text-slate-600">{session.deviceType || '-'} / {session.browser || '-'}</td>
-                  <td className="py-3 pr-4 text-slate-600">{sanitizeLandingValue(session.landingPath)}</td>
-                  <td className="py-3 pr-4 text-slate-600">{session.pickupSuburb || '-'} to {session.dropoffSuburb || '-'}</td>
-                  <td className="py-3 pr-4 text-slate-600">{session.eventCount}</td>
-                  <td className="py-3 pr-4 text-slate-600">{session.latestEventName || '-'}</td>
-                  <td className="py-3 pr-4 text-slate-600">{session.isLikelyMelbourne ? 'Yes' : 'No'}</td>
-                  <td className="py-3 pr-4 text-slate-600">{session.hasGclid ? 'Yes' : 'No'}</td>
-                  <td className="py-3 pr-4">
-                    <div className="space-y-1">
-                      <RiskBadge value={session.riskBand} />
-                      <div className="text-xs text-slate-500">{session.riskScore}</div>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+      <AnalyticsPanel title="Active session feed" description="Click a session card to inspect the detailed session trail." className="mt-6">
+        {sessions.length ? (
+          <div className="grid gap-4 lg:grid-cols-2 2xl:grid-cols-3">
+            {sessions.map((session) => (
+              <button
+                key={session.id}
+                type="button"
+                onClick={() => setSelectedSessionId(session.id)}
+                className="group rounded-[24px] border border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:border-sky-200 hover:shadow-md"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">{formatTime(session.startedAt)}</p>
+                    <p className="mt-2 font-mono text-xs text-slate-500">{String(session.sessionToken || '').slice(0, 12)}</p>
+                  </div>
+                  <div className="flex flex-wrap justify-end gap-2">
+                    <SourceBadge value={session.sourceType} />
+                    <RiskBadge value={session.riskBand} />
+                  </div>
+                </div>
+
+                <div className="mt-4 rounded-2xl bg-slate-50 px-3 py-2">
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Classification</p>
+                  <p className="mt-1 text-sm font-medium text-slate-900">{session.sourceClassificationReason || 'No classification note'}</p>
+                  <p className="mt-1 text-xs text-slate-500">Risk score {session.riskScore ?? 0}</p>
+                </div>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-2xl border border-slate-200 bg-white px-3 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Landing</p>
+                    <p className="mt-1 break-words text-sm font-medium text-slate-900">{sanitizeLandingValue(session.landingPath)}</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white px-3 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Route</p>
+                    <p className="mt-1 text-sm font-medium text-slate-900">{formatRoute(session)}</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-2xl border border-slate-200 bg-white px-3 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Latest</p>
+                    <p className="mt-1 text-sm font-medium text-slate-900">{session.latestEventName || '-'}</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white px-3 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Melbourne</p>
+                    <p className="mt-1 text-sm font-medium text-slate-900">{session.isLikelyMelbourne ? 'Yes' : 'No'}</p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white px-3 py-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">Paid click</p>
+                    <p className="mt-1 text-sm font-medium text-slate-900">{session.hasGclid ? 'Yes' : 'No'}</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-200 pt-3">
+                  <p className="text-xs text-slate-500">{formatSessionNote(session)}</p>
+                  <span className="text-xs font-semibold uppercase tracking-[0.14em] text-sky-700 transition group-hover:text-sky-800">
+                    Open details
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+            No active sessions match the current filters.
+          </div>
+        )}
       </AnalyticsPanel>
 
       <SessionDetailDrawer sessionId={selectedSessionId} onClose={() => setSelectedSessionId(null)} />
