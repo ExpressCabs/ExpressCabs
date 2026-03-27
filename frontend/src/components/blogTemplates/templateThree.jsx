@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Helmet } from "react-helmet-async";
 import BookingForm from "../BookingForm";
 import { Link } from "react-router-dom";
+import { formatMelbourneDate } from "../../lib/time";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 14 },
@@ -15,9 +16,7 @@ const fadeUp = {
 
 function formatDate(dateLike) {
   if (!dateLike) return null;
-  const d = new Date(dateLike);
-  if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleDateString("en-AU", { year: "numeric", month: "long", day: "numeric" });
+  return formatMelbourneDate(dateLike);
 }
 
 function estimateReadTime(text) {

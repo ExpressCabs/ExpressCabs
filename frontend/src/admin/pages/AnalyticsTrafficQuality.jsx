@@ -6,6 +6,7 @@ import { AnalyticsInsightList, AnalyticsPageHeader, AnalyticsPanel } from '../co
 import SessionDetailDrawer from '../components/SessionDetailDrawer';
 import { fetchAdminAnalytics } from '../lib/analyticsApi';
 import { sanitizeLandingValue } from '../lib/landingDisplay';
+import { formatMelbourneDateTime } from '../../lib/time';
 
 const formatRiskReason = (value) => String(value || 'unknown').replaceAll('_', ' ');
 
@@ -31,7 +32,7 @@ const renderIpTable = (rows, title, description) => (
               <td className="py-3 pr-4">{row.paidSessions}</td>
               <td className="py-3 pr-4">{row.suspiciousSessions}</td>
               <td className="py-3 pr-4 text-slate-600">{formatRiskReason(row.primaryReason)}</td>
-              <td className="py-3 pr-4 text-slate-600">{new Date(row.lastSeen).toLocaleString()}</td>
+              <td className="py-3 pr-4 text-slate-600">{formatMelbourneDateTime(row.lastSeen)}</td>
             </tr>
           )) : (
             <tr>

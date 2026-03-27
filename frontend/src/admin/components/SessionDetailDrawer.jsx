@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { fetchAdminAnalytics } from '../lib/analyticsApi';
 import { sanitizeLandingValue } from '../lib/landingDisplay';
 import { RiskBadge, SourceBadge } from './AnalyticsBadge';
+import { formatMelbourneDateTime } from '../../lib/time';
 
 const TIMELINE_EVENT_LABELS = {
   session_started: 'Session started',
@@ -23,10 +24,31 @@ const TIMELINE_EVENT_LABELS = {
 
 const formatDateTime = (value) => {
   try {
-    return new Date(value).toLocaleString();
+    return formatMelbourneDateTime(value);
   } catch {
     return String(value || '-');
   }
+};
+
+const formatDuration = (value) => {
+  const seconds = Number(value);
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    return '-';
+  }
+
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  if (hrs > 0) {
+    return `${hrs}h ${mins}m ${secs}s`;
+  }
+
+  if (mins > 0) {
+    return `${mins}m ${secs}s`;
+  }
+
+  return `${secs}s`;
 };
 
 const formatEventSummary = (event) => {
@@ -148,6 +170,11 @@ export default function SessionDetailDrawer({ sessionId, onClose }) {
                 <div className="mt-3 space-y-2 text-sm text-slate-600">
                   <div><span className="font-semibold text-slate-800">Token:</span> {session.sessionToken}</div>
                   <div><span className="font-semibold text-slate-800">Visitor:</span> {state.detail?.visitor?.id || session.visitorId}</div>
+                  <div><span className="font-semibold text-slate-800">Started:</span> {formatDateTime(session.startedAt)}</div>
+                  <div><span className="font-semibold text-slate-800">Last seen:</span> {formatDateTime(session.updatedAt)}</div>
+                  <div><span className="font-semibold text-slate-800">Reported end:</span> {session.endedAt ? formatDateTime(session.endedAt) : 'Still active'}</div>
+                  <div><span className="font-semibold text-slate-800">Time spent:</span> {formatDuration(session.durationSec)}</div>
+                  <div><span className="font-semibold text-slate-800">End source:</span> {session.endReason || '-'}</div>
                   <div><span className="font-semibold text-slate-800">Landing page:</span> {cleanedLandingPath}</div>
                   <div><span className="font-semibold text-slate-800">Referrer:</span> {session.referrer || '-'}</div>
                   <div><span className="font-semibold text-slate-800">Device:</span> {session.deviceType || '-'} / {session.browser || '-'}</div>

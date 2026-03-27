@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AnalyticsPageHeader, AnalyticsPanel } from '../components/AnalyticsPageHeader';
 import { fetchAdmin, postAdmin } from '../lib/adminApi';
+import { formatMelbourneDateTime } from '../../lib/time';
 
 function RideStatusBadge({ status }) {
   const cls =
@@ -122,7 +123,7 @@ export default function RideManagement() {
                       <p className="text-base font-bold text-slate-900">Ride #{ride.id}</p>
                       <RideStatusBadge status={ride.status} />
                     </div>
-                    <p className="mt-1 text-sm text-slate-600">{new Date(ride.rideDate).toLocaleString()}</p>
+                    <p className="mt-1 text-sm text-slate-600">{formatMelbourneDateTime(ride.rideDate)}</p>
                     <p className="mt-2 text-sm text-slate-900"><span className="font-semibold">Passenger:</span> {ride.name} · {ride.phone}</p>
                     <p className="mt-1 text-sm text-slate-700"><span className="font-semibold">Route:</span> {ride.pickup} to {ride.dropoff}</p>
                     <p className="mt-1 text-sm text-slate-700"><span className="font-semibold">Vehicle:</span> {ride.vehicleType} · ${Number(ride.fare || 0).toFixed(2)}</p>

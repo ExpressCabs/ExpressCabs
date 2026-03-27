@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from '../components/ToastProvider';
+import { formatMelbourneDateTime } from '../lib/time';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
@@ -38,7 +39,7 @@ const PassengerDetails = ({
   const [note, setNote] = useState('');
 
   const tripMeta = useMemo(() => {
-    const when = scheduledDateTime ? new Date(scheduledDateTime).toLocaleString('en-AU') : 'Now';
+    const when = scheduledDateTime ? formatMelbourneDateTime(scheduledDateTime) : 'Now';
     const pax = passengerCount ? `${passengerCount} passengers` : 'Passengers not set';
     const vehicleName = selectedVehicle?.name || selectedVehicle?.title || selectedVehicle?.id || 'Vehicle selected';
     const totalFare = typeof fare === 'number' ? `$${fare.toFixed(2)}` : fare ? `$${fare}` : '--';

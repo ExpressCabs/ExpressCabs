@@ -5,10 +5,11 @@ import { AnalyticsPageHeader, AnalyticsPanel } from '../components/AnalyticsPage
 import SessionDetailDrawer from '../components/SessionDetailDrawer';
 import { fetchAdminAnalytics } from '../lib/analyticsApi';
 import { sanitizeLandingValue } from '../lib/landingDisplay';
+import { formatMelbourneTime } from '../../lib/time';
 
 const formatTime = (value) => {
   try {
-    return new Date(value).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+    return formatMelbourneTime(value);
   } catch {
     return '-';
   }

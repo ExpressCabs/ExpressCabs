@@ -5,6 +5,7 @@ import { AnalyticsPageHeader, AnalyticsPanel } from '../components/AnalyticsPage
 import SessionDetailDrawer from '../components/SessionDetailDrawer';
 import { fetchAdminAnalytics } from '../lib/analyticsApi';
 import { sanitizeLandingValue } from '../lib/landingDisplay';
+import { formatMelbourneDateTime } from '../../lib/time';
 
 export default function AnalyticsSessions() {
   const [filters, setFilters] = useState({
@@ -117,7 +118,7 @@ export default function AnalyticsSessions() {
             <tbody>
               {data.sessions?.map((session) => (
                 <tr key={session.id} className="cursor-pointer border-b border-slate-100 hover:bg-slate-50" onClick={() => setSelectedSessionId(session.id)}>
-                  <td className="py-3 pr-4">{new Date(session.startedAt).toLocaleString()}</td>
+                  <td className="py-3 pr-4">{formatMelbourneDateTime(session.startedAt)}</td>
                   <td className="py-3 pr-4"><SourceBadge value={session.sourceType} /></td>
                   <td className="py-3 pr-4 text-slate-600">{sanitizeLandingValue(session.landingPath)}</td>
                   <td className="py-3 pr-4 text-slate-600">{session.pickupSuburb || '-'} to {session.dropoffSuburb || '-'}</td>

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { toast } from './ToastProvider';
+import { formatMelbourneDateTime } from '../lib/time';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
@@ -36,7 +37,7 @@ function Pill({ children, tone = 'gray' }) {
 
 function fmtDateTime(d) {
   try {
-    return new Date(d).toLocaleString('en-AU', {
+    return formatMelbourneDateTime(d, {
       weekday: 'short',
       year: 'numeric',
       month: 'short',

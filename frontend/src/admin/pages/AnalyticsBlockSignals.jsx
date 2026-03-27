@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import AnalyticsNav from '../components/AnalyticsNav';
 import { fetchAdminAnalytics, postAdminAnalytics } from '../lib/analyticsApi';
+import { formatMelbourneDateTime } from '../../lib/time';
 
 export default function AnalyticsBlockSignals() {
   const [data, setData] = useState({ blockSignals: [], total: 0, page: 1, limit: 25 });
@@ -55,7 +56,7 @@ export default function AnalyticsBlockSignals() {
                 <td className="py-3 pr-4 text-slate-600">{signal.reason}</td>
                 <td className="py-3 pr-4 text-slate-600">{signal.status}</td>
                 <td className="py-3 pr-4 text-slate-600">{signal.sessionCount}/{signal.suspiciousSessionCount}/{signal.paidSessionCount}</td>
-                <td className="py-3 pr-4 text-slate-600">{new Date(signal.lastSeenAt).toLocaleString()}</td>
+                <td className="py-3 pr-4 text-slate-600">{formatMelbourneDateTime(signal.lastSeenAt)}</td>
                 <td className="py-3 pr-4 text-slate-600">{signal.notes || '—'}</td>
                 <td className="py-3 pr-4">
                   <div className="flex flex-wrap gap-2">

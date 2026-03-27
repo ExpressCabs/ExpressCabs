@@ -54,6 +54,28 @@ const parseBool = (value) => {
   return null;
 };
 
+const getSessionTiming = (session) => {
+  const now = Date.now();
+  const startedAt = session.startedAt ? new Date(session.startedAt) : null;
+  const updatedAt = session.updatedAt ? new Date(session.updatedAt) : null;
+  const explicitEndedAt = session.endedAt ? new Date(session.endedAt) : null;
+  const inferredEndedAt =
+    !explicitEndedAt && updatedAt && updatedAt.getTime() < now - LIVE_SESSION_WINDOW_MS
+      ? updatedAt
+      : null;
+  const effectiveEndedAt = explicitEndedAt || inferredEndedAt;
+  const effectiveDurationSec =
+    startedAt && (effectiveEndedAt || updatedAt)
+      ? Math.max(0, Math.round(((effectiveEndedAt || updatedAt).getTime() - startedAt.getTime()) / 1000))
+      : session.sessionDurationSec || 0;
+
+  return {
+    reportedEndedAt: effectiveEndedAt,
+    reportedDurationSec: effectiveDurationSec,
+    reportedEndReason: explicitEndedAt ? 'session_ended' : inferredEndedAt ? 'heartbeat_timeout' : 'active',
+  };
+};
+
 const buildSessionWhere = (query = {}, { activeOnly = false } = {}) => {
   const where = getNonAdminSessionWhere({});
   if (activeOnly) {
@@ -90,12 +112,16 @@ const buildSessionWhere = (query = {}, { activeOnly = false } = {}) => {
 const summarizeSession = (session) => {
   const latestEvent = session.events?.[0] || null;
   const eventWithRoute = session.events?.find((event) => event.pickupSuburb || event.dropoffSuburb) || null;
+  const timing = getSessionTiming(session);
 
   return {
     id: session.id,
     sessionToken: session.sessionToken,
     startedAt: session.startedAt,
     updatedAt: session.updatedAt,
+    endedAt: timing.reportedEndedAt,
+    durationSec: timing.reportedDurationSec,
+    endReason: timing.reportedEndReason,
     sourceType: session.sourceType,
     sourceClassificationReason: session.sourceClassificationReason,
     riskBand: session.riskBand,
@@ -532,6 +558,8 @@ const getSessionDetail = async (req, res) => {
       return res.status(404).json({ error: 'Session not found.' });
     }
 
+    const timing = getSessionTiming(session);
+
     const relatedBlockSignals = session.ipHash
       ? await prisma.trafficBlockSignal.findMany({
           where: { ipHash: session.ipHash },
@@ -540,7 +568,12 @@ const getSessionDetail = async (req, res) => {
       : [];
 
     return res.json({
-      session,
+      session: {
+        ...session,
+        endedAt: timing.reportedEndedAt,
+        durationSec: timing.reportedDurationSec,
+        endReason: timing.reportedEndReason,
+      },
       visitor: session.visitor
         ? {
             id: session.visitor.id,

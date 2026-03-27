@@ -3,16 +3,11 @@ import axios from 'axios';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { formatMelbourneDate } from '../lib/time';
 
 function formatDate(dateLike) {
   if (!dateLike) return '';
-  const date = new Date(dateLike);
-  if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleDateString('en-AU', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+  return formatMelbourneDate(dateLike);
 }
 
 function estimateReadTime(blog) {

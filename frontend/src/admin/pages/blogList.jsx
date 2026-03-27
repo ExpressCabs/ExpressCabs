@@ -1,15 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { formatMelbourneDate } from '../../lib/time';
 
 function formatDate(dateLike) {
   if (!dateLike) return '--';
-  const date = new Date(dateLike);
-  if (Number.isNaN(date.getTime())) return '--';
-  return date.toLocaleDateString('en-AU', {
-    year: 'numeric',
+  return formatMelbourneDate(dateLike, {
     month: 'short',
-    day: 'numeric',
   });
 }
 
