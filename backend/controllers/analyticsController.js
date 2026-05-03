@@ -1,4 +1,5 @@
 const prisma = require('../lib/prisma');
+const { Prisma } = require('@prisma/client');
 const { ALLOWED_EVENT_NAMES, MAX_EVENT_BATCH_SIZE, MAX_METADATA_KEYS, MAX_STRING_LENGTH, MAX_TEXT_LENGTH } = require('../lib/analytics/constants');
 const { extractAttribution } = require('../lib/analytics/attribution');
 const { extractRequestContext } = require('../lib/analytics/requestMeta');
@@ -314,49 +315,76 @@ const startSession = async (req, res) => {
       },
     });
 
-    const session = await prisma.visitSession.create({
-      data: {
-        sessionToken,
-        visitorId: visitor.id,
-        siteKey,
-        landingUrl: attribution.landingUrl,
-        landingPath: attribution.landingPath,
-        referrer: attribution.referrer,
-        sourceType: attribution.sourceType,
-        utmSource: attribution.utmSource,
-        utmMedium: attribution.utmMedium,
-        utmCampaign: attribution.utmCampaign,
-        utmTerm: attribution.utmTerm,
-        utmContent: attribution.utmContent,
-        gclid: attribution.gclid,
-        gbraid: attribution.gbraid,
-        wbraid: attribution.wbraid,
-        sourceClassificationReason: attribution.sourceClassificationReason,
-        geoCity: context.geoCity,
-        geoRegion: context.geoRegion,
-        geoCountry: context.geoCountry,
-        isLikelyMelbourne: getMelbourneClassification({
-          geoCity: context.geoCity,
-          geoRegion: context.geoRegion,
-          geoCountry: context.geoCountry,
-          timezone: context.timezone,
-          landingPath: attribution.landingPath,
-        }).isLikelyMelbourne,
-        melbourneClassificationReason: getMelbourneClassification({
-          geoCity: context.geoCity,
-          geoRegion: context.geoRegion,
-          geoCountry: context.geoCountry,
-          timezone: context.timezone,
-          landingPath: attribution.landingPath,
-        }).reasons,
-        ipHash: context.ipHash,
-        userAgent: context.userAgent,
-        browser: context.browser,
-        deviceType: context.deviceType,
-        screenWidth: context.screenWidth,
-        timezone: context.timezone,
-      },
+    const melbourneClassification = getMelbourneClassification({
+      geoCity: context.geoCity,
+      geoRegion: context.geoRegion,
+      geoCountry: context.geoCountry,
+      timezone: context.timezone,
+      landingPath: attribution.landingPath,
     });
+
+    let session;
+
+    try {
+      session = await prisma.visitSession.create({
+        data: {
+          sessionToken,
+          visitorId: visitor.id,
+          siteKey,
+          landingUrl: attribution.landingUrl,
+          landingPath: attribution.landingPath,
+          referrer: attribution.referrer,
+          sourceType: attribution.sourceType,
+          utmSource: attribution.utmSource,
+          utmMedium: attribution.utmMedium,
+          utmCampaign: attribution.utmCampaign,
+          utmTerm: attribution.utmTerm,
+          utmContent: attribution.utmContent,
+          gclid: attribution.gclid,
+          gbraid: attribution.gbraid,
+          wbraid: attribution.wbraid,
+          sourceClassificationReason: attribution.sourceClassificationReason,
+          geoCity: context.geoCity,
+          geoRegion: context.geoRegion,
+          geoCountry: context.geoCountry,
+          isLikelyMelbourne: melbourneClassification.isLikelyMelbourne,
+          melbourneClassificationReason: melbourneClassification.reasons,
+          ipHash: context.ipHash,
+          userAgent: context.userAgent,
+          browser: context.browser,
+          deviceType: context.deviceType,
+          screenWidth: context.screenWidth,
+          timezone: context.timezone,
+        },
+      });
+    } catch (error) {
+      const isDuplicateSessionToken =
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002' &&
+        Array.isArray(error.meta?.target) &&
+        error.meta.target.includes('sessionToken');
+
+      if (!isDuplicateSessionToken) {
+        throw error;
+      }
+
+      const existingSessionAfterConflict = await prisma.visitSession.findUnique({
+        where: { sessionToken },
+      });
+
+      if (!existingSessionAfterConflict) {
+        throw error;
+      }
+
+      const refreshed = await refreshSessionState(existingSessionAfterConflict.id);
+      return res.json({
+        ok: true,
+        sessionToken,
+        sourceType: refreshed?.sourceType || existingSessionAfterConflict.sourceType,
+        riskBand: refreshed?.riskBand || existingSessionAfterConflict.riskBand,
+        resumed: true,
+      });
+    }
 
     await prisma.visitEvent.create({
       data: {
