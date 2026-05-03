@@ -13,6 +13,7 @@ import { useGoogleMapsReady } from '../utils/useGoogleMapsReady';
 const VehicleSelection = lazy(() => import('../screens/VehicleSelection'));
 const PassengerDetails = lazy(() => import('../screens/PassengerDetails'));
 const OTPVerification = lazy(() => import('../screens/OTPVerification'));
+const SITE_KEY = import.meta.env.VITE_ANALYTICS_SITE_KEY || 'prime_cabs_melbourne';
 
 const MODERN_MAP_STYLES = [
   { elementType: 'geometry', stylers: [{ color: '#eef2ff' }] },
@@ -734,6 +735,7 @@ const BookingForm = ({
       passengerCount,
       userId: loggedInUser?.id ?? null,
       sessionToken: getOrCreateSessionToken(),
+      siteKey: SITE_KEY,
     };
 
     try {

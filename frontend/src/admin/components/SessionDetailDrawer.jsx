@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { fetchAdminAnalytics } from '../lib/analyticsApi';
 import { sanitizeLandingValue } from '../lib/landingDisplay';
-import { RiskBadge, SourceBadge } from './AnalyticsBadge';
+import { RiskBadge, SiteBadge, SourceBadge } from './AnalyticsBadge';
 import { formatMelbourneDateTime } from '../../lib/time';
 
 const TIMELINE_EVENT_LABELS = {
@@ -169,6 +169,7 @@ export default function SessionDetailDrawer({ sessionId, onClose }) {
                 <p className="text-sm font-semibold text-slate-900">Session metadata</p>
                 <div className="mt-3 space-y-2 text-sm text-slate-600">
                   <div><span className="font-semibold text-slate-800">Token:</span> {session.sessionToken}</div>
+                  <div><span className="font-semibold text-slate-800">Site:</span> <span className="inline-flex align-middle"><SiteBadge value={session.siteKey} /></span></div>
                   <div><span className="font-semibold text-slate-800">Visitor:</span> {state.detail?.visitor?.id || session.visitorId}</div>
                   <div><span className="font-semibold text-slate-800">Started:</span> {formatDateTime(session.startedAt)}</div>
                   <div><span className="font-semibold text-slate-800">Last seen:</span> {formatDateTime(session.updatedAt)}</div>

@@ -4,6 +4,7 @@ const { extractAttribution } = require('../lib/analytics/attribution');
 const { extractRequestContext } = require('../lib/analytics/requestMeta');
 const { computeSessionRisk } = require('../lib/analytics/risk');
 const { getMelbourneClassification, isAirportText, normalizeSuburb } = require('../lib/analytics/suburbs');
+const { normalizeSiteKey } = require('../lib/siteKeys');
 const {
   isAdminAnalyticsPath,
   isAdminEventPayload,
@@ -98,6 +99,7 @@ const buildEventCreateInput = (session, rawEvent) => {
   return {
     sessionId: session.id,
     visitorId: session.visitorId,
+    siteKeySnapshot: session.siteKey,
     eventName,
     eventTime: safeDate(rawEvent.eventTime) || new Date(),
     path: safeString(rawEvent.path, 255),
@@ -210,11 +212,12 @@ const refreshSessionState = async (sessionId, sessionEndedAt) => {
 
   if (updatedSession.ipHash && ['suspicious', 'block_candidate'].includes(updatedSession.riskBand) && risk.riskReasons.length > 0) {
     const [sessionCount, paidSessionCount, suspiciousSessionCount] = await Promise.all([
-      prisma.visitSession.count({ where: { ipHash: updatedSession.ipHash } }),
-      prisma.visitSession.count({ where: { ipHash: updatedSession.ipHash, sourceType: 'google_paid' } }),
+      prisma.visitSession.count({ where: { ipHash: updatedSession.ipHash, siteKey: updatedSession.siteKey } }),
+      prisma.visitSession.count({ where: { ipHash: updatedSession.ipHash, siteKey: updatedSession.siteKey, sourceType: 'google_paid' } }),
       prisma.visitSession.count({
         where: {
           ipHash: updatedSession.ipHash,
+          siteKey: updatedSession.siteKey,
           riskBand: { in: ['suspicious', 'block_candidate'] },
         },
       }),
@@ -222,9 +225,10 @@ const refreshSessionState = async (sessionId, sessionEndedAt) => {
 
     await prisma.trafficBlockSignal.upsert({
       where: {
-        ipHash_reason: {
+        ipHash_reason_siteKey: {
           ipHash: updatedSession.ipHash,
           reason: risk.riskReasons[0],
+          siteKey: updatedSession.siteKey,
         },
       },
       update: {
@@ -235,6 +239,7 @@ const refreshSessionState = async (sessionId, sessionEndedAt) => {
       },
       create: {
         ipHash: updatedSession.ipHash,
+        siteKey: updatedSession.siteKey,
         firstSeenAt: new Date(),
         lastSeenAt: new Date(),
         sessionCount,
@@ -293,6 +298,7 @@ const startSession = async (req, res) => {
 
     const attribution = extractAttribution(req.body || {});
     const context = extractRequestContext(req, req.body || {});
+    const siteKey = normalizeSiteKey(req.body?.siteKey);
 
     const visitor = await prisma.visitor.upsert({
       where: { visitorToken },
@@ -312,6 +318,7 @@ const startSession = async (req, res) => {
       data: {
         sessionToken,
         visitorId: visitor.id,
+        siteKey,
         landingUrl: attribution.landingUrl,
         landingPath: attribution.landingPath,
         referrer: attribution.referrer,
@@ -355,6 +362,7 @@ const startSession = async (req, res) => {
       data: {
         sessionId: session.id,
         visitorId: visitor.id,
+        siteKeySnapshot: siteKey,
         eventName: 'session_started',
         eventTime: new Date(),
         path: attribution.landingPath,
@@ -467,6 +475,7 @@ const endSession = async (req, res) => {
       data: {
         sessionId: session.id,
         visitorId: session.visitorId,
+        siteKeySnapshot: session.siteKey,
         eventName: 'session_ended',
         eventTime: endedAt,
         path: safeString(req.body?.path, 255) || session.landingPath,
@@ -544,6 +553,7 @@ const getAnalyticsDebugSessions = async (req, res) => {
       take: limit,
       select: {
         id: true,
+        siteKey: true,
         sessionToken: true,
         visitorId: true,
         sourceType: true,

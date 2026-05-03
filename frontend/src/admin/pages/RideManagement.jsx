@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { AnalyticsPageHeader, AnalyticsPanel } from '../components/AnalyticsPageHeader';
 import { fetchAdmin, postAdmin } from '../lib/adminApi';
 import { formatMelbourneDateTime } from '../../lib/time';
+import { SITE_OPTIONS, getSiteLabel } from '../lib/siteFilters';
 
 function RideStatusBadge({ status }) {
   const cls =
@@ -15,7 +16,7 @@ function RideStatusBadge({ status }) {
 }
 
 export default function RideManagement() {
-  const [filters, setFilters] = useState({ status: 'upcoming', assigned: '', search: '' });
+  const [filters, setFilters] = useState({ status: 'upcoming', siteKey: '', assigned: '', search: '' });
   const [data, setData] = useState({ rides: [], total: 0 });
   const [loading, setLoading] = useState(true);
   const [statusMessage, setStatusMessage] = useState(null);
@@ -89,11 +90,16 @@ export default function RideManagement() {
       />
 
       <AnalyticsPanel title="Ride filters" description="Use these filters to narrow the booking queue before taking action.">
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-4">
           <select className="rounded-xl border border-slate-200 px-3 py-2 text-sm" value={filters.status} onChange={(e) => handleFilterChange({ status: e.target.value })}>
             <option value="upcoming">Upcoming</option>
             <option value="completed">Completed</option>
             <option value="cancelled">Cancelled</option>
+          </select>
+          <select className="rounded-xl border border-slate-200 px-3 py-2 text-sm" value={filters.siteKey} onChange={(e) => handleFilterChange({ siteKey: e.target.value })}>
+            {SITE_OPTIONS.map((option) => (
+              <option key={option.label} value={option.value}>{option.label}</option>
+            ))}
           </select>
           <select className="rounded-xl border border-slate-200 px-3 py-2 text-sm" value={filters.assigned} onChange={(e) => handleFilterChange({ assigned: e.target.value })}>
             <option value="">Assigned and unassigned</option>
@@ -122,6 +128,7 @@ export default function RideManagement() {
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="text-base font-bold text-slate-900">Ride #{ride.id}</p>
                       <RideStatusBadge status={ride.status} />
+                      <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">{getSiteLabel(ride.siteKey || 'prime_cabs_melbourne')}</span>
                     </div>
                     <p className="mt-1 text-sm text-slate-600">{formatMelbourneDateTime(ride.rideDate)}</p>
                     <p className="mt-2 text-sm text-slate-900"><span className="font-semibold">Passenger:</span> {ride.name} · {ride.phone}</p>

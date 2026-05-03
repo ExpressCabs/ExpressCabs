@@ -3,6 +3,7 @@ import { parseLandingAttribution } from './attribution';
 const VISITOR_TOKEN_KEY = 'express_cabs_visitor_token';
 const SESSION_TOKEN_KEY = 'express_cabs_session_token';
 const LANDING_ATTRIBUTION_KEY = 'express_cabs_landing_attribution';
+const DEFAULT_SITE_KEY = 'prime_cabs_melbourne';
 
 const safeLocalStorage = () => {
   try {
@@ -87,10 +88,12 @@ export function getTrackingContext() {
   const visitorToken = getOrCreateVisitorToken();
   const sessionToken = getOrCreateSessionToken();
   const attribution = getOrCreateLandingAttribution();
+  const siteKey = import.meta.env.VITE_ANALYTICS_SITE_KEY || DEFAULT_SITE_KEY;
 
   return {
     visitorToken,
     sessionToken,
+    siteKey,
     attribution,
   };
 }

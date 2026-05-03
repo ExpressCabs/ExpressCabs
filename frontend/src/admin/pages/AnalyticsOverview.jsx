@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import AnalyticsNav from '../components/AnalyticsNav';
 import AnalyticsCard from '../components/AnalyticsCard';
-import { RiskBadge, SourceBadge } from '../components/AnalyticsBadge';
+import { RiskBadge, SiteBadge, SourceBadge } from '../components/AnalyticsBadge';
 import { AnalyticsInsightList, AnalyticsPageHeader, AnalyticsPanel } from '../components/AnalyticsPageHeader';
 import SessionDetailDrawer from '../components/SessionDetailDrawer';
 import { fetchAdminAnalytics } from '../lib/analyticsApi';
 import { sanitizeLandingValue } from '../lib/landingDisplay';
 import { formatMelbourneDateTime } from '../../lib/time';
+import { SITE_OPTIONS, getSiteLabel } from '../lib/siteFilters';
 
 const initialState = { loading: true, data: null, error: '' };
 
@@ -18,6 +19,7 @@ const getTopItem = (items = []) => items.reduce((top, item) => (!top || item.cou
 
 export default function AnalyticsOverview() {
   const [range, setRange] = useState('today');
+  const [siteKey, setSiteKey] = useState('');
   const [selectedSessionId, setSelectedSessionId] = useState(null);
   const [state, setState] = useState(initialState);
 
@@ -25,7 +27,7 @@ export default function AnalyticsOverview() {
     let cancelled = false;
     const load = async () => {
       try {
-        const data = await fetchAdminAnalytics('/overview', { range });
+        const data = await fetchAdminAnalytics('/overview', { range, siteKey });
         if (!cancelled) setState({ loading: false, data, error: '' });
       } catch (error) {
         if (!cancelled) setState({ loading: false, data: null, error: 'Failed to load overview.' });
@@ -38,7 +40,7 @@ export default function AnalyticsOverview() {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [range]);
+  }, [range, siteKey]);
 
   const data = state.data;
   const totalSessions = data?.sessionsToday || 0;
@@ -81,16 +83,27 @@ export default function AnalyticsOverview() {
         title="Readable, decision-first overview"
         description="This screen turns the latest traffic into quick conclusions: where sessions came from, how far they moved toward booking, and whether quality issues are rising."
         actions={(
-          <select
-            value={range}
-            onChange={(event) => setRange(event.target.value)}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm"
-          >
-            <option value="today">Today</option>
-            <option value="24h">24h</option>
-            <option value="7d">7d</option>
-            <option value="30d">30d</option>
-          </select>
+          <div className="flex flex-wrap gap-2">
+            <select
+              value={range}
+              onChange={(event) => setRange(event.target.value)}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm"
+            >
+              <option value="today">Today</option>
+              <option value="24h">24h</option>
+              <option value="7d">7d</option>
+              <option value="30d">30d</option>
+            </select>
+            <select
+              value={siteKey}
+              onChange={(event) => setSiteKey(event.target.value)}
+              className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm"
+            >
+              {SITE_OPTIONS.map((option) => (
+                <option key={option.label} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
         )}
       >
         <AnalyticsInsightList items={overviewInsights} />
@@ -135,6 +148,14 @@ export default function AnalyticsOverview() {
                 <AnalyticsCard label="Block candidates" value={data.blockCandidateSessions} hint={formatPercent(getRatio(data.blockCandidateSessions, totalSessions))} tone="danger" />
                 <AnalyticsCard label="Risky sessions total" value={(data.suspiciousSessions || 0) + (data.blockCandidateSessions || 0)} hint={formatPercent(riskySessionRate)} tone={riskySessionRate >= 20 ? 'danger' : 'warn'} />
                 <AnalyticsCard label="Good or watch" value={Math.max(totalSessions - ((data.suspiciousSessions || 0) + (data.blockCandidateSessions || 0)), 0)} hint="Sessions outside the top risk bands." />
+              </div>
+            </AnalyticsPanel>
+
+            <AnalyticsPanel title="Site mix" description="Separate both brands while keeping them inside the same admin system.">
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {data.siteBreakdown?.map((item) => (
+                  <AnalyticsCard key={item.siteKey} label={getSiteLabel(item.siteKey)} value={item.count} hint="Tracked sessions in the selected range." />
+                ))}
               </div>
             </AnalyticsPanel>
           </div>
@@ -187,6 +208,7 @@ export default function AnalyticsOverview() {
                 <thead>
                   <tr className="border-b border-slate-200 text-left text-slate-500">
                     <th className="pb-3 pr-4">Started</th>
+                    <th className="pb-3 pr-4">Site</th>
                     <th className="pb-3 pr-4">Source</th>
                     <th className="pb-3 pr-4">Landing</th>
                     <th className="pb-3 pr-4">Latest Event</th>
@@ -197,6 +219,7 @@ export default function AnalyticsOverview() {
                   {data.recentSessions?.map((session) => (
                     <tr key={session.id} className="cursor-pointer border-b border-slate-100 hover:bg-slate-50" onClick={() => setSelectedSessionId(session.id)}>
                       <td className="py-3 pr-4">{formatMelbourneDateTime(session.startedAt)}</td>
+                      <td className="py-3 pr-4"><SiteBadge value={session.siteKey} /></td>
                       <td className="py-3 pr-4"><SourceBadge value={session.sourceType} /></td>
                       <td className="py-3 pr-4 text-slate-600">{sanitizeLandingValue(session.landingPath)}</td>
                       <td className="py-3 pr-4 text-slate-600">{session.latestEventName || '-'}</td>

@@ -12,6 +12,11 @@ const riskClasses = {
   block_candidate: 'bg-red-100 text-red-700',
 };
 
+const siteClasses = {
+  prime_cabs_melbourne: 'bg-sky-100 text-sky-700',
+  local_taxi_melbourne: 'bg-teal-100 text-teal-700',
+};
+
 export function SourceBadge({ value }) {
   return (
     <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${sourceClasses[value] || 'bg-slate-100 text-slate-700'}`}>
@@ -24,6 +29,21 @@ export function RiskBadge({ value }) {
   return (
     <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${riskClasses[value] || 'bg-slate-100 text-slate-700'}`}>
       {value || 'unknown'}
+    </span>
+  );
+}
+
+export function SiteBadge({ value }) {
+  const label =
+    value === 'prime_cabs_melbourne'
+      ? 'Prime Cabs'
+      : value === 'local_taxi_melbourne'
+      ? 'Local Taxi'
+      : value || 'unknown';
+
+  return (
+    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${siteClasses[value] || 'bg-slate-100 text-slate-700'}`}>
+      {label}
     </span>
   );
 }

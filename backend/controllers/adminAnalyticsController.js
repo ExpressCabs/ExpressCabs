@@ -1,4 +1,5 @@
 const prisma = require('../lib/prisma');
+const { VALID_SITE_KEYS, normalizeSiteKey } = require('../lib/siteKeys');
 const {
   getNonAdminEventWhere,
   getNonAdminNestedEventWhere,
@@ -54,6 +55,16 @@ const parseBool = (value) => {
   return null;
 };
 
+const getSiteKeyFilter = (value) => {
+  if (!value || value === 'all') {
+    return null;
+  }
+
+  return VALID_SITE_KEYS.has(String(value).trim().toLowerCase())
+    ? normalizeSiteKey(value)
+    : null;
+};
+
 const getSessionTiming = (session) => {
   const now = Date.now();
   const startedAt = session.startedAt ? new Date(session.startedAt) : null;
@@ -89,6 +100,11 @@ const buildSessionWhere = (query = {}, { activeOnly = false } = {}) => {
     where.sourceType = query.sourceType;
   }
 
+  const siteKey = getSiteKeyFilter(query.siteKey);
+  if (siteKey) {
+    where.siteKey = siteKey;
+  }
+
   if (VALID_RISK_BANDS.has(query.riskBand)) {
     where.riskBand = query.riskBand;
   }
@@ -116,6 +132,7 @@ const summarizeSession = (session) => {
 
   return {
     id: session.id,
+    siteKey: session.siteKey,
     sessionToken: session.sessionToken,
     startedAt: session.startedAt,
     updatedAt: session.updatedAt,
@@ -158,8 +175,9 @@ const getOverview = async (req, res) => {
   try {
     const range = VALID_RANGES.has(req.query.range) ? req.query.range : 'today';
     const since = getRangeStart(range);
-    const sessionWhere = getNonAdminSessionWhere({ startedAt: { gte: since } });
-    const eventWhere = getNonAdminEventWhere({ eventTime: { gte: since } });
+    const siteKey = getSiteKeyFilter(req.query.siteKey);
+    const sessionWhere = getNonAdminSessionWhere({ startedAt: { gte: since }, ...(siteKey ? { siteKey } : {}) });
+    const eventWhere = getNonAdminEventWhere({ eventTime: { gte: since }, ...(siteKey ? { siteKeySnapshot: siteKey } : {}) });
 
     const [sessions, events] = await Promise.all([
       prisma.visitSession.findMany({
@@ -190,7 +208,7 @@ const getOverview = async (req, res) => {
 
     const allSessions = await prisma.visitSession.findMany({
       where: sessionWhere,
-      select: { sourceType: true, riskBand: true },
+      select: { sourceType: true, riskBand: true, siteKey: true },
     });
 
     const countDistinctSessionsForEvent = (eventName) =>
@@ -210,12 +228,21 @@ const getOverview = async (req, res) => {
       }, new Map())
     ).map(([riskBand, count]) => ({ riskBand, count }));
 
+    const siteBreakdown = Array.from(
+      allSessions.reduce((map, session) => {
+        map.set(session.siteKey, (map.get(session.siteKey) || 0) + 1);
+        return map;
+      }, new Map())
+    ).map(([siteKeyValue, count]) => ({ siteKey: siteKeyValue, count }));
+
     return res.json({
       range,
+      siteKey: siteKey || 'all',
       activeSessions: await prisma.visitSession.count({
         where: getNonAdminSessionWhere({
           endedAt: null,
           updatedAt: { gte: new Date(Date.now() - LIVE_SESSION_WINDOW_MS) },
+          ...(siteKey ? { siteKey } : {}),
         }),
       }),
       sessionsToday: allSessions.length,
@@ -232,6 +259,7 @@ const getOverview = async (req, res) => {
       blockCandidateSessions: allSessions.filter((session) => session.riskBand === 'block_candidate').length,
       sourceBreakdown,
       riskBandBreakdown,
+      siteBreakdown,
       recentSessions: sessions.map(summarizeSession),
     });
   } catch (error) {
@@ -266,11 +294,13 @@ const getLiveSessions = async (req, res) => {
 const getFunnel = async (req, res) => {
   try {
     const since = getRangeStart(req.query.range || 'today');
+    const siteKey = getSiteKeyFilter(req.query.siteKey);
     const events = await prisma.visitEvent.findMany({
       where: {
         ...getNonAdminEventWhere({
           eventTime: { gte: since },
           eventName: { in: FUNNEL_STEPS },
+          ...(siteKey ? { siteKeySnapshot: siteKey } : {}),
         }),
       },
       select: {
@@ -310,18 +340,20 @@ const getFunnel = async (req, res) => {
 };
 
 const getSourceBreakdown = async (req, res) => {
-  req.query.range = req.query.range || 'today';
-  return getOverview(req, res);
+    req.query.range = req.query.range || 'today';
+    return getOverview(req, res);
 };
 
 const getSuburbInsights = async (req, res) => {
   try {
     const since = getRangeStart(req.query.range || 'today');
     const airportOnly = parseBool(req.query.airportOnly);
+    const siteKey = getSiteKeyFilter(req.query.siteKey);
     const events = await prisma.visitEvent.findMany({
       where: {
         ...getNonAdminEventWhere({
           eventTime: { gte: since },
+          ...(siteKey ? { siteKeySnapshot: siteKey } : {}),
           OR: [
             { pickupSuburb: { not: null } },
             { dropoffSuburb: { not: null } },
@@ -372,6 +404,7 @@ const getSuburbInsights = async (req, res) => {
       where: {
         ...getNonAdminSessionWhere({
           startedAt: { gte: since },
+          ...(siteKey ? { siteKey } : {}),
           riskBand: { in: ['suspicious', 'block_candidate'] },
         }),
       },
@@ -425,8 +458,12 @@ const getTrafficQuality = async (req, res) => {
 
     const signals = await prisma.trafficBlockSignal.findMany({
       where: {
+        ...(getSiteKeyFilter(req.query.siteKey) ? { siteKey: getSiteKeyFilter(req.query.siteKey) } : {}),
         ipHash: {
-          in: await getKnownNonAdminIpHashes({ startedAt: { gte: since } }),
+          in: await getKnownNonAdminIpHashes({
+            startedAt: { gte: since },
+            ...(getSiteKeyFilter(req.query.siteKey) ? { siteKey: getSiteKeyFilter(req.query.siteKey) } : {}),
+          }),
         },
       },
       orderBy: { lastSeenAt: 'desc' },
@@ -562,7 +599,7 @@ const getSessionDetail = async (req, res) => {
 
     const relatedBlockSignals = session.ipHash
       ? await prisma.trafficBlockSignal.findMany({
-          where: { ipHash: session.ipHash },
+          where: { ipHash: session.ipHash, siteKey: session.siteKey },
           orderBy: { lastSeenAt: 'desc' },
         })
       : [];
@@ -603,10 +640,12 @@ const getBlockSignals = async (req, res) => {
     }
 
     const allowedIpHashes = await getKnownNonAdminIpHashes();
+    const siteKey = getSiteKeyFilter(req.query.siteKey);
     const signalWhere = {
       ...where,
+      ...(siteKey ? { siteKey } : {}),
       ipHash: {
-        in: allowedIpHashes,
+        in: siteKey ? await getKnownNonAdminIpHashes({ siteKey }) : allowedIpHashes,
       },
     };
 

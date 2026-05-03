@@ -23,6 +23,7 @@ model Driver {
 
 model Ride {
   id             Int      @id @default(autoincrement())
+  siteKey        String   @default("prime_cabs_melbourne")
   name           String
   phone          String
   email          String?
@@ -45,6 +46,8 @@ model Ride {
   driver         Driver?  @relation("DriverRides", fields: [driverId], references: [id])
   user           User?    @relation(fields: [userId], references: [id])
   attributedSessions VisitSession[]
+
+  @@index([siteKey])
 }
 
 model User {
@@ -122,6 +125,7 @@ model VisitSession {
   id                  Int                     @id @default(autoincrement())
   sessionToken        String                  @unique
   visitorId           Int
+  siteKey             String                  @default("prime_cabs_melbourne")
   startedAt           DateTime                @default(now())
   endedAt             DateTime?
   landingUrl          String?
@@ -164,6 +168,7 @@ model VisitSession {
   @@index([visitorId])
   @@index([startedAt])
   @@index([updatedAt])
+  @@index([siteKey])
   @@index([sourceType])
   @@index([gclid])
   @@index([ipHash])
@@ -175,6 +180,7 @@ model VisitEvent {
   id                 Int          @id @default(autoincrement())
   sessionId          Int
   visitorId          Int
+  siteKeySnapshot    String       @default("prime_cabs_melbourne")
   eventName          String
   eventTime          DateTime     @default(now())
   path               String?
@@ -198,6 +204,7 @@ model VisitEvent {
   visitor            Visitor      @relation(fields: [visitorId], references: [id])
 
   @@index([sessionId, eventTime])
+  @@index([siteKeySnapshot, eventTime])
   @@index([eventName, eventTime])
   @@index([pickupSuburb])
   @@index([dropoffSuburb])
@@ -206,6 +213,7 @@ model VisitEvent {
 model TrafficBlockSignal {
   id                    Int      @id @default(autoincrement())
   ipHash                String
+  siteKey               String   @default("prime_cabs_melbourne")
   firstSeenAt           DateTime @default(now())
   lastSeenAt            DateTime @default(now())
   sessionCount          Int      @default(0)
@@ -217,7 +225,8 @@ model TrafficBlockSignal {
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
 
-  @@unique([ipHash, reason])
+  @@unique([ipHash, reason, siteKey])
+  @@index([siteKey])
   @@index([status])
   @@index([lastSeenAt])
 }

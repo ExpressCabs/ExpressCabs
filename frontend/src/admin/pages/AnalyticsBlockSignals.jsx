@@ -2,18 +2,21 @@ import { useEffect, useState } from 'react';
 import AnalyticsNav from '../components/AnalyticsNav';
 import { fetchAdminAnalytics, postAdminAnalytics } from '../lib/analyticsApi';
 import { formatMelbourneDateTime } from '../../lib/time';
+import { SITE_OPTIONS } from '../lib/siteFilters';
+import { SiteBadge } from '../components/AnalyticsBadge';
 
 export default function AnalyticsBlockSignals() {
+  const [siteKey, setSiteKey] = useState('');
   const [data, setData] = useState({ blockSignals: [], total: 0, page: 1, limit: 25 });
 
   const load = async () => {
-    const next = await fetchAdminAnalytics('/block-signals', { page: data.page, limit: data.limit });
+    const next = await fetchAdminAnalytics('/block-signals', { page: data.page, limit: data.limit, siteKey });
     setData(next);
   };
 
   useEffect(() => {
     load().catch(() => {});
-  }, []);
+  }, [siteKey]);
 
   const updateSignal = async (signal, patch) => {
     const path = patch.notes !== undefined ? `/block-signals/${signal.id}/note` : `/block-signals/${signal.id}/status`;
@@ -29,9 +32,16 @@ export default function AnalyticsBlockSignals() {
           <h1 className="text-3xl font-extrabold text-slate-900">Block Signals</h1>
           <p className="mt-1 text-sm text-slate-500">Analyst review of repeated suspicious IP patterns.</p>
         </div>
-        <button onClick={() => load()} className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
-          Refresh
-        </button>
+        <div className="flex gap-2">
+          <select value={siteKey} onChange={(event) => setSiteKey(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
+            {SITE_OPTIONS.map((option) => (
+              <option key={option.label} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+          <button onClick={() => load()} className="rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white">
+            Refresh
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -39,6 +49,7 @@ export default function AnalyticsBlockSignals() {
           <thead>
             <tr className="border-b border-slate-200 text-left text-slate-500">
               <th className="pb-3 pr-4">ID</th>
+              <th className="pb-3 pr-4">Site</th>
               <th className="pb-3 pr-4">IP Hash</th>
               <th className="pb-3 pr-4">Reason</th>
               <th className="pb-3 pr-4">Status</th>
@@ -52,6 +63,7 @@ export default function AnalyticsBlockSignals() {
             {data.blockSignals?.map((signal) => (
               <tr key={signal.id} className="border-b border-slate-100">
                 <td className="py-3 pr-4">{signal.id}</td>
+                <td className="py-3 pr-4"><SiteBadge value={signal.siteKey} /></td>
                 <td className="py-3 pr-4 font-mono text-xs text-slate-600">{String(signal.ipHash).slice(0, 16)}</td>
                 <td className="py-3 pr-4 text-slate-600">{signal.reason}</td>
                 <td className="py-3 pr-4 text-slate-600">{signal.status}</td>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import AnalyticsNav from '../components/AnalyticsNav';
 import { AnalyticsPageHeader, AnalyticsPanel } from '../components/AnalyticsPageHeader';
 import { fetchAdminAnalytics } from '../lib/analyticsApi';
+import { SITE_OPTIONS } from '../lib/siteFilters';
 
 const SimpleList = ({ title, rows, nameKey = 'name', description }) => (
   <AnalyticsPanel title={title} description={description}>
@@ -19,6 +20,7 @@ const SimpleList = ({ title, rows, nameKey = 'name', description }) => (
 export default function AnalyticsSuburbs() {
   const [data, setData] = useState(null);
   const [airportOnly, setAirportOnly] = useState('false');
+  const [siteKey, setSiteKey] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -26,6 +28,7 @@ export default function AnalyticsSuburbs() {
       const next = await fetchAdminAnalytics('/suburb-insights', {
         range: '7d',
         airportOnly,
+        siteKey,
       });
       if (!cancelled) setData(next);
     };
@@ -38,7 +41,7 @@ export default function AnalyticsSuburbs() {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [airportOnly]);
+  }, [airportOnly, siteKey]);
 
   return (
     <div>
@@ -49,10 +52,17 @@ export default function AnalyticsSuburbs() {
         title="See demand patterns by area and route"
         description="This view makes it easier to spot where bookings originate, where they end, and which suburb pairs are strongest."
         actions={(
-          <select value={airportOnly} onChange={(event) => setAirportOnly(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
-            <option value="false">All suburb events</option>
-            <option value="true">Airport-focused only</option>
-          </select>
+          <div className="flex flex-wrap gap-2">
+            <select value={airportOnly} onChange={(event) => setAirportOnly(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
+              <option value="false">All suburb events</option>
+              <option value="true">Airport-focused only</option>
+            </select>
+            <select value={siteKey} onChange={(event) => setSiteKey(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
+              {SITE_OPTIONS.map((option) => (
+                <option key={option.label} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
         )}
       />
 

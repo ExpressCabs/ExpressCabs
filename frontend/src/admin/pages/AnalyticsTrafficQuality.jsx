@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import AnalyticsNav from '../components/AnalyticsNav';
 import AnalyticsCard from '../components/AnalyticsCard';
-import { RiskBadge, SourceBadge } from '../components/AnalyticsBadge';
+import { RiskBadge, SiteBadge, SourceBadge } from '../components/AnalyticsBadge';
 import { AnalyticsInsightList, AnalyticsPageHeader, AnalyticsPanel } from '../components/AnalyticsPageHeader';
 import SessionDetailDrawer from '../components/SessionDetailDrawer';
 import { fetchAdminAnalytics } from '../lib/analyticsApi';
 import { sanitizeLandingValue } from '../lib/landingDisplay';
 import { formatMelbourneDateTime } from '../../lib/time';
+import { SITE_OPTIONS } from '../lib/siteFilters';
 
 const formatRiskReason = (value) => String(value || 'unknown').replaceAll('_', ' ');
 
@@ -47,12 +48,13 @@ const renderIpTable = (rows, title, description) => (
 
 export default function AnalyticsTrafficQuality() {
   const [data, setData] = useState(null);
+  const [siteKey, setSiteKey] = useState('');
   const [selectedSessionId, setSelectedSessionId] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const nextData = await fetchAdminAnalytics('/traffic-quality', { range: 'today' });
+      const nextData = await fetchAdminAnalytics('/traffic-quality', { range: 'today', siteKey });
       if (!cancelled) setData(nextData);
     };
 
@@ -64,7 +66,7 @@ export default function AnalyticsTrafficQuality() {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, []);
+  }, [siteKey]);
 
   const qualityInsights = data
     ? [
@@ -97,6 +99,13 @@ export default function AnalyticsTrafficQuality() {
         eyebrow="Traffic Quality"
         title="Spot bad traffic before it distorts the story"
         description="This view groups suspicious sessions, repeat IP behavior, and click-only patterns so you can quickly decide what needs investigation and what can be ignored."
+        actions={(
+          <select value={siteKey} onChange={(event) => setSiteKey(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
+            {SITE_OPTIONS.map((option) => (
+              <option key={option.label} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+        )}
       >
         <AnalyticsInsightList items={qualityInsights} />
       </AnalyticsPageHeader>
@@ -135,6 +144,7 @@ export default function AnalyticsTrafficQuality() {
                       <td className="py-3 pr-4 font-mono text-xs text-slate-600">{String(session.sessionToken).slice(0, 12)}</td>
                       <td className="py-3 pr-4">
                         <div className="space-y-1">
+                          <SiteBadge value={session.siteKey} />
                           <SourceBadge value={session.sourceType} />
                           <div className="text-xs text-slate-500">{session.sourceClassificationReason || 'No classification note'}</div>
                         </div>

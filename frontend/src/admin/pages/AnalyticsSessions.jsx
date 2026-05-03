@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react';
 import AnalyticsNav from '../components/AnalyticsNav';
-import { RiskBadge, SourceBadge } from '../components/AnalyticsBadge';
+import { RiskBadge, SiteBadge, SourceBadge } from '../components/AnalyticsBadge';
 import { AnalyticsPageHeader, AnalyticsPanel } from '../components/AnalyticsPageHeader';
 import SessionDetailDrawer from '../components/SessionDetailDrawer';
 import { fetchAdminAnalytics } from '../lib/analyticsApi';
 import { sanitizeLandingValue } from '../lib/landingDisplay';
 import { formatMelbourneDateTime } from '../../lib/time';
+import { SITE_OPTIONS } from '../lib/siteFilters';
 
 export default function AnalyticsSessions() {
   const [filters, setFilters] = useState({
     page: 1,
     limit: 25,
     range: '7d',
+    siteKey: '',
     sourceType: '',
     riskBand: '',
     suburb: '',
@@ -55,6 +57,11 @@ export default function AnalyticsSessions() {
             <option value="24h">24h</option>
             <option value="7d">7d</option>
             <option value="30d">30d</option>
+          </select>
+          <select className="rounded-xl border border-slate-200 px-3 py-2 text-sm" value={filters.siteKey} onChange={(event) => setFilters((current) => ({ ...current, page: 1, siteKey: event.target.value }))}>
+            {SITE_OPTIONS.map((option) => (
+              <option key={option.label} value={option.value}>{option.label}</option>
+            ))}
           </select>
           <select className="rounded-xl border border-slate-200 px-3 py-2 text-sm" value={filters.sourceType} onChange={(event) => setFilters((current) => ({ ...current, page: 1, sourceType: event.target.value }))}>
             <option value="">All sources</option>
@@ -108,6 +115,7 @@ export default function AnalyticsSessions() {
             <thead>
               <tr className="border-b border-slate-200 text-left text-slate-500">
                 <th className="pb-3 pr-4">Started</th>
+                <th className="pb-3 pr-4">Site</th>
                 <th className="pb-3 pr-4">Source</th>
                 <th className="pb-3 pr-4">Landing</th>
                 <th className="pb-3 pr-4">Route</th>
@@ -119,6 +127,7 @@ export default function AnalyticsSessions() {
               {data.sessions?.map((session) => (
                 <tr key={session.id} className="cursor-pointer border-b border-slate-100 hover:bg-slate-50" onClick={() => setSelectedSessionId(session.id)}>
                   <td className="py-3 pr-4">{formatMelbourneDateTime(session.startedAt)}</td>
+                  <td className="py-3 pr-4"><SiteBadge value={session.siteKey} /></td>
                   <td className="py-3 pr-4"><SourceBadge value={session.sourceType} /></td>
                   <td className="py-3 pr-4 text-slate-600">{sanitizeLandingValue(session.landingPath)}</td>
                   <td className="py-3 pr-4 text-slate-600">{session.pickupSuburb || '-'} to {session.dropoffSuburb || '-'}</td>

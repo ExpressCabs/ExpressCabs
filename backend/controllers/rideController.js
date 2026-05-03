@@ -1,12 +1,10 @@
 // controllers/rideController.js
 const prisma = require('../lib/prisma');
 const { getMailTransporter } = require('../lib/mailer');
-const { normalizeAuPhone, parsePositiveInt } = require('../lib/validators');
-const twilio = require('twilio');
-
-const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-const BOOKING_MANAGER_PHONE = normalizeAuPhone('0488797233');
+const { parsePositiveInt } = require('../lib/validators');
+const { SITE_KEYS, VALID_SITE_KEYS, normalizeSiteKey } = require('../lib/siteKeys');
 const VALID_RIDE_STATUSES = new Set(['upcoming', 'completed', 'cancelled']);
+const LOCAL_TAXI_BOOKING_EMAIL = 'bookings@localtaximelbourne.com.au';
 
 const formatMelbourneTime = (dateInput) => {
   const d = new Date(dateInput);
@@ -21,49 +19,35 @@ const formatMelbourneTime = (dateInput) => {
   }).format(d);
 };
 
-const sendAssignmentSmsNotifications = async ({ ride, driver }) => {
-  const riderPhone = normalizeAuPhone(ride.phone);
-  const riderSmsText =
-    `Hi ${ride.name},\n` +
-    `Your Express Cabs ride has now been assigned.\n\n` +
-    `From: ${ride.pickup}\n` +
-    `To: ${ride.dropoff}\n` +
-    `Time: ${formatMelbourneTime(ride.rideDate)}\n\n` +
-    `Driver: ${driver.name}\n` +
-    `Phone: ${driver.phone}\n` +
-    `Car: ${driver.carModel} (${driver.taxiReg})\n\n` +
-    `Need help? Call 0488 797 233`;
-
-  const driverPhone = normalizeAuPhone(driver.phone);
-  const driverSmsText =
-    `New Express Cabs job assigned.\n\n` +
-    `Passenger: ${ride.name}\n` +
-    `Phone: ${riderPhone}\n` +
-    `From: ${ride.pickup}\n` +
-    `To: ${ride.dropoff}\n` +
-    `Time: ${formatMelbourneTime(ride.rideDate)}\n` +
-    `Vehicle: ${ride.vehicleType}\n` +
-    `Fare: $${Number(ride.fare || 0).toFixed(2)} (${ride.fareType})` +
-    (ride.note ? `\nNote: ${ride.note}` : '');
-
-  const notificationResults = await Promise.allSettled([
-    client.messages.create({
-      from: process.env.TWILIO_PHONE_NUMBER,
-      to: riderPhone,
-      body: riderSmsText,
-    }),
-    client.messages.create({
-      from: process.env.TWILIO_PHONE_NUMBER,
-      to: driverPhone,
-      body: driverSmsText,
-    }),
-  ]);
-
-  if (notificationResults[0].status === 'rejected') {
-    console.error('Failed to send rider assignment SMS:', notificationResults[0].reason);
+const getRideNotificationEmail = (siteKey) => {
+  const normalizedSiteKey = normalizeSiteKey(siteKey);
+  if (normalizedSiteKey === SITE_KEYS.LOCAL_TAXI_MELBOURNE) {
+    return LOCAL_TAXI_BOOKING_EMAIL;
   }
-  if (notificationResults[1].status === 'rejected') {
-    console.error('Failed to send driver assignment SMS:', notificationResults[1].reason);
+  return process.env.EMAIL_USER;
+};
+
+const sendAssignmentEmailNotification = async ({ ride, driver }) => {
+  try {
+    await getMailTransporter().sendMail({
+      from: `"Express Cabs" <${process.env.EMAIL_USER}>`,
+      to: getRideNotificationEmail(ride.siteKey),
+      subject: `Ride #${ride.id} assigned to ${driver.taxiReg}`,
+      html: `
+        <h2>Ride Assignment Updated</h2>
+        <p><strong>Ride ID:</strong> ${ride.id}</p>
+        <p><strong>Passenger:</strong> ${ride.name}</p>
+        <p><strong>Phone:</strong> ${ride.phone}</p>
+        <p><strong>Pickup:</strong> ${ride.pickup}</p>
+        <p><strong>Dropoff:</strong> ${ride.dropoff}</p>
+        <p><strong>Ride Time:</strong> ${formatMelbourneTime(ride.rideDate)}</p>
+        <p><strong>Driver:</strong> ${driver.name}</p>
+        <p><strong>Driver Phone:</strong> ${driver.phone}</p>
+        <p><strong>Vehicle:</strong> ${driver.carModel} (${driver.taxiReg})</p>
+      `,
+    });
+  } catch (error) {
+    console.error('Failed to send assignment email:', error);
   }
 };
 
@@ -87,6 +71,7 @@ const bookRide = async (req, res) => {
       fareType,
       userId,
       sessionToken,
+      siteKey,
     } = req.body;
 
     const parsedRideDate = new Date(rideDate);
@@ -117,9 +102,12 @@ const bookRide = async (req, res) => {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
+    const normalizedSiteKey = normalizeSiteKey(siteKey);
+
     const ride = await prisma.ride.create({
       data: {
         name,
+        siteKey: normalizedSiteKey,
         phone,
         email,
         note,
@@ -154,7 +142,7 @@ const bookRide = async (req, res) => {
     notificationTasks.push(
       getMailTransporter().sendMail({
         from: `"Express Cabs" <${process.env.EMAIL_USER}>`,
-        to: process.env.EMAIL_USER,
+        to: getRideNotificationEmail(normalizedSiteKey),
         subject: '-- New Ride Booking Received --',
         html: `
           <h2>New Ride Booking</h2>
@@ -172,55 +160,9 @@ const bookRide = async (req, res) => {
       })
     );
 
-    const formattedPhone = normalizeAuPhone(phone);
-    const smsText =
-      `Hi ${name},\n` +
-      `Your Express Cabs ride has been booked.\n\n` +
-      `From: ${pickup}\n` +
-      `To: ${dropoff}\n` +
-      `Time: ${formatMelbourneTime(parsedRideDate)}\n` +
-      `Vehicle: ${vehicleType} (${parsedPassengerCount} passengers)\n` +
-      `Fare: $${parsedFare.toFixed(2)}\n\n` +
-      `Need help? Call 0488 797 233`;
-
-    const managerBookingSmsText =
-      `New ride booking received.\n\n` +
-      `Name: ${name}\n` +
-      `Phone: ${formattedPhone}\n` +
-      `Email: ${email || 'N/A'}\n` +
-      `From: ${pickup}\n` +
-      `To: ${dropoff}\n` +
-      `Time: ${formatMelbourneTime(parsedRideDate)}\n` +
-      `Passengers: ${parsedPassengerCount}\n` +
-      `Vehicle: ${vehicleType}\n` +
-      `Fare: $${parsedFare.toFixed(2)} (${fareType})` +
-      (note ? `\nNote: ${note}` : '');
-
-    notificationTasks.push(
-      client.messages.create({
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: formattedPhone,
-        body: smsText,
-      })
-    );
-
-    notificationTasks.push(
-      client.messages.create({
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: BOOKING_MANAGER_PHONE,
-        body: managerBookingSmsText,
-      })
-    );
-
     const notificationResults = await Promise.allSettled(notificationTasks);
     if (notificationResults[0].status === 'rejected') {
       console.error('Failed to send booking email:', notificationResults[0].reason);
-    }
-    if (notificationResults[1].status === 'rejected') {
-      console.error('Failed to send booking SMS:', notificationResults[1].reason);
-    }
-    if (notificationResults[2].status === 'rejected') {
-      console.error('Failed to send booking manager SMS:', notificationResults[2].reason);
     }
 
     res.status(201).json(ride);
@@ -302,9 +244,9 @@ const assignRideToDriver = async (req, res) => {
 
     const updatedRide = await prisma.ride.findUnique({ where: { id: rideId } });
 
-    await sendAssignmentSmsNotifications({ ride, driver });
+    await sendAssignmentEmailNotification({ ride, driver });
 
-    res.json({ message: 'Ride assigned and SMS sent to rider and driver.', ride: updatedRide });
+    res.json({ message: 'Ride assigned and admin email updated.', ride: updatedRide });
   } catch (err) {
     console.error('Error assigning ride:', err);
     res.status(500).json({ error: 'Failed to assign ride.' });
@@ -350,9 +292,9 @@ const assignRideToDriverByTaxiReg = async (req, res) => {
       },
     });
 
-    await sendAssignmentSmsNotifications({ ride, driver });
+    await sendAssignmentEmailNotification({ ride, driver });
 
-    return res.json({ message: 'Ride assigned and SMS sent to rider and driver.', ride: updatedRide });
+    return res.json({ message: 'Ride assigned and admin email updated.', ride: updatedRide });
   } catch (err) {
     console.error('Error assigning ride by taxi reg:', err);
     return res.status(500).json({ error: 'Failed to assign ride.' });
@@ -375,24 +317,7 @@ const unassignRideFromDriver = async (req, res) => {
 
     const updated = await prisma.ride.update({ where: { id: rideId }, data: { driverId: null } });
 
-    const phone = normalizeAuPhone(ride.phone);
-    const smsText =
-      `Hi ${ride.name},\n` +
-      `Your driver is no longer available for your Express Cabs ride.\n` +
-      `We're now finding another driver.\n\n` +
-      `No action is needed.\nNeed help? Call 0488 797 233`;
-
-    try {
-      await client.messages.create({
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: phone,
-        body: smsText,
-      });
-    } catch (smsErr) {
-      console.error('Failed to send unassign SMS:', smsErr);
-    }
-
-    res.json({ message: 'Ride unassigned and SMS sent.', ride: updated });
+    res.json({ message: 'Ride unassigned.', ride: updated });
   } catch (err) {
     console.error('Error unassigning ride:', err);
     res.status(500).json({ error: 'Failed to unassign ride.' });
@@ -494,6 +419,7 @@ const getAdminRides = async (req, res) => {
   const status = String(req.query.status || '').trim().toLowerCase();
   const assigned = String(req.query.assigned || '').trim().toLowerCase();
   const search = String(req.query.search || '').trim();
+  const siteKey = String(req.query.siteKey || '').trim().toLowerCase();
 
   const where = {};
 
@@ -503,6 +429,10 @@ const getAdminRides = async (req, res) => {
     where.driverId = { not: null };
   } else if (assigned === 'false') {
     where.driverId = null;
+  }
+
+  if (VALID_SITE_KEYS.has(siteKey)) {
+    where.siteKey = normalizeSiteKey(siteKey);
   }
 
   if (search) {

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import AnalyticsNav from '../components/AnalyticsNav';
-import { RiskBadge, SourceBadge } from '../components/AnalyticsBadge';
+import { RiskBadge, SiteBadge, SourceBadge } from '../components/AnalyticsBadge';
 import { AnalyticsPageHeader, AnalyticsPanel } from '../components/AnalyticsPageHeader';
 import SessionDetailDrawer from '../components/SessionDetailDrawer';
 import { fetchAdminAnalytics } from '../lib/analyticsApi';
 import { sanitizeLandingValue } from '../lib/landingDisplay';
 import { formatMelbourneTime } from '../../lib/time';
+import { SITE_OPTIONS } from '../lib/siteFilters';
 
 const formatTime = (value) => {
   try {
@@ -33,7 +34,7 @@ const formatSessionNote = (session) => {
 };
 
 export default function AnalyticsLive() {
-  const [filters, setFilters] = useState({ sourceType: '', riskBand: '', isLikelyMelbourne: '', paidOnly: '' });
+  const [filters, setFilters] = useState({ siteKey: '', sourceType: '', riskBand: '', isLikelyMelbourne: '', paidOnly: '' });
   const [sessions, setSessions] = useState([]);
   const [selectedSessionId, setSelectedSessionId] = useState(null);
 
@@ -70,7 +71,12 @@ export default function AnalyticsLive() {
       />
 
       <AnalyticsPanel title="Live filters" description="Narrow the stream to the traffic segment you want to inspect first.">
-        <div className="grid gap-3 md:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-5">
+          <select className="rounded-xl border border-slate-200 px-3 py-2 text-sm" value={filters.siteKey} onChange={(event) => setFilters((current) => ({ ...current, siteKey: event.target.value }))}>
+            {SITE_OPTIONS.map((option) => (
+              <option key={option.label} value={option.value}>{option.label}</option>
+            ))}
+          </select>
           <select className="rounded-xl border border-slate-200 px-3 py-2 text-sm" value={filters.sourceType} onChange={(event) => setFilters((current) => ({ ...current, sourceType: event.target.value }))}>
             <option value="">All sources</option>
             <option value="google_paid">Google Paid</option>
@@ -113,6 +119,7 @@ export default function AnalyticsLive() {
                     <p className="mt-2 font-mono text-xs text-slate-500">{String(session.sessionToken || '').slice(0, 12)}</p>
                   </div>
                   <div className="flex flex-wrap justify-end gap-2">
+                    <SiteBadge value={session.siteKey} />
                     <SourceBadge value={session.sourceType} />
                     <RiskBadge value={session.riskBand} />
                   </div>

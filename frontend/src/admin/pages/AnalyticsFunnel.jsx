@@ -2,15 +2,17 @@ import { useEffect, useState } from 'react';
 import AnalyticsNav from '../components/AnalyticsNav';
 import { AnalyticsPageHeader, AnalyticsPanel } from '../components/AnalyticsPageHeader';
 import { fetchAdminAnalytics } from '../lib/analyticsApi';
+import { SITE_OPTIONS } from '../lib/siteFilters';
 
 export default function AnalyticsFunnel() {
   const [range, setRange] = useState('today');
+  const [siteKey, setSiteKey] = useState('');
   const [funnel, setFunnel] = useState([]);
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      const data = await fetchAdminAnalytics('/funnel', { range });
+      const data = await fetchAdminAnalytics('/funnel', { range, siteKey });
       if (!cancelled) setFunnel(data.funnel || []);
     };
 
@@ -22,7 +24,7 @@ export default function AnalyticsFunnel() {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [range]);
+  }, [range, siteKey]);
 
   return (
     <div>
@@ -32,12 +34,19 @@ export default function AnalyticsFunnel() {
         title="See where sessions lose momentum"
         description="Compare each booking stage by source so drop-off points are easier to spot and explain."
         actions={(
-          <select value={range} onChange={(event) => setRange(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
-            <option value="today">Today</option>
-            <option value="24h">24h</option>
-            <option value="7d">7d</option>
-            <option value="30d">30d</option>
-          </select>
+          <div className="flex flex-wrap gap-2">
+            <select value={range} onChange={(event) => setRange(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
+              <option value="today">Today</option>
+              <option value="24h">24h</option>
+              <option value="7d">7d</option>
+              <option value="30d">30d</option>
+            </select>
+            <select value={siteKey} onChange={(event) => setSiteKey(event.target.value)} className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
+              {SITE_OPTIONS.map((option) => (
+                <option key={option.label} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+          </div>
         )}
       />
 
