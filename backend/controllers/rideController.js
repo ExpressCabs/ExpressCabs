@@ -4,7 +4,7 @@ const { getMailTransporter } = require('../lib/mailer');
 const { parsePositiveInt } = require('../lib/validators');
 const { SITE_KEYS, VALID_SITE_KEYS, normalizeSiteKey } = require('../lib/siteKeys');
 const VALID_RIDE_STATUSES = new Set(['upcoming', 'completed', 'cancelled']);
-const LOCAL_TAXI_BOOKING_EMAIL = 'bookings@localtaximelbourne.com.au';
+const LOCAL_TAXI_BOOKING_EMAIL = 'localtaxi2707@gmail.com';
 
 const formatMelbourneTime = (dateInput) => {
   const d = new Date(dateInput);
