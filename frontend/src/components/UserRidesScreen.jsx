@@ -123,7 +123,9 @@ const UserRidesScreen = ({ user, onLogout, setMode }) => {
 
             <div className="flex flex-col items-end gap-2">
               <Pill tone={tone}>{ride?.status === 'cancelled' ? 'Cancelled' : variant === 'upcoming' ? 'Upcoming' : 'Past'}</Pill>
+              {/*
               <Pill tone="blue">{money(ride?.fare)}</Pill>
+              */}
             </div>
           </div>
         </div>

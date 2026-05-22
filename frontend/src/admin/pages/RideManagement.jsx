@@ -133,7 +133,7 @@ export default function RideManagement() {
                     <p className="mt-1 text-sm text-slate-600">{formatMelbourneDateTime(ride.rideDate)}</p>
                     <p className="mt-2 text-sm text-slate-900"><span className="font-semibold">Passenger:</span> {ride.name} · {ride.phone}</p>
                     <p className="mt-1 text-sm text-slate-700"><span className="font-semibold">Route:</span> {ride.pickup} to {ride.dropoff}</p>
-                    <p className="mt-1 text-sm text-slate-700"><span className="font-semibold">Vehicle:</span> {ride.vehicleType} · ${Number(ride.fare || 0).toFixed(2)}</p>
+                    <p className="mt-1 text-sm text-slate-700"><span className="font-semibold">Vehicle:</span> {ride.vehicleType}{/* · ${Number(ride.fare || 0).toFixed(2)} */}</p>
                     <p className="mt-1 text-sm text-slate-700">
                       <span className="font-semibold">Assigned driver:</span>{' '}
                       {ride.driver ? `${ride.driver.name} (${ride.driver.taxiReg})` : 'Not assigned'}

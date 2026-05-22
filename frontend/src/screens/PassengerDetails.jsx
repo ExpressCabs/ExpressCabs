@@ -98,7 +98,9 @@ const PassengerDetails = ({
             <Pill>{tripMeta.when}</Pill>
             <Pill>{tripMeta.pax}</Pill>
             <Pill>{tripMeta.vehicleName}</Pill>
+            {/*
             <Pill>{tripMeta.totalFare}{tripMeta.fareLabel ? ` | ${tripMeta.fareLabel}` : ''}</Pill>
+            */}
           </div>
         </div>
       </motion.div>

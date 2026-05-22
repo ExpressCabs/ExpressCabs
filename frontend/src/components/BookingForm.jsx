@@ -43,6 +43,7 @@ const BookingForm = ({
   const tripEstimateRef = useRef(null);
   const pickupInputRef = useRef(null);
   const dropoffInputRef = useRef(null);
+  const passengerCountInputRef = useRef(null);
   const pickupMarker = useRef(null);
   const dropoffMarker = useRef(null);
   const directionsRenderer = useRef(null);
@@ -210,6 +211,32 @@ const BookingForm = ({
     }
   }, [createMarker, extractSuburbFromPlace, map]);
 
+  const focusDropoffInput = useCallback(() => {
+    const focusInput = () => {
+      dropoffInputRef.current?.focus();
+    };
+
+    if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+      window.requestAnimationFrame(focusInput);
+      return;
+    }
+
+    setTimeout(focusInput, 0);
+  }, []);
+
+  const focusPassengerCountInput = useCallback(() => {
+    const focusInput = () => {
+      passengerCountInputRef.current?.focus();
+    };
+
+    if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+      window.requestAnimationFrame(focusInput);
+      return;
+    }
+
+    setTimeout(focusInput, 0);
+  }, []);
+
   const initMapAndAutocomplete = useCallback(() => {
     if (gmapsInitRef.current) return map;
     if (step !== 1) return null;
@@ -258,6 +285,7 @@ const BookingForm = ({
           place,
           targetMap: gMap,
         });
+        focusDropoffInput();
         const pickupSuburb = extractSuburbFromPlace(place);
 
         const eventKey = `${pickupSuburb}:${resolvedAddress}`;
@@ -326,6 +354,7 @@ const BookingForm = ({
     applyPickupSelection,
     bookingType,
     extractSuburbFromPlace,
+    focusDropoffInput,
     map,
     passengerCount,
     step,
@@ -1102,7 +1131,14 @@ const BookingForm = ({
                         id="scheduledDateTime"
                         type="datetime-local"
                         value={scheduledDateTime}
-                        onChange={(e) => setScheduledDateTime(e.target.value)}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setScheduledDateTime(value);
+
+                          if (value && !Number.isNaN(new Date(value).getTime())) {
+                            focusPassengerCountInput();
+                          }
+                        }}
                         className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-sm text-black placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-900/20"
                         placeholder="Select date and time"
                       />
@@ -1112,6 +1148,7 @@ const BookingForm = ({
 
                 <div>
                   <input
+                    ref={passengerCountInputRef}
                     type="number"
                     min="1"
                     value={passengerCount || ''}
@@ -1139,9 +1176,11 @@ const BookingForm = ({
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
+                    {/*
                     <span className="rounded-full bg-slate-900 px-3 py-1 text-[11px] font-semibold text-white">
                       {routePreview.fareTypeText}
                     </span>
+                    */}
                     {Number(passengerCount) > 4 ? (
                       <span className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-800">
                         High occupancy
@@ -1150,6 +1189,7 @@ const BookingForm = ({
                   </div>
                 </div>
 
+                {/*
                 <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-900 px-4 py-4 text-white">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/55">Approx Fare On Meter Will Be</p>
                   <p className="mt-1 text-2xl font-extrabold tracking-tight">
@@ -1157,6 +1197,7 @@ const BookingForm = ({
                     {routePreview.maxFareText !== routePreview.minFareText ? ` - ${routePreview.maxFareText}` : ''}
                   </p>
                 </div>
+                */}
 
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <div className="rounded-2xl border border-slate-200 bg-white/80 px-3 py-3">

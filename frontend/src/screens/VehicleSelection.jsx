@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import sedanImg from '/assets/vehicles/sedan-modern.png';
 import suvImg from '/assets/vehicles/suv-modern.png';
 import vanImg from '/assets/vehicles/van-modern.png';
@@ -316,14 +316,28 @@ const VehicleSelection = ({
       <div className="rounded-[30px] border border-white/30 bg-[linear-gradient(180deg,rgba(255,255,255,0.5)_0%,rgba(226,232,240,0.34)_100%)] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_28px_70px_-38px_rgba(15,23,42,0.34)] backdrop-blur-xl">
         <div className="grid gap-2">
           {vehicleStates.map((vehicle, index) => (
-            <motion.button
+            <motion.div
               key={vehicle.id}
-              type="button"
+              layout
               onClick={() => !vehicle.disabled && handleSelect(vehicle)}
+              onKeyDown={(event) => {
+                if (!vehicle.disabled && (event.key === 'Enter' || event.key === ' ')) {
+                  event.preventDefault();
+                  handleSelect(vehicle);
+                }
+              }}
+              role="button"
+              tabIndex={vehicle.disabled ? -1 : 0}
+              aria-disabled={vehicle.disabled}
+              aria-pressed={vehicle.isSelected}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 * index }}
-              className={`grid rounded-[20px] border px-3 py-2.5 text-left transition-all duration-200 md:grid-cols-[minmax(0,1.5fr)_90px_120px_130px] md:items-center md:gap-3 ${
+              transition={{
+                opacity: { delay: 0.04 * index, duration: 0.18 },
+                y: { delay: 0.04 * index, duration: 0.22, ease: [0.22, 1, 0.36, 1] },
+                layout: { duration: 0.2, ease: [0.22, 1, 0.36, 1] },
+              }}
+              className={`grid rounded-[20px] border px-3 py-2.5 text-left transition-all duration-200 ${
                 vehicle.disabled
                   ? 'cursor-not-allowed border-slate-300/60 bg-white/48 opacity-50'
                   : vehicle.isSelected
@@ -331,37 +345,37 @@ const VehicleSelection = ({
                   : 'border-slate-300/65 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,250,252,0.84)_100%)] shadow-[0_18px_38px_-28px_rgba(15,23,42,0.24)] hover:-translate-y-0.5 hover:border-slate-300/90 hover:bg-white'
               }`}
             >
-              <div className="relative flex min-w-0 items-center gap-3 py-1.5 before:absolute before:left-0 before:right-0 before:top-0 before:h-px before:bg-[linear-gradient(90deg,rgba(148,163,184,0)_0%,rgba(148,163,184,0.5)_18%,rgba(148,163,184,0.5)_82%,rgba(148,163,184,0)_100%)] after:absolute after:left-0 after:right-0 after:bottom-0 after:h-px after:bg-[linear-gradient(90deg,rgba(148,163,184,0)_0%,rgba(148,163,184,0.5)_18%,rgba(148,163,184,0.5)_82%,rgba(148,163,184,0)_100%)]">
-                <div className={`relative z-[1] flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/90 bg-gradient-to-br ${vehicle.accent.tint} shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_10px_18px_-16px_rgba(15,23,42,0.35)]`}>
-                  <img src={vehicle.image} alt={vehicle.name} className="h-8 w-8 object-contain" />
+              <div className="relative grid min-w-0 grid-cols-[92px_minmax(0,1fr)] gap-3 py-1.5 before:absolute before:left-0 before:right-0 before:top-0 before:h-px before:bg-[linear-gradient(90deg,rgba(148,163,184,0)_0%,rgba(148,163,184,0.5)_18%,rgba(148,163,184,0.5)_82%,rgba(148,163,184,0)_100%)] after:absolute after:left-0 after:right-0 after:bottom-0 after:h-px after:bg-[linear-gradient(90deg,rgba(148,163,184,0)_0%,rgba(148,163,184,0.5)_18%,rgba(148,163,184,0.5)_82%,rgba(148,163,184,0)_100%)]">
+                <div className={`relative z-[1] flex h-20 w-[92px] shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/90 bg-gradient-to-br ${vehicle.accent.tint} shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_14px_24px_-18px_rgba(15,23,42,0.42)]`}>
+                  <img src={vehicle.image} alt={vehicle.name} className="h-16 w-20 object-contain drop-shadow-sm" />
                 </div>
-                <div className="relative z-[1] min-w-0">
+                <div className="relative z-[1] flex min-w-0 flex-col justify-center">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="truncate text-sm font-bold text-slate-900">{vehicle.name}</p>
+                    <p className="text-base font-extrabold tracking-tight text-slate-900">{vehicle.name}</p>
                     <span className={`rounded-full px-2 py-0.5 text-[8px] font-semibold uppercase tracking-[0.14em] text-white ${vehicle.accent.badge}`}>
                       {vehicle.badge}
                     </span>
                   </div>
-                  <p className="mt-0.5 text-[11px] leading-4.5 text-slate-600">{vehicle.summary}</p>
+                  <p className="mt-1 text-[12px] leading-5 text-slate-600">{vehicle.summary}</p>
                 </div>
               </div>
 
-              <div className="mt-1.5 flex items-center justify-between rounded-xl border border-slate-300/55 bg-white/84 px-3 py-1.5 text-xs text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] md:mt-0 md:block md:border-0 md:bg-transparent md:px-0 md:py-0 md:shadow-none">
-                <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500 md:hidden">Seats</span>
+              <div className="mt-1.5 flex items-center justify-between rounded-xl border border-slate-300/55 bg-white/84 px-3 py-1.5 text-xs text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
+                <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">Seats</span>
                 <span className="font-semibold text-slate-900">{vehicle.seats}</span>
               </div>
 
-              <div className="mt-1.5 flex items-center justify-between rounded-xl border border-slate-300/55 bg-white/84 px-3 py-1.5 text-xs text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] md:mt-0 md:block md:border-0 md:bg-transparent md:px-0 md:py-0 md:shadow-none">
-                <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500 md:hidden">Luggage</span>
-                <span className="font-semibold text-slate-900">{vehicle.luggage}</span>
+              <div className="mt-1.5 flex items-center justify-between gap-3 rounded-xl border border-slate-300/55 bg-white/84 px-3 py-1.5 text-xs text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
+                <span className="shrink-0 text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">Luggage</span>
+                <span className="text-right font-semibold text-slate-900">{vehicle.luggage}</span>
               </div>
 
-              <div className="mt-1.5 flex items-center justify-between rounded-xl border border-slate-300/55 bg-white/84 px-3 py-1.5 text-xs text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)] md:mt-0 md:block md:border-0 md:bg-transparent md:px-0 md:py-0 md:shadow-none">
-                <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500 md:hidden">Best for</span>
-                <span className="font-semibold text-slate-900">{vehicle.rideStyle}</span>
+              <div className="mt-1.5 flex items-center justify-between gap-3 rounded-xl border border-slate-300/55 bg-white/84 px-3 py-1.5 text-xs text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
+                <span className="shrink-0 text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">Best for</span>
+                <span className="text-right font-semibold text-slate-900">{vehicle.rideStyle}</span>
               </div>
 
-              <div className="mt-1.5 flex items-center justify-between md:mt-0 md:justify-end">
+              <div className="mt-1.5 flex items-center justify-between">
                 <span className={`rounded-full px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] ${
                   vehicle.disabled
                     ? 'bg-red-100 text-red-700'
@@ -373,7 +387,7 @@ const VehicleSelection = ({
                 </span>
               </div>
 
-              <div className="mt-1.5 flex flex-wrap gap-1.5 md:col-span-4 md:mt-0.5">
+              <div className="mt-1.5 flex flex-wrap gap-1.5">
                 <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${vehicle.accent.chip}`}>
                   {vehicle.comfort}
                 </span>
@@ -381,34 +395,56 @@ const VehicleSelection = ({
                   {vehicle.fitLabel}
                 </span>
               </div>
-            </motion.button>
+
+              <AnimatePresence initial={false}>
+                {vehicle.isSelected && (
+                  <motion.div
+                    layout
+                    initial={{ opacity: 0, y: -5, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -3, scale: 0.99 }}
+                    transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+                    className="mt-3 grid grid-cols-2 gap-2 overflow-hidden border-t border-slate-200/80 pt-3"
+                  >
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setMap(null);
+                        setStep(1);
+                      }}
+                      className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] transition hover:bg-slate-50"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setStep(3);
+                      }}
+                      className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-800/70 bg-slate-950 px-4 text-sm font-semibold text-white shadow-[0_18px_36px_-24px_rgba(15,23,42,0.8)] transition hover:brightness-110"
+                    >
+                      Continue
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
           ))}
         </div>
       </div>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+      <div className="mt-6">
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={() => {
             setMap(null);
             setStep(1);
           }}
-          className="h-12 rounded-2xl border border-white/55 bg-white/68 font-semibold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] transition hover:bg-white/82"
+          className="h-12 w-full rounded-2xl border border-white/55 bg-white/68 font-semibold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] transition hover:bg-white/82"
         >
           Back
-        </motion.button>
-
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={() => setStep(3)}
-          disabled={!selectedId}
-          className={`h-12 rounded-2xl border font-semibold text-white shadow-[0_20px_46px_-30px_rgba(15,23,42,0.65)] backdrop-blur-md transition ${
-            selectedId
-              ? 'border-slate-800/70 bg-[linear-gradient(180deg,rgba(30,41,59,0.98)_0%,rgba(15,23,42,1)_100%)] hover:brightness-105'
-              : 'cursor-not-allowed border-slate-500/40 bg-slate-400/70'
-          }`}
-        >
-          Next
         </motion.button>
       </div>
     </>

@@ -154,7 +154,7 @@ const bookRide = async (req, res) => {
           <p><strong>Date & Time:</strong> ${formatMelbourneTime(parsedRideDate)}</p>
           <p><strong>Passengers:</strong> ${parsedPassengerCount}</p>
           <p><strong>Vehicle:</strong> ${vehicleType}</p>
-          <p><strong>Fare:</strong> $${parsedFare.toFixed(2)} (${fareType})</p>
+          ${/* <p><strong>Fare:</strong> $${parsedFare.toFixed(2)} (${fareType})</p> */ ''}
           ${note ? `<p><strong>Note:</strong> ${note}</p>` : ''}
         `,
       })

@@ -325,7 +325,9 @@ const DriverDashboard = ({ driver, onLogout }) => {
 
                           <div className="flex flex-col items-end gap-2">
                             <Pill tone="green">Assigned</Pill>
+                            {/*
                             <Pill tone="blue">{money(ride.fare)}</Pill>
+                            */}
                           </div>
                         </div>
                       </div>

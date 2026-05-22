@@ -7,10 +7,10 @@ export default function AirportTransferCoreContent({ suburb }) {
           Reliable Airport Transfers from {suburb.name}
         </h2>
         <p className="text-gray-700 leading-relaxed">
-          PrimeCabs offers safe, comfortable and on-time airport transfers from{" "}
-          <strong>{suburb.name}</strong> to Melbourne Airport. Whether you’re travelling
-          for business or a family trip, we provide 24/7 pickups with fixed pricing
-          and professional local drivers.
+          PrimeCabs offers safe, comfortable and on-time airport transfers from{' '}
+          <strong>{suburb.name}</strong> to Melbourne Airport. Whether you are travelling
+          for business or a family trip, we provide 24/7 pickups and professional local
+          drivers.
         </p>
       </section>
 
@@ -18,7 +18,7 @@ export default function AirportTransferCoreContent({ suburb }) {
       <section className="space-y-3">
         <h2 className="text-2xl font-bold">Why choose PrimeCabs?</h2>
         <ul className="list-disc ml-6 text-gray-700 space-y-1">
-          <li>Fixed pricing — no surge fares</li>
+          {/* <li>Fixed pricing - no surge fares</li> */}
           <li>24/7 airport transfers including early morning pickups</li>
           <li>Flight tracking to adjust for delays</li>
           <li>Door-to-door pickups in {suburb.name} ({suburb.postcode})</li>
@@ -36,21 +36,22 @@ export default function AirportTransferCoreContent({ suburb }) {
         </ol>
       </section>
 
-      {/* Pricing / transparency */}
+      {/* Pricing / transparency
       <section className="space-y-3">
         <h2 className="text-2xl font-bold">Transparent pricing</h2>
         <p className="text-gray-700 leading-relaxed">
           We aim to keep pricing clear and predictable. Your quote depends on pickup
-          address, time, and vehicle type. No hidden charges — just reliable airport transport.
+          address, time, and vehicle type. No hidden charges - just reliable airport transport.
         </p>
       </section>
+      */}
 
       {/* Trust */}
       <section className="space-y-3">
         <h2 className="text-2xl font-bold">Trusted local service</h2>
         <p className="text-gray-700 leading-relaxed">
           PrimeCabs provides airport transfers across Melbourne suburbs with punctual
-          drivers and a customer-first approach. If you need help, we’re available 24/7.
+          drivers and a customer-first approach. If you need help, we are available 24/7.
         </p>
       </section>
     </section>
