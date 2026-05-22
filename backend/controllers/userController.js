@@ -75,7 +75,7 @@ exports.userForgotPassword = async (req, res) => {
 
       await twilioClient.messages.create({
         to: normalizedPhone,
-        from: process.env.TWILIO_PHONE_NUMBER,
+        from: process.env.TWILIO_PHONE_NUMBER || process.env.TWILIO_FROM,
         body: `Your Prime Cabs OTP is: ${otp}`,
       });
     }
