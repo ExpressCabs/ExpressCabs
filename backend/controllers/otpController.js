@@ -1,28 +1,11 @@
 const crypto = require('crypto');
-const twilio = require('twilio');
 const { normalizeAuPhone } = require('../lib/validators');
+const smsService = require('../services/sms/smsService');
+const { SMS_MESSAGE_TYPES } = require('../services/sms/smsTemplates');
 
 const OTP_TTL_MS = 10 * 60 * 1000;
 const MAX_VERIFY_ATTEMPTS = 5;
 const otpStore = new Map();
-
-const getTwilioConfig = () => {
-  const accountSid = process.env.TWILIO_ACCOUNT_SID || process.env.TWILIO_SID;
-  const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_PHONE_NUMBER || process.env.TWILIO_FROM;
-
-  return { accountSid, authToken, from };
-};
-
-const getTwilioClient = () => {
-  const { accountSid, authToken, from } = getTwilioConfig();
-
-  if (!accountSid || !authToken || !from) {
-    return null;
-  }
-
-  return twilio(accountSid, authToken);
-};
 
 const cleanupExpiredOtps = () => {
   const now = Date.now();
@@ -40,13 +23,6 @@ exports.sendOtp = async (req, res) => {
     return res.status(400).json({ error: 'Phone is required' });
   }
 
-  const twilioClient = getTwilioClient();
-  const { from } = getTwilioConfig();
-
-  if (!twilioClient) {
-    return res.status(500).json({ error: 'OTP service is not configured' });
-  }
-
   cleanupExpiredOtps();
 
   const otp = crypto.randomInt(100000, 1000000).toString();
@@ -57,11 +33,21 @@ exports.sendOtp = async (req, res) => {
   });
 
   try {
-    await twilioClient.messages.create({
+    const smsResult = await smsService.send({
       to: formattedPhone,
-      from,
-      body: `Your Prime Cabs verification code is: ${otp}`,
+      type: SMS_MESSAGE_TYPES.OTP_VERIFICATION,
+      data: { otp },
     });
+
+    if (!smsResult.success) {
+      otpStore.delete(formattedPhone);
+      console.error('Booking OTP send error:', smsResult.error);
+      return res.status(500).json({
+        error: smsResult.error && smsResult.error.includes('configured')
+          ? 'OTP service is not configured'
+          : 'Failed to send OTP',
+      });
+    }
 
     return res.json({ success: true, message: 'OTP sent to your phone' });
   } catch (error) {

@@ -46,8 +46,32 @@ model Ride {
   driver         Driver?  @relation("DriverRides", fields: [driverId], references: [id])
   user           User?    @relation(fields: [userId], references: [id])
   attributedSessions VisitSession[]
+  smsMessages    SmsMessage[]
 
   @@index([siteKey])
+}
+
+model SmsMessage {
+  id                Int      @id @default(autoincrement())
+  rideId            Int?
+  recipient         String
+  messageType       String
+  provider          String
+  status            String
+  providerMessageId String?
+  errorMessage      String?
+  cost              Decimal?
+  createdAt         DateTime @default(now())
+  sentAt            DateTime?
+  deliveredAt       DateTime?
+
+  ride              Ride?    @relation(fields: [rideId], references: [id], onDelete: SetNull)
+
+  @@index([rideId])
+  @@index([recipient])
+  @@index([messageType])
+  @@index([provider])
+  @@index([createdAt])
 }
 
 model User {

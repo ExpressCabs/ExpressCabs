@@ -3,6 +3,8 @@ const prisma = require('../lib/prisma');
 const { getMailTransporter } = require('../lib/mailer');
 const { parsePositiveInt } = require('../lib/validators');
 const { SITE_KEYS, VALID_SITE_KEYS, normalizeSiteKey } = require('../lib/siteKeys');
+const smsService = require('../services/sms/smsService');
+const { SMS_MESSAGE_TYPES } = require('../services/sms/smsTemplates');
 const VALID_RIDE_STATUSES = new Set(['upcoming', 'completed', 'cancelled']);
 const LOCAL_TAXI_BOOKING_EMAIL = 'localtaxi2707@gmail.com';
 
@@ -160,9 +162,30 @@ const bookRide = async (req, res) => {
       })
     );
 
+    notificationTasks.push(
+      smsService.send({
+        to: phone,
+        type: SMS_MESSAGE_TYPES.BOOKING_CONFIRMATION,
+        data: {
+          pickup,
+          dropoff,
+          formattedTime: formatMelbourneTime(parsedRideDate),
+        },
+        metadata: {
+          rideId: ride.id,
+          siteKey: normalizedSiteKey,
+        },
+      })
+    );
+
     const notificationResults = await Promise.allSettled(notificationTasks);
     if (notificationResults[0].status === 'rejected') {
       console.error('Failed to send booking email:', notificationResults[0].reason);
+    }
+    if (notificationResults[1].status === 'rejected') {
+      console.error('Failed to send booking SMS:', notificationResults[1].reason);
+    } else if (!notificationResults[1].value?.success) {
+      console.error('Failed to send booking SMS:', notificationResults[1].value?.error);
     }
 
     res.status(201).json(ride);

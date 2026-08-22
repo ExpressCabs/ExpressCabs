@@ -1,13 +1,9 @@
 // controllers/userController.js
 const prisma = require('../lib/prisma');
-const twilio = require('twilio');
 const bcrypt = require('bcrypt');
 const { normalizeAuPhone, isNonEmptyString } = require('../lib/validators');
-
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID || process.env.TWILIO_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
+const smsService = require('../services/sms/smsService');
+const { SMS_MESSAGE_TYPES } = require('../services/sms/smsTemplates');
 
 const publicUserFields = {
   id: true,
@@ -73,11 +69,15 @@ exports.userForgotPassword = async (req, res) => {
         data: { otpCode: otp, otpExpiresAt: expiry },
       });
 
-      await twilioClient.messages.create({
+      const smsResult = await smsService.send({
         to: normalizedPhone,
-        from: process.env.TWILIO_PHONE_NUMBER || process.env.TWILIO_FROM,
-        body: `Your Prime Cabs OTP is: ${otp}`,
+        type: SMS_MESSAGE_TYPES.PASSWORD_RESET_OTP,
+        data: { otp },
       });
+
+      if (!smsResult.success) {
+        throw new Error(`Password reset OTP SMS failed: ${smsResult.error}`);
+      }
     }
 
     return res.json({ message: 'If the account exists, OTP has been sent via SMS' });
