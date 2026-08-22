@@ -130,7 +130,9 @@ exports.userVerifyOtp = async (req, res) => {
 };
 
 exports.loginUser = async (req, res) => {
-  const normalizedPhone = normalizeAuPhone(req.body.phone);
+  const rawPhone = String(req.body.phone || '').trim();
+  const compactRawPhone = rawPhone.replace(/\s+/g, '');
+  const normalizedPhone = normalizeAuPhone(rawPhone);
   const { password } = req.body;
 
   if (!isNonEmptyString(normalizedPhone) || !isNonEmptyString(password)) {
@@ -138,17 +140,24 @@ exports.loginUser = async (req, res) => {
   }
 
   try {
-    const user = await prisma.user.findUnique({
-      where: { phone: normalizedPhone },
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        email: true,
-        createdAt: true,
-        password: true,
-      },
-    });
+    const selectLoginUserFields = {
+      id: true,
+      name: true,
+      phone: true,
+      email: true,
+      createdAt: true,
+      password: true,
+    };
+    const phoneLookupCandidates = [...new Set([normalizedPhone, rawPhone, compactRawPhone].filter(isNonEmptyString))];
+
+    let user = null;
+    for (const phone of phoneLookupCandidates) {
+      user = await prisma.user.findUnique({
+        where: { phone },
+        select: selectLoginUserFields,
+      });
+      if (user) break;
+    }
 
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
@@ -157,6 +166,20 @@ exports.loginUser = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    if (user.phone !== normalizedPhone) {
+      try {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { phone: normalizedPhone },
+        });
+        user.phone = normalizedPhone;
+      } catch (updateErr) {
+        if (updateErr.code !== 'P2002') {
+          console.error('User phone normalization update error:', updateErr);
+        }
+      }
     }
 
     const { password: _, ...safeUser } = user;
