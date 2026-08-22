@@ -1,0 +1,70 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: primecabs-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: primecabs
+      POSTGRES_USER: primecabs
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - primecabs_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U primecabs -d primecabs"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - primecabs-net
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: primecabs-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://primecabs:${POSTGRES_PASSWORD}@db:5432/primecabs
+    env_file:
+      - ./backend/.env.production
+    expose:
+      - "3000"
+    networks:
+      - primecabs-net
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+        VITE_GOOGLE_MAPS_BROWSER_KEY: ${VITE_GOOGLE_MAPS_BROWSER_KEY}
+        VITE_OTP_VERIFICATION_ENABLED: ${VITE_OTP_VERIFICATION_ENABLED}
+        VITE_GOOGLE_ADS_ID: ${VITE_GOOGLE_ADS_ID}
+        VITE_GOOGLE_ADS_BOOKING_LABEL: ${VITE_GOOGLE_ADS_BOOKING_LABEL}
+        VITE_GOOGLE_ADS_PHONE_CLICK_LABEL: ${VITE_GOOGLE_ADS_PHONE_CLICK_LABEL}
+        VITE_GOOGLE_ADS_WHATSAPP_CLICK_LABEL: ${VITE_GOOGLE_ADS_WHATSAPP_CLICK_LABEL}
+        VITE_GA4_MEASUREMENT_ID: ${VITE_GA4_MEASUREMENT_ID}
+        VITE_GA4_DEBUG: ${VITE_GA4_DEBUG}
+        VITE_ANALYTICS_SITE_KEY: ${VITE_ANALYTICS_SITE_KEY}
+        VITE_CANONICAL_BASE_URL: ${VITE_CANONICAL_BASE_URL}
+        VITE_SITE_URL: ${VITE_SITE_URL}
+    container_name: primecabs-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+    networks:
+      - primecabs-net
+
+volumes:
+  primecabs_postgres_data:
+
+networks:
+  primecabs-net:
+    driver: bridge
