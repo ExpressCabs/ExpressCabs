@@ -74,6 +74,68 @@ model SmsMessage {
   @@index([createdAt])
 }
 
+model DispatchJob {
+  id                       Int             @id @default(autoincrement())
+  calendarEventId          String?         @unique
+  calendarRecurringEventId String?
+  calendarOriginalStart    DateTime?
+  source                   String
+  status                   String
+  title                    String
+  originalDescription      String?
+  pickup                   String?
+  pickupSuburb             String?
+  dropoff                  String?
+  dropoffSuburb            String?
+  pickupAt                 DateTime?
+  passengerCount           Int?
+  passengerAssumption      String?
+  luggage                  String?
+  vehicleRequirement       String          @default("ANY_SUITABLE")
+  minimumFare              Decimal?
+  specialNotes             Json?
+  publicDispatchText       String?
+  privateDriverText        String?
+  selectedDriverName       String?
+  selectedDriverPhone      String?
+  selectedDriverUnit       String?
+  selectedDriverVehicle    String?
+  driverEtaMinutes         Int?
+  dispatchedMainAt         DateTime?
+  dispatchedExcessAt       DateTime?
+  dispatchedLocalAt        DateTime?
+  assignedAt               DateTime?
+  pickedUpAt               DateTime?
+  completedAt              DateTime?
+  calendarSyncedAt         DateTime?
+  calendarUpdatedAt        DateTime?
+  createdAt                DateTime        @default(now())
+  updatedAt                DateTime        @updatedAt
+  auditEvents              DispatchAudit[]
+
+  @@index([pickupAt])
+  @@index([status])
+  @@index([source])
+  @@index([calendarRecurringEventId])
+}
+
+model DispatchAudit {
+  id            Int         @id @default(autoincrement())
+  dispatchJobId Int
+  eventType     String
+  fromStatus    String?
+  toStatus      String?
+  actor         String
+  details       Json?
+  createdAt     DateTime    @default(now())
+
+  dispatchJob   DispatchJob @relation(fields: [dispatchJobId], references: [id], onDelete: Cascade)
+
+  @@index([dispatchJobId])
+  @@index([eventType])
+  @@index([createdAt])
+}
+
 model User {
   id           Int       @id @default(autoincrement())
   name         String

@@ -16,6 +16,13 @@ const {
   updateBlockSignal,
 } = require('../controllers/adminAnalyticsController');
 const { getAdminRides, assignRideToDriverByTaxiReg, updateRideStatus, markRideCompleted } = require('../controllers/rideController');
+const {
+  getDispatchJob,
+  getDispatchJobs,
+  getDispatchMeta,
+  syncDispatchCalendar,
+  transitionDispatchJobStatus,
+} = require('../controllers/dispatchController');
 
 router.post('/login', adminLogin);
 router.get('/drivers', requireAdminAuth, listDrivers);
@@ -28,6 +35,11 @@ router.post('/rides/:id/complete', requireAdminAuth, (req, res) => {
   req.body.actor = 'admin';
   return markRideCompleted(req, res);
 });
+router.get('/dispatch/meta', requireAdminAuth, getDispatchMeta);
+router.get('/dispatch/jobs', requireAdminAuth, getDispatchJobs);
+router.get('/dispatch/jobs/:id', requireAdminAuth, getDispatchJob);
+router.post('/dispatch/sync', requireAdminAuth, syncDispatchCalendar);
+router.post('/dispatch/jobs/:id/status', requireAdminAuth, transitionDispatchJobStatus);
 router.get('/analytics/overview', requireAdminAuth, getOverview);
 router.get('/analytics/live-sessions', requireAdminAuth, getLiveSessions);
 router.get('/analytics/funnel', requireAdminAuth, getFunnel);

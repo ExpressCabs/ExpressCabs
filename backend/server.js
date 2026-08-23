@@ -19,6 +19,7 @@ const sitemapRoutes = require('./routes/sitemapRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const airportMetricsRouter = require('./routes/airportMetrics');
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const { startDispatchCalendarPolling } = require('./services/dispatch/dispatchSyncService');
 
 const app = express();
 let server;
@@ -113,6 +114,7 @@ const startServer = async () => {
     if (!hasAdminAuthSecret()) {
       console.warn('ADMIN_SESSION_SECRET is not configured. Admin login and analytics auth will not work until it is set.');
     }
+    startDispatchCalendarPolling();
     server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   } catch (error) {
     console.error('Failed to start server:', error);

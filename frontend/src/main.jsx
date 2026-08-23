@@ -68,6 +68,7 @@ const AnalyticsTrafficQuality = lazy(() => import("./admin/pages/AnalyticsTraffi
 const AnalyticsSuburbs = lazy(() => import("./admin/pages/AnalyticsSuburbs"));
 const AnalyticsSessions = lazy(() => import("./admin/pages/AnalyticsSessions"));
 const AnalyticsBlockSignals = lazy(() => import("./admin/pages/AnalyticsBlockSignals"));
+const DispatchBoard = lazy(() => import("./admin/pages/DispatchBoard"));
 
 const App = () => {
   const navigate = useNavigate();
@@ -349,6 +350,7 @@ const App = () => {
             <Route path="analytics/suburbs" element={<AnalyticsSuburbs />} />
             <Route path="analytics/sessions" element={<AnalyticsSessions />} />
             <Route path="analytics/block-signals" element={<AnalyticsBlockSignals />} />
+            <Route path="dispatch" element={<DispatchBoard />} />
             <Route path="rides" element={<RideManagement />} />
             <Route path="invite-driver" element={<InviteDriver />} />
             <Route path="blogs" element={<BlogList />} />
