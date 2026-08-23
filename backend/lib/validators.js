@@ -2,6 +2,7 @@ const normalizeAuPhone = (phone) => {
   const raw = String(phone || '').replace(/\s+/g, '').trim();
   if (!raw) return '';
   if (raw.startsWith('+')) return raw;
+  if (/^61\d+$/.test(raw)) return `+${raw}`;
   return `+61${raw.replace(/^0/, '')}`;
 };
 

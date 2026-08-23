@@ -111,6 +111,11 @@ test('registerUser stores Australian 04 mobile numbers in canonical +61 format',
   assert.equal(captured.createSelect.password, undefined);
 });
 
+test('normalizeAuPhone preserves Australian numbers supplied without plus prefix', () => {
+  const { normalizeAuPhone } = require('../lib/validators');
+  assert.equal(normalizeAuPhone('61400000001'), '+61400000001');
+});
+
 test('loginUser accepts 04 input for a canonically stored +61 user', async (t) => {
   const lookups = [];
   const fakePrisma = {

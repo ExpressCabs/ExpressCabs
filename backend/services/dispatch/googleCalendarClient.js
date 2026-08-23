@@ -72,11 +72,60 @@ const listUpcomingEvents = async ({ now = new Date(), fetchImpl = global.fetch }
   return { enabled: true, events: body.items || [], timeMin, timeMax };
 };
 
+const createCalendarEvent = async ({ title, description, startTime, endTime }, { fetchImpl = global.fetch } = {}) => {
+  const { calendarId, timezone } = getCalendarConfig();
+  const accessToken = await refreshAccessToken({ fetchImpl });
+  const response = await fetchImpl(`${GOOGLE_CALENDAR_BASE_URL}/calendars/${encodeURIComponent(calendarId)}/events`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      summary: title,
+      description,
+      start: { dateTime: new Date(startTime).toISOString(), timeZone: timezone },
+      end: { dateTime: new Date(endTime || new Date(startTime).getTime() + 60 * 60 * 1000).toISOString(), timeZone: timezone },
+    }),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error('Failed to create Google Calendar event');
+  return body;
+};
+
+const updateCalendarEvent = async (eventId, patch, { fetchImpl = global.fetch } = {}) => {
+  const { calendarId, timezone } = getCalendarConfig();
+  const accessToken = await refreshAccessToken({ fetchImpl });
+  const data = {};
+  if (patch.title !== undefined) data.summary = patch.title;
+  if (patch.description !== undefined) data.description = patch.description;
+  if (patch.startTime !== undefined) {
+    data.start = { dateTime: new Date(patch.startTime).toISOString(), timeZone: timezone };
+  }
+  if (patch.endTime !== undefined) {
+    data.end = { dateTime: new Date(patch.endTime).toISOString(), timeZone: timezone };
+  }
+
+  const response = await fetchImpl(`${GOOGLE_CALENDAR_BASE_URL}/calendars/${encodeURIComponent(calendarId)}/events/${encodeURIComponent(eventId)}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error('Failed to update Google Calendar event');
+  return body;
+};
+
 module.exports = {
   GOOGLE_CALENDAR_BASE_URL,
   GOOGLE_TOKEN_URL,
+  createCalendarEvent,
   getCalendarConfig,
   isCalendarEnabled,
   listUpcomingEvents,
   refreshAccessToken,
+  updateCalendarEvent,
 };

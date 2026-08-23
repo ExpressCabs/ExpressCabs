@@ -3,6 +3,8 @@ const { DISPATCH_ACTORS, DISPATCH_STATUSES } = require('../lib/dispatch/constant
 const { isKnownStatus, transitionDispatchJob } = require('../lib/dispatch/stateMachine');
 const { syncUpcomingCalendarEvents } = require('../services/dispatch/dispatchSyncService');
 const { isCalendarEnabled, getCalendarConfig } = require('../services/dispatch/googleCalendarClient');
+const { getReminderMinutes } = require('../services/dispatch/reminderService');
+const { isWhatsAppEnabled } = require('../services/whatsapp/whatsappService');
 
 const parseId = (value) => {
   const parsed = Number(value);
@@ -34,6 +36,10 @@ exports.getDispatchJobs = async (req, res) => {
         enabled: isCalendarEnabled(),
         calendarId: getCalendarConfig().calendarId,
       },
+      whatsapp: {
+        enabled: isWhatsAppEnabled(),
+        reminderMinutes: getReminderMinutes(),
+      },
     });
   } catch (error) {
     console.error('Failed to fetch dispatch jobs:', error);
@@ -50,6 +56,7 @@ exports.getDispatchJob = async (req, res) => {
       where: { id },
       include: {
         auditEvents: { orderBy: { createdAt: 'desc' } },
+        whatsappMessages: { orderBy: { createdAt: 'desc' }, take: 20 },
       },
     });
     if (!job) return res.status(404).json({ error: 'Dispatch job not found' });
@@ -97,5 +104,9 @@ exports.getDispatchMeta = (req, res) => res.json({
     calendarId: getCalendarConfig().calendarId,
     timezone: getCalendarConfig().timezone,
     lookaheadHours: getCalendarConfig().lookaheadHours,
+  },
+  whatsapp: {
+    enabled: isWhatsAppEnabled(),
+    reminderMinutes: getReminderMinutes(),
   },
 });

@@ -41,6 +41,7 @@ export default function DispatchBoard() {
   const [selectedId, setSelectedId] = useState(null);
   const [selectedJob, setSelectedJob] = useState(null);
   const [calendar, setCalendar] = useState(null);
+  const [whatsapp, setWhatsapp] = useState(null);
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [message, setMessage] = useState(null);
@@ -57,6 +58,7 @@ export default function DispatchBoard() {
       const response = await fetchAdmin('/dispatch/jobs');
       setJobs(response.jobs || []);
       setCalendar(response.calendar || null);
+      setWhatsapp(response.whatsapp || null);
       setSelectedId((current) => current || response.jobs?.[0]?.id || null);
     } catch (error) {
       setMessage({ type: 'error', text: 'Failed to load dispatch jobs.' });
@@ -145,6 +147,8 @@ export default function DispatchBoard() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="text-sm text-slate-700">
             <span className="font-semibold">Upcoming jobs:</span> {jobs.length}
+            <span className="ml-4 font-semibold">WhatsApp:</span> {whatsapp?.enabled ? 'enabled' : 'disabled'}
+            <span className="ml-4 font-semibold">Reminders:</span> {(whatsapp?.reminderMinutes || [60, 35]).join(', ')} min
           </div>
           <button
             type="button"
@@ -215,6 +219,15 @@ export default function DispatchBoard() {
                 <DetailRow label="Luggage" value={selectedJob.luggage} />
                 <DetailRow label="Vehicle requirement" value={selectedJob.vehicleRequirement} />
                 <DetailRow label="Minimum fare" value={selectedJob.minimumFare ? `$${Number(selectedJob.minimumFare)}` : null} />
+                <DetailRow label="Customer phone" value={selectedJob.customerPhone} />
+                <DetailRow label="Driver unit" value={selectedJob.selectedDriverUnit} />
+                <DetailRow label="Driver vehicle" value={selectedJob.selectedDriverVehicle} />
+                <DetailRow label="Driver ETA" value={selectedJob.driverEtaMinutes ? `${selectedJob.driverEtaMinutes} min` : null} />
+                <DetailRow label="Customer SMS" value={selectedJob.customerSmsSentAt ? `Sent ${formatMelbourneDateTime(selectedJob.customerSmsSentAt)}` : 'Not sent'} />
+                <DetailRow
+                  label="Last WhatsApp reminder"
+                  value={(selectedJob.whatsappMessages || []).find((item) => item.direction === 'OUTBOUND' && item.messageType?.startsWith('DISPATCH_REMINDER_'))?.providerMessageId}
+                />
               </div>
 
               <DetailRow label="Original description" value={selectedJob.originalDescription} />

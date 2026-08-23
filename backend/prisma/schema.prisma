@@ -94,6 +94,8 @@ model DispatchJob {
   vehicleRequirement       String          @default("ANY_SUITABLE")
   minimumFare              Decimal?
   specialNotes             Json?
+  customerName             String?
+  customerPhone            String?
   publicDispatchText       String?
   privateDriverText        String?
   selectedDriverName       String?
@@ -101,6 +103,8 @@ model DispatchJob {
   selectedDriverUnit       String?
   selectedDriverVehicle    String?
   driverEtaMinutes         Int?
+  customerSmsSentAt        DateTime?
+  customerSmsFingerprint   String?
   dispatchedMainAt         DateTime?
   dispatchedExcessAt       DateTime?
   dispatchedLocalAt        DateTime?
@@ -112,6 +116,7 @@ model DispatchJob {
   createdAt                DateTime        @default(now())
   updatedAt                DateTime        @updatedAt
   auditEvents              DispatchAudit[]
+  whatsappMessages         WhatsAppMessage[]
 
   @@index([pickupAt])
   @@index([status])
@@ -134,6 +139,60 @@ model DispatchAudit {
   @@index([dispatchJobId])
   @@index([eventType])
   @@index([createdAt])
+}
+
+model WhatsAppMessage {
+  id                       Int          @id @default(autoincrement())
+  dispatchJobId            Int?
+  bookingProposalId        Int?
+  direction                String
+  provider                 String
+  providerMessageId        String?      @unique
+  replyToProviderMessageId String?
+  fromNumber               String?
+  toNumber                 String?
+  messageType              String
+  body                     String?
+  status                   String
+  createdAt                DateTime     @default(now())
+
+  dispatchJob              DispatchJob? @relation(fields: [dispatchJobId], references: [id], onDelete: SetNull)
+  bookingProposal          DispatchBookingProposal? @relation(fields: [bookingProposalId], references: [id], onDelete: SetNull)
+
+  @@index([dispatchJobId])
+  @@index([bookingProposalId])
+  @@index([replyToProviderMessageId])
+  @@index([fromNumber])
+  @@index([messageType])
+  @@index([createdAt])
+}
+
+model DispatchBookingProposal {
+  id                 Int      @id @default(autoincrement())
+  ownerPhone         String
+  status             String
+  originalMessage    String
+  parsed             Json
+  customerName       String?
+  customerPhone      String?
+  pickup             String?
+  pickupSuburb       String?
+  dropoff            String?
+  dropoffSuburb      String?
+  pickupAt           DateTime?
+  passengerCount     Int?
+  minimumFare        Decimal?
+  notes              Json?
+  calendarEventId    String?
+  expiresAt          DateTime
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  whatsappMessages   WhatsAppMessage[]
+
+  @@index([ownerPhone])
+  @@index([status])
+  @@index([expiresAt])
+  @@index([calendarEventId])
 }
 
 model User {

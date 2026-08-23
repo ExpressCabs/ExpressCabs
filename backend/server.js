@@ -20,6 +20,8 @@ const adminRoutes = require('./routes/adminRoutes');
 const airportMetricsRouter = require('./routes/airportMetrics');
 const analyticsRoutes = require('./routes/analyticsRoutes');
 const { startDispatchCalendarPolling } = require('./services/dispatch/dispatchSyncService');
+const webhookRoutes = require('./routes/webhookRoutes');
+const { startDispatchReminderPolling } = require('./services/dispatch/reminderService');
 
 const app = express();
 let server;
@@ -85,6 +87,7 @@ app.use('/api', sitemapRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api', airportMetricsRouter);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/webhooks', webhookRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);
@@ -115,6 +118,7 @@ const startServer = async () => {
       console.warn('ADMIN_SESSION_SECRET is not configured. Admin login and analytics auth will not work until it is set.');
     }
     startDispatchCalendarPolling();
+    startDispatchReminderPolling();
     server = app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   } catch (error) {
     console.error('Failed to start server:', error);
