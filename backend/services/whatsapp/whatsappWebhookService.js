@@ -10,6 +10,7 @@ const {
   createOrUpdateProposal,
 } = require('./bookingProposalService');
 const { sendCustomerAssignmentSmsIfNeeded } = require('../dispatch/customerAssignmentSms');
+const { parseBookingWithAi } = require('./ollamaBookingParser');
 
 const coveredStatuses = new Set([
   DISPATCH_STATUSES.COVERED,
@@ -57,6 +58,18 @@ const resolveJobForMessage = async (message, prismaClient = prisma) => {
 
   const jobId = parseJobId(message.body);
   if (jobId) return jobId;
+  if (prismaClient.whatsAppMessage.findFirst) {
+    const clarification = await prismaClient.whatsAppMessage.findFirst({
+      where: {
+        direction: 'OUTBOUND',
+        toNumber: message.from,
+        messageType: 'OWNER_CLARIFICATION',
+        dispatchJobId: { not: null },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (clarification?.dispatchJobId) return clarification.dispatchJobId;
+  }
   return null;
 };
 
@@ -88,12 +101,17 @@ const applyDriverDetails = async ({ jobId, details, prismaClient = prisma }) => 
   });
 
   const transitions = [];
-  if (!coveredStatuses.has(job.status) && job.status !== DISPATCH_STATUSES.DRIVER_SELECTED) {
+  if (details.selectedDriverUnit && !coveredStatuses.has(job.status) && job.status !== DISPATCH_STATUSES.DRIVER_SELECTED) {
     transitions.push(DISPATCH_STATUSES.DRIVER_SELECTED);
   }
-  if (details.selectedDriverUnit && details.selectedDriverVehicle) transitions.push(DISPATCH_STATUSES.DETAILS_SENT);
-  if (details.driverEtaMinutes) transitions.push(DISPATCH_STATUSES.ETA_CONFIRMED);
-  if (details.selectedDriverUnit && details.selectedDriverVehicle && details.driverEtaMinutes) transitions.push(DISPATCH_STATUSES.COVERED);
+  const combined = {
+    unit: details.selectedDriverUnit || job.selectedDriverUnit,
+    vehicle: details.selectedDriverVehicle || job.selectedDriverVehicle,
+    eta: details.driverEtaMinutes || job.driverEtaMinutes,
+  };
+  if (combined.unit && combined.vehicle) transitions.push(DISPATCH_STATUSES.DETAILS_SENT);
+  if (combined.eta) transitions.push(DISPATCH_STATUSES.ETA_CONFIRMED);
+  if (combined.unit && combined.vehicle && combined.eta) transitions.push(DISPATCH_STATUSES.COVERED);
 
   for (const status of transitions) {
     try {
@@ -161,7 +179,8 @@ const processOwnerMessage = async (message, { prismaClient = prisma } = {}) => {
     return { proposalCancelled: Boolean(proposal) };
   }
 
-  if (parseBookingProposal(normalizedBody)) {
+  const ruleBooking = parseBookingProposal(normalizedBody);
+  if (ruleBooking) {
     const proposal = await createOrUpdateProposal({ ownerPhone: owner, body: normalizedBody, prismaClient });
     await prismaClient.whatsAppMessage.update({
       where: { id: inboundLog.id },
@@ -172,6 +191,27 @@ const processOwnerMessage = async (message, { prismaClient = prisma } = {}) => {
 
   const jobId = await resolveJobForMessage(message, prismaClient);
   if (!jobId) {
+    const directDriverDetails = parseDriverDetails(normalizedBody);
+    const looksLikeDriverDetails = Boolean(
+      directDriverDetails.selectedDriverUnit
+      || directDriverDetails.selectedDriverVehicle
+      || directDriverDetails.driverEtaMinutes
+      || parseJobId(normalizedBody)
+    );
+    const aiBooking = looksLikeDriverDetails ? null : await parseBookingWithAi(normalizedBody);
+    if (aiBooking) {
+      const proposal = await createOrUpdateProposal({
+        ownerPhone: owner,
+        body: normalizedBody,
+        parsedBooking: aiBooking,
+        prismaClient,
+      });
+      await prismaClient.whatsAppMessage.update({
+        where: { id: inboundLog.id },
+        data: { bookingProposalId: proposal.id, messageType: 'BOOKING_PROPOSAL_AI_INPUT' },
+      });
+      return { proposalCreated: true, proposalId: proposal.id, source: 'ollama' };
+    }
     await whatsappService.sendText({
       to: owner,
       body: 'I could not match that to a dispatch job. Please reply to the correct job message or include Job <id>.',
@@ -186,25 +226,23 @@ const processOwnerMessage = async (message, { prismaClient = prisma } = {}) => {
     data: { dispatchJobId: jobId, messageType: 'OWNER_DRIVER_DETAILS_REPLY' },
   });
 
-  if (!details.selectedDriverUnit) {
+  const job = await applyDriverDetails({ jobId, details, prismaClient });
+  const missingFields = [
+    !job.selectedDriverUnit ? 'taxi/unit number' : null,
+    !job.selectedDriverVehicle ? 'vehicle' : null,
+    !job.driverEtaMinutes ? 'ETA' : null,
+  ].filter(Boolean);
+
+  if (missingFields.length) {
     await whatsappService.sendText({
       to: owner,
-      body: [
-        details.selectedDriverVehicle || details.driverEtaMinutes
-          ? `Got ${[
-            details.selectedDriverVehicle ? `vehicle ${details.selectedDriverVehicle}` : null,
-            details.driverEtaMinutes ? `ETA ${details.driverEtaMinutes} min` : null,
-          ].filter(Boolean).join(' and ')}.`
-          : 'I could not find the taxi/unit number.',
-        'What is the taxi/unit number?',
-      ].join(' '),
+      body: `Updated job ${job.id} with the details provided. What is the ${missingFields.join(' and ')}?`,
       dispatchJobId: jobId,
       messageType: 'OWNER_CLARIFICATION',
     });
-    return { missingUnit: true, jobId };
+    return { needsDriverDetails: true, missing: missingFields, jobId };
   }
 
-  const job = await applyDriverDetails({ jobId, details, prismaClient });
   await whatsappService.sendText({
     to: owner,
     body: `Updated job ${job.id}: ${job.selectedDriverUnit || ''} ${job.selectedDriverVehicle || ''}${job.driverEtaMinutes ? ` ETA ${job.driverEtaMinutes} min` : ''}`.trim(),

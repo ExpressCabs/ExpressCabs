@@ -170,6 +170,7 @@ const bookRide = async (req, res) => {
           pickup,
           dropoff,
           formattedTime: formatMelbourneTime(parsedRideDate),
+          siteKey: normalizedSiteKey,
         },
         metadata: {
           rideId: ride.id,

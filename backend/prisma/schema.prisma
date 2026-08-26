@@ -93,6 +93,10 @@ model DispatchJob {
   luggage                  String?
   vehicleRequirement       String          @default("ANY_SUITABLE")
   minimumFare              Decimal?
+  fareType                 String?
+  fareAmount               Decimal?
+  paymentMethod            String           @default("UNKNOWN")
+  boa                      Boolean          @default(false)
   specialNotes             Json?
   customerName             String?
   customerPhone            String?
@@ -182,6 +186,10 @@ model DispatchBookingProposal {
   pickupAt           DateTime?
   passengerCount     Int?
   minimumFare        Decimal?
+  fareType           String?
+  fareAmount         Decimal?
+  paymentMethod      String   @default("UNKNOWN")
+  boa                Boolean  @default(false)
   notes              Json?
   calendarEventId    String?
   expiresAt          DateTime

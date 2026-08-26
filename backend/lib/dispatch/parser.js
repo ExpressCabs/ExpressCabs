@@ -3,6 +3,7 @@ const {
   PASSENGER_ASSUMPTIONS,
   VEHICLE_REQUIREMENTS,
 } = require('./constants');
+const { parseFareInstruction, parsePaymentMethod } = require('./farePolicy');
 
 const SUBURB_NORMALISATIONS = new Map([
   ['sth', 'South'],
@@ -131,6 +132,7 @@ const parseCalendarBooking = (event = {}) => {
   const passengerCount = extractPassengerCount(originalDescription);
   const luggage = extractLuggage(originalDescription);
   const minimumFare = extractMinimumFare(originalDescription);
+  const fare = parseFareInstruction(originalDescription);
 
   const needsReview = !pickup || !dropoff || !pickupAt;
 
@@ -147,6 +149,10 @@ const parseCalendarBooking = (event = {}) => {
     luggage,
     vehicleRequirement: extractVehicleRequirement(originalDescription),
     minimumFare,
+    fareType: fare.fareType,
+    fareAmount: fare.fareAmount,
+    paymentMethod: parsePaymentMethod(originalDescription),
+    boa: /\bBOA\b/i.test(originalDescription),
     specialNotes: extractSpecialNotes(originalDescription),
     status: needsReview ? DISPATCH_STATUSES.NEEDS_REVIEW : DISPATCH_STATUSES.READY_FOR_DISPATCH,
     needsReview,

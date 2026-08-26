@@ -6,12 +6,13 @@ exports.verifyWhatsAppWebhook = (req, res) => {
   return res.status(200).send(result.challenge);
 };
 
-exports.receiveWhatsAppWebhook = async (req, res) => {
-  try {
-    await handleWebhookPayload(req.body || {});
-    return res.sendStatus(200);
-  } catch (error) {
-    console.error('WhatsApp webhook processing failed:', error);
-    return res.sendStatus(200);
-  }
+exports.receiveWhatsAppWebhook = (req, res) => {
+  const payload = req.body || {};
+  res.sendStatus(200);
+  setImmediate(() => {
+    handleWebhookPayload(payload).catch((error) => {
+      console.error('WhatsApp webhook background processing failed:', error);
+    });
+  });
+  return res;
 };

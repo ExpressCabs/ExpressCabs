@@ -103,6 +103,7 @@ test('bookRide succeeds and sends booking confirmation through smsService', asyn
   assert.equal(smsRequests.length, 1);
   assert.equal(smsRequests[0].to, '0400000001');
   assert.equal(smsRequests[0].type, 'BOOKING_CONFIRMATION');
+  assert.equal(smsRequests[0].data.siteKey, 'prime_cabs_melbourne');
   assert.equal(smsRequests[0].metadata.rideId, 1001);
 });
 

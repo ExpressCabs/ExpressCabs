@@ -79,7 +79,7 @@ test('owner reply resolves job by outbound provider message ID and updates assig
     dispatchJob: {
       findUnique: async () => fakeJob,
       update: async ({ data }) => {
-        Object.assign(fakeJob, data);
+        Object.assign(fakeJob, Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined)));
         return fakeJob;
       },
     },
@@ -135,4 +135,60 @@ test('non-owner inbound message cannot modify dispatch state', async (t) => {
 
   assert.equal(result.ignored, true);
   assert.equal(jobUpdated, false);
+});
+
+test('partial driver details retain job context and accept the missing unit alone', async (t) => {
+  const inboundLogs = new Map();
+  const sentMessages = [];
+  const fakeJob = {
+    id: 14,
+    status: 'READY_FOR_DISPATCH',
+    selectedDriverUnit: null,
+    selectedDriverVehicle: null,
+    driverEtaMinutes: null,
+    customerPhone: null,
+  };
+  const fakePrisma = {
+    whatsAppMessage: {
+      findUnique: async ({ where }) => inboundLogs.get(where.providerMessageId) || null,
+      findFirst: async () => sentMessages.some((message) => message.messageType === 'OWNER_CLARIFICATION')
+        ? { dispatchJobId: 14 }
+        : null,
+      create: async ({ data }) => {
+        const row = { id: inboundLogs.size + 1, ...data };
+        inboundLogs.set(data.providerMessageId, row);
+        return row;
+      },
+      update: async ({ where, data }) => ({ id: where.id, ...data }),
+    },
+    dispatchJob: {
+      findUnique: async () => fakeJob,
+      update: async ({ data }) => {
+        Object.assign(fakeJob, Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined)));
+        return fakeJob;
+      },
+    },
+    dispatchAudit: { create: async ({ data }) => data },
+    $transaction: async (operations) => Promise.all(operations),
+  };
+  const { processOwnerMessage } = loadWebhookService(t, fakePrisma, sentMessages);
+
+  const partial = await processOwnerMessage({
+    providerMessageId: 'wamid.partial',
+    from: '+61400000001',
+    body: 'Job 14 white kluger ETA 12',
+  }, { prismaClient: fakePrisma });
+  assert.equal(partial.needsDriverDetails, true);
+  assert.deepEqual(partial.missing, ['taxi/unit number']);
+  assert.equal(fakeJob.selectedDriverVehicle, 'White Kluger');
+  assert.equal(fakeJob.driverEtaMinutes, 12);
+
+  const completed = await processOwnerMessage({
+    providerMessageId: 'wamid.unit',
+    from: '+61400000001',
+    body: '7258M',
+  }, { prismaClient: fakePrisma });
+  assert.equal(completed.updated, true);
+  assert.equal(fakeJob.selectedDriverUnit, '7258M');
+  assert.equal(fakeJob.status, 'COVERED');
 });

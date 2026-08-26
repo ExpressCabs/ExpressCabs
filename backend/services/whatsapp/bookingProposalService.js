@@ -3,6 +3,7 @@ const { createCalendarEvent } = require('../dispatch/googleCalendarClient');
 const { parseBookingProposal } = require('./ownerParsers');
 const { buildProposalSummary } = require('./whatsappMessageBuilder');
 const whatsappService = require('./whatsappService');
+const { estimateDispatchFare } = require('../dispatch/dispatchFareEstimator');
 
 const PENDING = 'PENDING';
 const CONFIRMED = 'CONFIRMED';
@@ -10,9 +11,16 @@ const CANCELLED = 'CANCELLED';
 
 const proposalExpiry = () => new Date(Date.now() + Number(process.env.DISPATCH_PROPOSAL_EXPIRE_MINUTES || 30) * 60 * 1000);
 
-const createOrUpdateProposal = async ({ ownerPhone, body, prismaClient = prisma, now = new Date() }) => {
-  const parsed = parseBookingProposal(body, now);
+const createOrUpdateProposal = async ({ ownerPhone, body, parsedBooking, prismaClient = prisma, now = new Date() }) => {
+  let parsed = parsedBooking || parseBookingProposal(body, now);
   if (!parsed) return null;
+  if (!parsed.fareType && parsed.pickup && parsed.dropoff && parsed.pickupAt) {
+    const estimatedFare = await estimateDispatchFare(parsed);
+    if (estimatedFare) parsed = { ...parsed, ...estimatedFare };
+  }
+  if (!parsed.fareType) {
+    parsed = { ...parsed, missing: [...new Set([...(parsed.missing || []), 'fare'])] };
+  }
 
   const existing = await prismaClient.dispatchBookingProposal.findFirst({
     where: { ownerPhone, status: PENDING, expiresAt: { gt: now } },
@@ -33,6 +41,10 @@ const createOrUpdateProposal = async ({ ownerPhone, body, prismaClient = prisma,
     pickupAt: parsed.pickupAt,
     passengerCount: parsed.passengerCount,
     minimumFare: parsed.minimumFare,
+    fareType: parsed.fareType,
+    fareAmount: parsed.fareAmount,
+    paymentMethod: parsed.paymentMethod,
+    boa: parsed.boa,
     notes: parsed.notes,
     expiresAt: proposalExpiry(),
   };
@@ -56,7 +68,9 @@ const buildCalendarDescription = (proposal) => [
   proposal.pickup ? `Pickup: ${proposal.pickup}` : null,
   proposal.dropoff ? `Dropoff: ${proposal.dropoff}` : null,
   proposal.passengerCount ? `Passengers: ${proposal.passengerCount}` : null,
-  proposal.minimumFare ? `Min $${Number(proposal.minimumFare)}` : null,
+  proposal.fareType && proposal.fareAmount ? `${proposal.fareType === 'COLLECT' ? 'Collect' : 'Min'} $${Number(proposal.fareAmount)}` : null,
+  proposal.paymentMethod && proposal.paymentMethod !== 'UNKNOWN' ? `Payment: ${proposal.paymentMethod}` : null,
+  proposal.boa ? 'BOA' : null,
   ...(Array.isArray(proposal.notes) ? proposal.notes : []),
   '',
   'Original owner WhatsApp:',
@@ -69,6 +83,16 @@ const confirmProposal = async ({ ownerPhone, prismaClient = prisma, now = new Da
     orderBy: { createdAt: 'desc' },
   });
   if (!proposal) return null;
+  const missing = Array.isArray(proposal.parsed?.missing) ? proposal.parsed.missing : [];
+  if (missing.length) {
+    await whatsappService.sendText({
+      to: ownerPhone,
+      body: `I cannot add this booking yet. Missing: ${missing.join(', ')}. Send the missing details, then reply CONFIRM.`,
+      bookingProposalId: proposal.id,
+      messageType: 'BOOKING_PROPOSAL_INCOMPLETE',
+    });
+    return null;
+  }
 
   const event = await createCalendarEvent({
     title: `${proposal.pickupSuburb || 'Pickup'} - ${proposal.dropoffSuburb || 'Dropoff'}`,

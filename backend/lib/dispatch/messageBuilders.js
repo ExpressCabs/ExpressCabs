@@ -15,6 +15,25 @@ const publicVehicleNote = (requirement) => {
   return requirement.replace(/_/g, '/');
 };
 
+const formatFareInstruction = (job) => {
+  const amount = job.fareAmount ?? job.minimumFare;
+  if (amount === null || amount === undefined) return null;
+  const label = job.fareType === 'COLLECT' ? 'Collect' : 'Min';
+  return `${label} $${Number(amount).toFixed(Number(amount) % 1 === 0 ? 0 : 2)}`;
+};
+
+const formatPaymentMethod = (paymentMethod) => {
+  if (!paymentMethod || paymentMethod === 'UNKNOWN') return null;
+  const labels = {
+    CASH: 'Cash', CARD: 'Card', CASH_OR_CARD: 'Cash or Card', CABCHARGE: 'Cabcharge',
+    MPTP_CARD: 'MPTP/Card', MPTP_CABCHARGE: 'MPTP/Cabcharge',
+  };
+  return labels[paymentMethod] || null;
+};
+
+const redactCustomerPhones = (value) => String(value || '')
+  .replace(/(?:\+?61|0)4(?:[\s-]?\d){8}\b/g, '[customer phone withheld]');
+
 const buildPublicDispatchMessage = (job) => {
   const lines = [
     `Ready ${formatDispatchTime(job.pickupAt)}`,
@@ -23,15 +42,19 @@ const buildPublicDispatchMessage = (job) => {
     `• ${job.dropoffSuburb || 'Drop-off area TBC'}`,
   ];
 
-  if (job.minimumFare !== null && job.minimumFare !== undefined) {
-    lines.push(`Min $${Number(job.minimumFare).toFixed(Number(job.minimumFare) % 1 === 0 ? 0 : 2)}`);
-  }
+  const fareInstruction = formatFareInstruction(job);
+  if (fareInstruction) lines.push(fareInstruction);
+  if (job.boa) lines.push('BOA');
+  if (job.passengerCount) lines.push(`${job.passengerCount} pax`);
+  const paymentMethod = formatPaymentMethod(job.paymentMethod);
+  if (paymentMethod) lines.push(paymentMethod);
 
   const vehicleNote = publicVehicleNote(job.vehicleRequirement);
   if (vehicleNote) lines.push(vehicleNote);
-  if (Array.isArray(job.specialNotes) && job.specialNotes.some((note) => /card|receipt|inbox|mptp/i.test(note))) {
-    lines.push('Mptp/Card Receipt Inbox');
-  }
+  const publicNotes = Array.isArray(job.specialNotes)
+    ? job.specialNotes.filter((note) => !/(?:\+?61|0)4(?:[\s-]?\d){8}/.test(note))
+    : [];
+  if (publicNotes.length) lines.push(`Notes: ${publicNotes.join(' | ')}`);
 
   return lines.join('\n');
 };
@@ -50,10 +73,14 @@ const buildPrivateDriverMessage = (job) => {
   if (job.vehicleRequirement && job.vehicleRequirement !== VEHICLE_REQUIREMENTS.ANY_SUITABLE) {
     lines.push(`Vehicle: ${job.vehicleRequirement.replace(/_/g, '/')}`);
   }
-  if (job.minimumFare !== null && job.minimumFare !== undefined) lines.push(`Minimum fare: $${Number(job.minimumFare)}`);
-  if (Array.isArray(job.specialNotes) && job.specialNotes.length) lines.push(`Notes: ${job.specialNotes.join(' | ')}`);
+  const fareInstruction = formatFareInstruction(job);
+  if (fareInstruction) lines.push(`Fare: ${fareInstruction}`);
+  const paymentMethod = formatPaymentMethod(job.paymentMethod);
+  if (paymentMethod) lines.push(`Payment: ${paymentMethod}`);
+  if (job.boa) lines.push('BOA');
+  if (Array.isArray(job.specialNotes) && job.specialNotes.length) lines.push(`Notes: ${redactCustomerPhones(job.specialNotes.join(' | '))}`);
   lines.push('Original calendar description:');
-  lines.push(job.originalDescription || '');
+  lines.push(redactCustomerPhones(job.originalDescription));
 
   return lines.join('\n');
 };

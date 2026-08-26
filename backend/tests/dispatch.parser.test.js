@@ -92,3 +92,35 @@ test('dispatch message builders separate public suburb text from private exact d
   assert.equal(privateText.includes('23 delville st mooroolbark'), true);
   assert.equal(privateText.includes(job.originalDescription), true);
 });
+
+test('public and driver dispatch text hide customer phones and show normalized fare details', () => {
+  const customerPhone = '0412 345 678';
+  const job = {
+    pickupAt: new Date('2026-08-23T07:00:00.000Z'),
+    pickup: '1 Main St Croydon',
+    pickupSuburb: 'Croydon',
+    dropoff: 'Melbourne Airport',
+    dropoffSuburb: 'Melbourne Airport',
+    passengerCount: 2,
+    vehicleRequirement: 'ANY_SUITABLE',
+    fareType: 'MINIMUM',
+    fareAmount: 75,
+    paymentMethod: 'CABCHARGE',
+    boa: true,
+    customerPhone,
+    specialNotes: [`Call ${customerPhone}`, 'steep driveway'],
+    originalDescription: `Customer ${customerPhone}\nsteep driveway`,
+  };
+
+  const publicText = buildPublicDispatchMessage(job);
+  const driverText = buildPrivateDriverMessage(job);
+  for (const text of [publicText, driverText]) {
+    assert.equal(text.includes(customerPhone), false);
+    assert.equal(text.includes('0412345678'), false);
+  }
+  assert.match(publicText, /Min \$75/);
+  assert.match(publicText, /BOA/);
+  assert.match(publicText, /2 pax/);
+  assert.match(publicText, /Cabcharge/);
+  assert.doesNotMatch(publicText, /BOA \$/);
+});
