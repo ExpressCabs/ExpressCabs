@@ -36,8 +36,6 @@ services:
       - ./backend/.env.production
     expose:
       - "3000"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     networks:
       - primecabs-net
 
