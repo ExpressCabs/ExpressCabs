@@ -35,7 +35,7 @@ export function getWhatsappClickConversionLabel() {
 }
 
 function ensureGtagStub() {
-  if (typeof window === 'undefined') {
+  if (import.meta.env.VITE_DISABLE_GOOGLE_TRACKING || typeof window === 'undefined') {
     return;
   }
 
@@ -49,7 +49,7 @@ function ensureGtagStub() {
 }
 
 function configureGoogleTargets() {
-  if (typeof window === 'undefined' || typeof window.gtag !== 'function' || googleTagConfigured) {
+  if (import.meta.env.VITE_DISABLE_GOOGLE_TRACKING || typeof window === 'undefined' || typeof window.gtag !== 'function' || googleTagConfigured) {
     return;
   }
 
@@ -65,7 +65,7 @@ function configureGoogleTargets() {
 }
 
 export function loadGoogleAdsTag() {
-  if (typeof document === 'undefined' || shouldSkipAnalyticsTracking()) {
+  if (import.meta.env.VITE_DISABLE_GOOGLE_TRACKING || typeof document === 'undefined' || shouldSkipAnalyticsTracking()) {
     return Promise.resolve(false);
   }
 
@@ -182,6 +182,7 @@ function buildEnhancedUserData({ name, email, phone }) {
 }
 
 function emitEvent(eventName, params = {}) {
+  if (import.meta.env.VITE_DISABLE_GOOGLE_TRACKING) return false;
   ensureGtagStub();
   configureGoogleTargets();
 
@@ -228,6 +229,7 @@ function shouldSkipDuplicateEvent(key) {
 }
 
 export function fireGoogleAdsConversion({ sendTo, value, currency, transactionId, userData, callback } = {}) {
+  if (import.meta.env.VITE_DISABLE_GOOGLE_TRACKING) return false;
   ensureGtagStub();
   configureGoogleTargets();
 

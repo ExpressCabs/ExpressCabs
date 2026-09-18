@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef, lazy, Suspense } from 'react';
+import React, { useEffect, useState, useRef, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 
@@ -63,36 +63,6 @@ const softIn = {
   show: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.6, ease: 'easeOut' } },
 };
 
-function StepPill({ label, active, done, disabled, onClick }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className={[
-        'flex items-center gap-2 px-3 py-2 rounded-full border text-xs font-semibold transition select-none',
-        disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
-        done
-          ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-          : active
-          ? 'bg-white border-gray-200 text-gray-900 shadow-sm'
-          : 'bg-white/20 border-white/20 text-white/85 backdrop-blur',
-      ].join(' ')}
-      title={disabled ? 'Complete previous steps first' : `Go to ${label}`}
-    >
-      <span
-        className={[
-          'inline-flex items-center justify-center w-5 h-5 rounded-full text-[11px] font-extrabold',
-          done ? 'bg-emerald-600 text-white' : active ? 'bg-gray-900 text-white' : 'bg-white/15 text-white',
-        ].join(' ')}
-        >
-        {done ? '•' : '-'}
-        </span>
-      <span className="whitespace-nowrap">{label}</span>
-    </button>
-  );
-}
-
 function DeferredSection({ children, minHeight = 'min-h-[240px]' }) {
   const [shouldRender, setShouldRender] = useState(false);
   const containerRef = useRef(null);
@@ -132,14 +102,7 @@ function DeferredSection({ children, minHeight = 'min-h-[240px]' }) {
 }
 
 export default function AddressScreen({ loggedInUser }) {
-  const OTP_ENABLED = import.meta.env.VITE_OTP_VERIFICATION_ENABLED === 'true';
-
   const [fleetIndex, setFleetIndex] = useState(0);
-
-  // ✅ NEW: step sync + clickable pill request
-  const [currentStep, setCurrentStep] = useState(1);
-  const [maxStepAllowed, setMaxStepAllowed] = useState(1);
-  const [requestedStep, setRequestedStep] = useState(null);
 
   useEffect(() => {
     const fleetTimer = setInterval(() => {
@@ -147,28 +110,6 @@ export default function AddressScreen({ loggedInUser }) {
     }, 4500);
     return () => clearInterval(fleetTimer);
   }, []);
-
-  const stepMeta = useMemo(() => {
-    const labels = [
-      { key: 1, label: 'Book' },
-      { key: 2, label: 'Vehicle' },
-      { key: 3, label: 'Passenger' },
-      ...(OTP_ENABLED ? [{ key: 4, label: 'Verify' }] : []),
-    ];
-    return labels;
-  }, [OTP_ENABLED]);
-
-  const handleProgressChange = ({ step, maxStepAllowed }) => {
-    setCurrentStep(step);
-    setMaxStepAllowed(maxStepAllowed);
-  };
-
-  const onPillClick = (targetKey) => {
-    // request step change; BookingForm will accept only if allowed
-    setRequestedStep(targetKey);
-    // small reset so clicking same pill twice still triggers effect in child
-    setTimeout(() => setRequestedStep(null), 0);
-  };
 
   const activeFleet = fleet[fleetIndex];
   const prevFleet = () => setFleetIndex((prev) => (prev - 1 + fleet.length) % fleet.length);
@@ -383,19 +324,9 @@ export default function AddressScreen({ loggedInUser }) {
                 ))}
               </div>
 
-              {/* ✅ Clickable pills (synced to real progress) */}
-              <div className="mt-10 flex flex-wrap gap-2">
-                {stepMeta.map((s) => (
-                  <StepPill
-                    key={s.key}
-                    label={s.label}
-                    active={currentStep === s.key}
-                    done={currentStep > s.key}
-                    disabled={s.key > maxStepAllowed}
-                    onClick={() => onPillClick(s.key)}
-                  />
-                ))}
-              </div>
+              <p className="mt-10 text-sm font-semibold text-white/85">
+                One streamlined form — journey, vehicle and contact details together.
+              </p>
             </motion.div>
 
             <div className="lg:col-span-6">
@@ -411,8 +342,6 @@ export default function AddressScreen({ loggedInUser }) {
                   <BookingForm
                     embedded
                     loggedInUser={loggedInUser}
-                    onProgressChange={handleProgressChange}
-                    requestedStep={requestedStep}
                   />
                 </div>
               </motion.div>

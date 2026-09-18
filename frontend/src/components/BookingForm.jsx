@@ -73,7 +73,15 @@ const BookingForm = ({
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [fare, setFare] = useState(null);
   const [fareType, setFareType] = useState('');
-  const [passengerDetails, setPassengerDetails] = useState(null);
+  const [passengerDetails, setPassengerDetails] = useState({
+    name: loggedInUser?.name || '',
+    phone: loggedInUser?.phone || '',
+    email: loggedInUser?.email || '',
+    note: '',
+  });
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [showExtras, setShowExtras] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [mapInitialized, setMapInitialized] = useState(false);
   const [mapsEnabled, setMapsEnabled] = useState(false);
   const [routePreview, setRoutePreview] = useState(null);
@@ -239,7 +247,7 @@ const BookingForm = ({
 
   const initMapAndAutocomplete = useCallback(() => {
     if (gmapsInitRef.current) return map;
-    if (step !== 1) return null;
+    if (step === 4) return null;
     if (!window.google?.maps?.Map || !window.google?.maps?.places?.Autocomplete) return null;
     if (!mapRef.current || !pickupInputRef.current || !dropoffInputRef.current) return null;
 
@@ -478,7 +486,7 @@ const BookingForm = ({
   ]);
 
   useEffect(() => {
-    if (step !== 1 || !mapsReady) return;
+    if (step === 4 || !mapsReady) return;
 
     initMapAndAutocomplete();
 
@@ -494,7 +502,7 @@ const BookingForm = ({
   }, [step, mapsReady, initMapAndAutocomplete]);
 
   useEffect(() => {
-    if (step !== 1) {
+    if (step === 4) {
       gmapsInitRef.current = false;
     }
   }, [step]);
@@ -530,7 +538,7 @@ const BookingForm = ({
   }, [createMarker, dropoffLoc, map]);
 
   useEffect(() => {
-    if (step !== 1 || !mapsEnabled || !pickupAddress.trim()) {
+    if (step === 4 || !mapsEnabled || !pickupAddress.trim()) {
       return;
     }
 
@@ -725,22 +733,6 @@ const BookingForm = ({
     scheduledDateTime,
   ]);
 
-  const handlePassengerSubmit = (details) => {
-    trackAnalyticsEvent('passenger_details_submitted', {
-      stepName: 'passenger_details',
-      bookingType,
-      passengerCount: Number(passengerCount) || undefined,
-      vehicleType: selectedVehicle?.id || null,
-      estimatedFare: Number.isFinite(Number(fare)) ? Number(fare) : undefined,
-      metadata: {
-        hasEmail: Boolean(details?.email),
-        hasPhone: Boolean(details?.phone),
-      },
-    });
-    setPassengerDetails(details);
-    setStep(4);
-  };
-
   const handleBookRide = async () => {
     if (!pickupLoc || !dropoffLoc || !passengerDetails) return;
 
@@ -854,7 +846,9 @@ const BookingForm = ({
             message: result?.error || 'Booking failed.',
           },
         });
-        toast.error(result.error ? `Booking failed: ${result.error}` : 'Booking failed.');
+        const message = result.error ? `Booking failed: ${result.error}` : 'Booking failed.';
+        setFieldErrors((current) => ({ ...current, submit: message }));
+        toast.error(message);
       }
     } catch (err) {
       console.error('Booking error:', err);
@@ -871,8 +865,59 @@ const BookingForm = ({
           errorType: 'network_error',
         },
       });
+      setFieldErrors((current) => ({ ...current, submit: 'We could not submit your booking. Check your connection and try again.' }));
       toast.error('Error booking the ride.');
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  const handlePassengerSubmit = (details) => {
+    setPassengerDetails(details);
+    setStep(4);
+  };
+
+  const handleSingleSubmit = (event) => {
+    event?.preventDefault?.();
+    trackBookingStarted();
+
+    const errors = {};
+    if (!pickupLoc) errors.pickup = 'Choose a pickup address from the suggestions.';
+    if (!dropoffLoc) errors.dropoff = 'Choose a destination from the suggestions.';
+    if (!hasPassengerCount) errors.passengerCount = 'Enter the number of passengers.';
+    if (bookingType === 'later' && !scheduledDateTime) errors.scheduledDateTime = 'Choose a pickup date and time.';
+    if (!selectedVehicle) errors.vehicle = 'Select a vehicle that fits your group.';
+    if (!passengerDetails.name.trim()) errors.name = 'Enter the passenger name.';
+    if (!passengerDetails.phone.trim()) errors.phone = 'Enter a phone number.';
+    if (passengerDetails.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(passengerDetails.email)) {
+      errors.email = 'Enter a valid email address or leave it blank.';
+    }
+
+    setFieldErrors(errors);
+    if (Object.keys(errors).length) {
+      requestAnimationFrame(() => document.querySelector('[aria-invalid="true"]')?.focus());
+      return;
+    }
+
+    trackAnalyticsEvent('passenger_details_submitted', {
+      stepName: 'passenger_details',
+      bookingType,
+      passengerCount: Number(passengerCount) || undefined,
+      vehicleType: selectedVehicle?.id || null,
+      estimatedFare: Number.isFinite(Number(fare)) ? Number(fare) : undefined,
+      metadata: {
+        hasEmail: Boolean(passengerDetails.email),
+        hasPhone: Boolean(passengerDetails.phone),
+      },
+    });
+
+    if (OTP_ENABLED) {
+      setStep(4);
+      return;
+    }
+
+    setIsSubmitting(true);
+    handleBookRide();
   };
 
   useEffect(() => {
@@ -1023,7 +1068,7 @@ const BookingForm = ({
     </div>
   );
 
-  const content = (
+  const legacyContent = (
     <>
       {step === 1 && (
         <>
@@ -1310,6 +1355,187 @@ const BookingForm = ({
         </div>
       )}
     </>
+  );
+
+  const inputClass = (name) => `mt-2 h-12 w-full rounded-xl border bg-white px-3 text-base text-slate-950 outline-none transition focus:ring-2 ${
+    fieldErrors[name] ? 'border-red-500 focus:ring-red-200' : 'border-slate-300 focus:border-slate-700 focus:ring-slate-200'
+  }`;
+  const updatePassengerDetail = (name, value) => {
+    setPassengerDetails((current) => ({ ...current, [name]: value }));
+    setFieldErrors((current) => ({ ...current, [name]: undefined, submit: undefined }));
+  };
+  const errorText = (name) => fieldErrors[name] ? (
+    <p id={`${name}-error`} className="mt-1 text-sm font-medium text-red-700">{fieldErrors[name]}</p>
+  ) : null;
+
+  const content = step === 4 && OTP_ENABLED ? (
+    <Suspense fallback={stepFallback}>
+      <OTPVerification
+        setStep={setStep}
+        phone={phone}
+        onSuccess={() => { setIsSubmitting(true); handleBookRide(); }}
+        onBack={() => setStep(1)}
+      />
+    </Suspense>
+  ) : (
+    <form onSubmit={handleSingleSubmit} noValidate className="text-slate-900">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Fast, secure, 24/7</p>
+          <h2 className="mt-1 text-2xl font-extrabold tracking-tight md:text-3xl">Book your ride</h2>
+          <p className="mt-1 text-sm text-slate-600">One quick form. We’ll confirm your booking straight away.</p>
+        </div>
+        <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800">No account needed</span>
+      </div>
+
+      <fieldset className="mt-6 rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
+        <legend className="px-1 text-base font-extrabold">Your journey</legend>
+        <div className="relative">
+          <label htmlFor="booking-pickup" className="text-sm font-semibold">Pickup address *</label>
+          <input
+            id="booking-pickup" ref={pickupInputRef} type="text" autoComplete="street-address"
+            value={pickupAddress}
+            onChange={(event) => {
+              setPickupAddress(event.target.value);
+              setPickupLoc(null);
+              setFieldErrors((current) => ({ ...current, pickup: undefined, submit: undefined }));
+              if (currentLocationError) setCurrentLocationError('');
+            }}
+            onFocus={handleMapIntent} onChangeCapture={handleMapIntent}
+            aria-invalid={Boolean(fieldErrors.pickup)} aria-describedby={fieldErrors.pickup ? 'pickup-error' : undefined}
+            className={`${inputClass('pickup')} pr-12`} placeholder="Start typing an address"
+          />
+          <button
+            type="button" onClick={handleUseCurrentLocation} disabled={isResolvingCurrentLocation}
+            className="absolute right-2 top-[34px] inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 disabled:text-slate-400"
+            aria-label={isResolvingCurrentLocation ? 'Detecting current location' : 'Use current location'}
+          ><MdMyLocation size={19} /></button>
+          {errorText('pickup')}
+          {currentLocationError && <p className="mt-1 text-sm font-medium text-red-700">{currentLocationError}</p>}
+        </div>
+
+        <div className="mt-4">
+          <label htmlFor="booking-dropoff" className="text-sm font-semibold">Destination *</label>
+          <input
+            id="booking-dropoff" ref={dropoffInputRef} type="text" autoComplete="off" value={dropoffAddress}
+            onChange={(event) => {
+              setDropoffAddress(event.target.value);
+              setDropoffLoc(null);
+              setFieldErrors((current) => ({ ...current, dropoff: undefined, submit: undefined }));
+            }}
+            onFocus={handleMapIntent} onChangeCapture={handleMapIntent}
+            aria-invalid={Boolean(fieldErrors.dropoff)} aria-describedby={fieldErrors.dropoff ? 'dropoff-error' : undefined}
+            className={inputClass('dropoff')} placeholder="Where are you going?"
+          />
+          {errorText('dropoff')}
+        </div>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div>
+            <span className="text-sm font-semibold">Pickup time *</span>
+            <div className="mt-2 grid grid-cols-2 rounded-xl bg-slate-100 p-1" role="radiogroup" aria-label="Pickup time">
+              {['now', 'later'].map((value) => (
+                <label key={value} className={`cursor-pointer rounded-lg px-2 py-2 text-center text-sm font-semibold ${bookingType === value ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-600'}`}>
+                  <input type="radio" name="bookingType" value={value} checked={bookingType === value} onChange={() => { setBookingType(value); if (value === 'now') setScheduledDateTime(''); }} className="sr-only" />
+                  {value === 'now' ? 'As soon as possible' : 'Schedule'}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label htmlFor="passenger-count" className="text-sm font-semibold">Passengers *</label>
+            <input
+              id="passenger-count" ref={passengerCountInputRef} type="number" inputMode="numeric" min="1" max="11" value={passengerCount || ''}
+              onChange={(event) => {
+                const value = parseInt(event.target.value, 10);
+                setPassengerCount(Number.isNaN(value) ? '' : value);
+                setSelectedVehicle(null);
+                setFieldErrors((current) => ({ ...current, passengerCount: undefined, vehicle: undefined }));
+              }}
+              aria-invalid={Boolean(fieldErrors.passengerCount)} aria-describedby={fieldErrors.passengerCount ? 'passengerCount-error' : undefined}
+              className={inputClass('passengerCount')} placeholder="e.g. 2"
+            />
+            {errorText('passengerCount')}
+          </div>
+        </div>
+
+        {bookingType === 'later' && <div className="mt-4">
+          <label htmlFor="scheduledDateTime" className="flex items-center gap-2 text-sm font-semibold"><MdCalendarToday /> Pickup date and time *</label>
+          <input
+            id="scheduledDateTime" type="datetime-local" value={scheduledDateTime}
+            onChange={(event) => { setScheduledDateTime(event.target.value); setFieldErrors((current) => ({ ...current, scheduledDateTime: undefined })); }}
+            aria-invalid={Boolean(fieldErrors.scheduledDateTime)} aria-describedby={fieldErrors.scheduledDateTime ? 'scheduledDateTime-error' : undefined}
+            className={inputClass('scheduledDateTime')}
+          />
+          {errorText('scheduledDateTime')}
+        </div>}
+
+        {routePreview && <div ref={tripEstimateRef} className="mt-4 flex flex-wrap gap-2 rounded-xl bg-slate-50 p-3 text-sm text-slate-700" aria-live="polite">
+          <span className="font-bold text-slate-950">Trip estimate</span>
+          <span>{routePreview.distanceText}</span><span aria-hidden="true">•</span><span>{routePreview.durationText}</span><span aria-hidden="true">•</span><span>{routePreview.tollsText}</span>
+        </div>}
+
+        <details className="mt-4 rounded-xl border border-slate-200 bg-slate-50">
+          <summary className="cursor-pointer px-3 py-2 text-sm font-semibold text-slate-700">Preview route map</summary>
+          <div className="px-3 pb-3">
+            {!mapsReady || !mapInitialized ? <MapPlaceholder /> : null}
+            <div ref={mapRef} className={`${mapsReady && mapInitialized ? 'block' : 'hidden'} mt-3 h-56 overflow-hidden rounded-xl border border-slate-200`} aria-label="Route map" />
+          </div>
+        </details>
+      </fieldset>
+
+      <fieldset className="mt-5 rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
+        <legend className="px-1 text-base font-extrabold">Choose a vehicle *</legend>
+        <p className="mb-4 text-sm text-slate-600">Options update when your route and passenger count are ready.</p>
+        {canContinueToVehicle ? <Suspense fallback={stepFallback}>
+          <VehicleSelection
+            inline pickupLoc={pickupLoc} dropoffLoc={dropoffLoc} pickupSuburb={pickupSuburb} dropoffSuburb={dropoffSuburb}
+            passengerCount={passengerCount} bookingType={bookingType} scheduledDateTime={scheduledDateTime}
+            setStep={setStep} setSelectedVehicle={(vehicle) => { setSelectedVehicle(vehicle); setFieldErrors((current) => ({ ...current, vehicle: undefined })); }}
+            setFare={setFare} setFareType={setFareType} setMap={setMap}
+          />
+        </Suspense> : <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-600">Add your journey details above to see suitable vehicles.</p>}
+        {errorText('vehicle')}
+      </fieldset>
+
+      <fieldset className="mt-5 rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
+        <legend className="px-1 text-base font-extrabold">Contact details</legend>
+        <p className="mb-4 text-sm text-slate-600">Your driver will use these details for this booking.</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="passenger-name" className="text-sm font-semibold">Full name *</label>
+            <input id="passenger-name" type="text" autoComplete="name" value={passengerDetails.name} onChange={(event) => updatePassengerDetail('name', event.target.value)} aria-invalid={Boolean(fieldErrors.name)} aria-describedby={fieldErrors.name ? 'name-error' : undefined} className={inputClass('name')} />
+            {errorText('name')}
+          </div>
+          <div>
+            <label htmlFor="passenger-phone" className="text-sm font-semibold">Mobile number *</label>
+            <input id="passenger-phone" type="tel" inputMode="tel" autoComplete="tel" value={passengerDetails.phone} onChange={(event) => updatePassengerDetail('phone', event.target.value)} aria-invalid={Boolean(fieldErrors.phone)} aria-describedby={fieldErrors.phone ? 'phone-error' : undefined} className={inputClass('phone')} placeholder="04xx xxx xxx" />
+            {errorText('phone')}
+          </div>
+        </div>
+
+        <button type="button" onClick={() => setShowExtras((value) => !value)} aria-expanded={showExtras} className="mt-4 text-sm font-bold text-slate-700 underline decoration-slate-300 underline-offset-4">
+          {showExtras ? 'Hide optional details' : 'Add email or booking notes'}
+        </button>
+        {showExtras && <div className="mt-4 grid gap-4">
+          <div>
+            <label htmlFor="passenger-email" className="text-sm font-semibold">Email <span className="font-normal text-slate-500">(optional)</span></label>
+            <input id="passenger-email" type="email" autoComplete="email" value={passengerDetails.email} onChange={(event) => updatePassengerDetail('email', event.target.value)} aria-invalid={Boolean(fieldErrors.email)} aria-describedby={fieldErrors.email ? 'email-error' : undefined} className={inputClass('email')} placeholder="you@example.com" />
+            {errorText('email')}
+          </div>
+          <div>
+            <label htmlFor="passenger-note" className="text-sm font-semibold">Notes for the driver <span className="font-normal text-slate-500">(optional)</span></label>
+            <textarea id="passenger-note" value={passengerDetails.note} onChange={(event) => updatePassengerDetail('note', event.target.value)} className="mt-2 min-h-24 w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-base outline-none focus:border-slate-700 focus:ring-2 focus:ring-slate-200" placeholder="Flight number, luggage, child seat or pickup instructions" />
+          </div>
+        </div>}
+      </fieldset>
+
+      {fieldErrors.submit && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">{fieldErrors.submit}</p>}
+      <button type="submit" disabled={isSubmitting} className="mt-5 h-12 w-full rounded-xl bg-slate-950 px-5 text-base font-extrabold text-white shadow-lg transition hover:bg-black focus:outline-none focus:ring-4 focus:ring-slate-300 disabled:cursor-wait disabled:opacity-65">
+        {isSubmitting ? 'Booking your ride…' : 'Book my ride'}
+      </button>
+      <p className="mt-2 text-center text-xs text-slate-500">You’ll receive confirmation after your booking is submitted.</p>
+    </form>
   );
 
   if (embedded) return content;

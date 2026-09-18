@@ -48,7 +48,7 @@ const getGtag = () => {
 };
 
 export const trackGa4Event = (eventName, params = {}) => {
-  if (!getGa4MeasurementId() || shouldSkipAnalyticsTracking()) {
+  if (import.meta.env.VITE_DISABLE_GOOGLE_TRACKING || !getGa4MeasurementId() || shouldSkipAnalyticsTracking()) {
     return false;
   }
 

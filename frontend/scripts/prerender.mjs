@@ -424,6 +424,11 @@ function requestJson(url) {
 }
 
 async function loadPublishedBlogs() {
+  if (process.env.VERCEL_ENV === 'preview') {
+    console.log('[prerender] Preview build: skipping blog SEO snapshots.');
+    return [];
+  }
+
   if (!apiBaseUrl) {
     console.warn('[prerender] VITE_API_BASE_URL missing. Skipping blog prerender.');
     return [];

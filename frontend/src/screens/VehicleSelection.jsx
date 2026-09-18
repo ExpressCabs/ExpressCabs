@@ -104,6 +104,7 @@ const VehicleSelection = ({
   setFare,
   setFareType,
   setMap,
+  inline = false,
 }) => {
   const summaryRef = useRef(null);
   const [distanceKm, setDistanceKm] = useState(null);
@@ -286,7 +287,7 @@ const VehicleSelection = ({
   return (
     <>
       <div ref={summaryRef} className="mb-4 scroll-mt-28">
-        <h2 className="mb-3 text-center text-2xl font-semibold tracking-tight text-slate-900">Select Your Vehicle</h2>
+        {!inline && <h2 className="mb-3 text-center text-2xl font-semibold tracking-tight text-slate-900">Select Your Vehicle</h2>}
 
         <div className="rounded-[26px] border border-white/22 bg-[linear-gradient(180deg,rgba(255,255,255,0.56)_0%,rgba(226,232,240,0.42)_100%)] px-4 py-3 text-sm text-slate-700 shadow-[0_22px_48px_-34px_rgba(15,23,42,0.26)] backdrop-blur-xl">
           <div className="flex flex-wrap gap-2 text-xs font-medium text-slate-600">
@@ -397,7 +398,7 @@ const VehicleSelection = ({
               </div>
 
               <AnimatePresence initial={false}>
-                {vehicle.isSelected && (
+                {vehicle.isSelected && !inline && (
                   <motion.div
                     layout
                     initial={{ opacity: 0, y: -5, scale: 0.98 }}
@@ -435,7 +436,7 @@ const VehicleSelection = ({
         </div>
       </div>
 
-      <div className="mt-6">
+      {!inline && <div className="mt-6">
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={() => {
@@ -446,7 +447,7 @@ const VehicleSelection = ({
         >
           Back
         </motion.button>
-      </div>
+      </div>}
     </>
   );
 };
