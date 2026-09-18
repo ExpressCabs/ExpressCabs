@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
 import sedanImg from '/assets/vehicles/sedan-modern.png';
 import suvImg from '/assets/vehicles/suv-modern.png';
 import vanImg from '/assets/vehicles/van-modern.png';
@@ -99,19 +98,21 @@ const VehicleSelection = ({
   passengerCount,
   bookingType,
   scheduledDateTime,
-  setStep,
+  selectedVehicleId,
   setSelectedVehicle,
   setFare,
   setFareType,
-  setMap,
-  inline = false,
 }) => {
   const summaryRef = useRef(null);
   const [distanceKm, setDistanceKm] = useState(null);
   const [durationMin, setDurationMin] = useState(null);
   const [hasTolls, setHasTolls] = useState(false);
   const [fares, setFares] = useState({});
-  const [selectedId, setSelectedId] = useState(null);
+  const [selectedId, setSelectedId] = useState(selectedVehicleId || null);
+
+  useEffect(() => {
+    setSelectedId(selectedVehicleId || null);
+  }, [selectedVehicleId]);
 
   const rideDateObj = useMemo(() => {
     if (bookingType === 'now') return new Date();
@@ -265,9 +266,7 @@ const VehicleSelection = ({
   };
 
   const vehicleStates = VEHICLES.map((vehicle) => {
-    const disabled =
-      (passengerCount > 4 && vehicle.seats <= 4) ||
-      (vehicle.id === 'suv' && passengerCount > 6);
+    const disabled = Number(passengerCount) > vehicle.seats;
     const isSelected = selectedId === vehicle.id;
     const fitLabel = Number(passengerCount) > 0
       ? vehicle.seats >= Number(passengerCount)
@@ -285,170 +284,57 @@ const VehicleSelection = ({
   });
 
   return (
-    <>
-      <div ref={summaryRef} className="mb-4 scroll-mt-28">
-        {!inline && <h2 className="mb-3 text-center text-2xl font-semibold tracking-tight text-slate-900">Select Your Vehicle</h2>}
-
-        <div className="rounded-[26px] border border-white/22 bg-[linear-gradient(180deg,rgba(255,255,255,0.56)_0%,rgba(226,232,240,0.42)_100%)] px-4 py-3 text-sm text-slate-700 shadow-[0_22px_48px_-34px_rgba(15,23,42,0.26)] backdrop-blur-xl">
-          <div className="flex flex-wrap gap-2 text-xs font-medium text-slate-600">
-            <span className="rounded-full border border-slate-300/60 bg-white/84 px-3 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
-              {distanceKm ? distanceKm.toFixed(1) : '--'} km
-            </span>
-            <span className="rounded-full border border-slate-300/60 bg-white/84 px-3 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
-              {durationMin ? Math.round(durationMin) : '--'} min
-            </span>
-            <span className="rounded-full border border-slate-300/60 bg-white/84 px-3 py-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
-              {Number(passengerCount) || '--'} passenger{Number(passengerCount) === 1 ? '' : 's'}
-            </span>
-            {airportPickup && (
-              <span className="rounded-full border border-sky-200/70 bg-sky-100/55 px-3 py-1 text-sky-700 backdrop-blur-md">
-                Airport pickup
-              </span>
-            )}
-            {hasTolls && (
-              <span className="rounded-full border border-amber-200/70 bg-amber-100/55 px-3 py-1 text-amber-700 backdrop-blur-md">
-                Tolls likely
-              </span>
-            )}
-          </div>
-        </div>
+    <div ref={summaryRef} className="scroll-mt-28">
+      <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-slate-600" aria-live="polite">
+        <span>{distanceKm ? `${distanceKm.toFixed(1)} km` : 'Calculating distance…'}</span>
+        <span aria-hidden="true">•</span>
+        <span>{durationMin ? `${Math.round(durationMin)} min` : 'Calculating time…'}</span>
+        {hasTolls && <span className="rounded-full bg-amber-50 px-2 py-1 font-semibold text-amber-800">Tolls likely</span>}
       </div>
 
-      <div className="rounded-[30px] border border-white/30 bg-[linear-gradient(180deg,rgba(255,255,255,0.5)_0%,rgba(226,232,240,0.34)_100%)] p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_28px_70px_-38px_rgba(15,23,42,0.34)] backdrop-blur-xl">
-        <div className="grid gap-2">
-          {vehicleStates.map((vehicle, index) => (
-            <motion.div
-              key={vehicle.id}
-              layout
-              onClick={() => !vehicle.disabled && handleSelect(vehicle)}
-              onKeyDown={(event) => {
-                if (!vehicle.disabled && (event.key === 'Enter' || event.key === ' ')) {
-                  event.preventDefault();
-                  handleSelect(vehicle);
-                }
-              }}
-              role="button"
-              tabIndex={vehicle.disabled ? -1 : 0}
-              aria-disabled={vehicle.disabled}
-              aria-pressed={vehicle.isSelected}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{
-                opacity: { delay: 0.04 * index, duration: 0.18 },
-                y: { delay: 0.04 * index, duration: 0.22, ease: [0.22, 1, 0.36, 1] },
-                layout: { duration: 0.2, ease: [0.22, 1, 0.36, 1] },
-              }}
-              className={`grid rounded-[20px] border px-3 py-2.5 text-left transition-all duration-200 ${
-                vehicle.disabled
-                  ? 'cursor-not-allowed border-slate-300/60 bg-white/48 opacity-50'
-                  : vehicle.isSelected
-                  ? 'border-slate-400/45 bg-[linear-gradient(135deg,rgba(255,255,255,1)_0%,rgba(241,245,249,0.94)_100%)] shadow-[0_24px_52px_-30px_rgba(15,23,42,0.42)] ring-2 ring-slate-700/12'
-                  : 'border-slate-300/65 bg-[linear-gradient(180deg,rgba(255,255,255,0.96)_0%,rgba(248,250,252,0.84)_100%)] shadow-[0_18px_38px_-28px_rgba(15,23,42,0.24)] hover:-translate-y-0.5 hover:border-slate-300/90 hover:bg-white'
-              }`}
-            >
-              <div className="relative grid min-w-0 grid-cols-[92px_minmax(0,1fr)] gap-3 py-1.5 before:absolute before:left-0 before:right-0 before:top-0 before:h-px before:bg-[linear-gradient(90deg,rgba(148,163,184,0)_0%,rgba(148,163,184,0.5)_18%,rgba(148,163,184,0.5)_82%,rgba(148,163,184,0)_100%)] after:absolute after:left-0 after:right-0 after:bottom-0 after:h-px after:bg-[linear-gradient(90deg,rgba(148,163,184,0)_0%,rgba(148,163,184,0.5)_18%,rgba(148,163,184,0.5)_82%,rgba(148,163,184,0)_100%)]">
-                <div className={`relative z-[1] flex h-20 w-[92px] shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/90 bg-gradient-to-br ${vehicle.accent.tint} shadow-[inset_0_1px_0_rgba(255,255,255,0.92),0_14px_24px_-18px_rgba(15,23,42,0.42)]`}>
-                  <img src={vehicle.image} alt={vehicle.name} className="h-16 w-20 object-contain drop-shadow-sm" />
-                </div>
-                <div className="relative z-[1] flex min-w-0 flex-col justify-center">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="text-base font-extrabold tracking-tight text-slate-900">{vehicle.name}</p>
-                    <span className={`rounded-full px-2 py-0.5 text-[8px] font-semibold uppercase tracking-[0.14em] text-white ${vehicle.accent.badge}`}>
-                      {vehicle.badge}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-[12px] leading-5 text-slate-600">{vehicle.summary}</p>
-                </div>
-              </div>
-
-              <div className="mt-1.5 flex items-center justify-between rounded-xl border border-slate-300/55 bg-white/84 px-3 py-1.5 text-xs text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
-                <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">Seats</span>
-                <span className="font-semibold text-slate-900">{vehicle.seats}</span>
-              </div>
-
-              <div className="mt-1.5 flex items-center justify-between gap-3 rounded-xl border border-slate-300/55 bg-white/84 px-3 py-1.5 text-xs text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
-                <span className="shrink-0 text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">Luggage</span>
-                <span className="text-right font-semibold text-slate-900">{vehicle.luggage}</span>
-              </div>
-
-              <div className="mt-1.5 flex items-center justify-between gap-3 rounded-xl border border-slate-300/55 bg-white/84 px-3 py-1.5 text-xs text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.9)]">
-                <span className="shrink-0 text-[9px] font-semibold uppercase tracking-[0.14em] text-slate-500">Best for</span>
-                <span className="text-right font-semibold text-slate-900">{vehicle.rideStyle}</span>
-              </div>
-
-              <div className="mt-1.5 flex items-center justify-between">
-                <span className={`rounded-full px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.14em] ${
-                  vehicle.disabled
-                    ? 'bg-red-100 text-red-700'
-                    : vehicle.isSelected
-                    ? 'bg-slate-950 text-white'
-                    : 'border border-slate-200/85 bg-white text-slate-700'
-                }`}>
-                  {vehicle.disabled ? 'Not suitable' : vehicle.isSelected ? 'Selected' : 'Select'}
+      <div className="grid gap-2" role="radiogroup" aria-label="Vehicle options">
+        {vehicleStates.map((vehicle) => (
+          <label
+            key={vehicle.id}
+            className={`relative flex min-h-[76px] items-center gap-3 rounded-2xl border px-3 py-2.5 transition ${vehicle.disabled
+              ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-55'
+              : vehicle.isSelected
+              ? 'cursor-pointer border-slate-950 bg-slate-950 text-white shadow-md ring-2 ring-slate-950/15 ring-offset-2'
+              : 'cursor-pointer border-slate-200 bg-white hover:border-slate-400 hover:bg-slate-50'
+            }`}
+          >
+            <input
+              type="radio"
+              name="booking-vehicle"
+              value={vehicle.id}
+              checked={vehicle.isSelected}
+              disabled={vehicle.disabled}
+              onChange={() => handleSelect(vehicle)}
+              className="sr-only"
+            />
+            <span className={`flex h-14 w-16 shrink-0 items-center justify-center rounded-xl border ${vehicle.isSelected ? 'border-white/20 bg-white' : 'border-slate-200 bg-slate-50'}`}>
+              <img src={vehicle.image} alt="" aria-hidden="true" className="h-11 w-14 object-contain" />
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="flex items-baseline justify-between gap-2">
+                <span className="font-extrabold">{vehicle.name}</span>
+                <span className={`shrink-0 text-base font-extrabold ${vehicle.isSelected ? 'text-white' : 'text-slate-950'}`}>
+                  {vehicle.fare ? `$${vehicle.fare}` : '—'}
                 </span>
-              </div>
-
-              <div className="mt-1.5 flex flex-wrap gap-1.5">
-                <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${vehicle.accent.chip}`}>
-                  {vehicle.comfort}
-                </span>
-                <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${vehicle.accent.chip}`}>
-                  {vehicle.fitLabel}
-                </span>
-              </div>
-
-              <AnimatePresence initial={false}>
-                {vehicle.isSelected && !inline && (
-                  <motion.div
-                    layout
-                    initial={{ opacity: 0, y: -5, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -3, scale: 0.99 }}
-                    transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
-                    className="mt-3 grid grid-cols-2 gap-2 overflow-hidden border-t border-slate-200/80 pt-3"
-                  >
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setMap(null);
-                        setStep(1);
-                      }}
-                      className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.92)] transition hover:bg-slate-50"
-                    >
-                      Back
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        setStep(3);
-                      }}
-                      className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-800/70 bg-slate-950 px-4 text-sm font-semibold text-white shadow-[0_18px_36px_-24px_rgba(15,23,42,0.8)] transition hover:brightness-110"
-                    >
-                      Continue
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-          ))}
-        </div>
+              </span>
+              <span className={`mt-1 block text-xs leading-5 ${vehicle.isSelected ? 'text-white/75' : 'text-slate-600'}`}>
+                Up to {vehicle.seats} passengers · {vehicle.luggage}
+              </span>
+              {vehicle.disabled && <span className="mt-0.5 block text-xs font-semibold text-red-700">Not suitable for your group</span>}
+            </span>
+            <span aria-hidden="true" className={`h-5 w-5 shrink-0 rounded-full border-2 p-1 ${vehicle.isSelected ? 'border-white bg-white ring-2 ring-white/25' : 'border-slate-400'}`}>
+              {vehicle.isSelected && <span className="block h-full w-full rounded-full bg-slate-950" />}
+            </span>
+          </label>
+        ))}
       </div>
-
-      {!inline && <div className="mt-6">
-        <motion.button
-          whileTap={{ scale: 0.95 }}
-          onClick={() => {
-            setMap(null);
-            setStep(1);
-          }}
-          className="h-12 w-full rounded-2xl border border-white/55 bg-white/68 font-semibold text-slate-900 shadow-[inset_0_1px_0_rgba(255,255,255,0.82)] transition hover:bg-white/82"
-        >
-          Back
-        </motion.button>
-      </div>}
-    </>
+      <p className="mt-2 text-xs text-slate-500">Fares include the selected vehicle and route estimate. Final route conditions may affect metered charges.</p>
+    </div>
   );
 };
 
