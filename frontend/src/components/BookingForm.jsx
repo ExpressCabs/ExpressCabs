@@ -71,7 +71,9 @@ const BookingForm = ({
   const [dropoffSuburb, setDropoffSuburb] = useState('');
   const [bookingType, setBookingType] = useState('now');
   const [passengerCount, setPassengerCount] = useState('');
-  const [scheduledDateTime, setScheduledDateTime] = useState('');
+  const [scheduledDate, setScheduledDate] = useState('');
+  const [scheduledTime, setScheduledTime] = useState('');
+  const scheduledDateTime = scheduledDate && scheduledTime ? `${scheduledDate}T${scheduledTime}` : '';
   const [step, setStep] = useState(1);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [fare, setFare] = useState(null);
@@ -990,7 +992,7 @@ const BookingForm = ({
 
     lastScrolledVehicleRef.current = selectedVehicle.id;
     window.requestAnimationFrame(() => {
-      vehicleActionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      vehicleActionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     });
   }, [fare, selectedVehicle?.id, step]);
 
@@ -1174,19 +1176,39 @@ const BookingForm = ({
             <div className="mt-2 grid grid-cols-2 rounded-xl bg-slate-100 p-1" role="radiogroup" aria-label="Pickup time">
               {['now', 'later'].map((value) => (
                 <label key={value} className={`cursor-pointer rounded-lg px-2 py-2 text-center text-sm font-semibold ${bookingType === value ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-600'}`}>
-                  <input type="radio" name="bookingType" value={value} checked={bookingType === value} onChange={() => { setBookingType(value); if (value === 'now') setScheduledDateTime(''); }} className="sr-only" />
+                  <input type="radio" name="bookingType" value={value} checked={bookingType === value} onChange={() => {
+                    setBookingType(value);
+                    if (value === 'now') {
+                      setScheduledDate('');
+                      setScheduledTime('');
+                    }
+                  }} className="sr-only" />
                   {value === 'now' ? 'As soon as possible' : 'Schedule'}
                 </label>
               ))}
             </div>
             {bookingType === 'later' && <div className="mt-4 min-w-0 overflow-hidden">
-              <label htmlFor="scheduledDateTime" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><MdCalendarToday className="text-blue-600" /> Pickup date and time *</label>
-              <input
-                id="scheduledDateTime" type="datetime-local" value={scheduledDateTime}
-                onChange={(event) => { setScheduledDateTime(event.target.value); setFieldErrors((current) => ({ ...current, scheduledDateTime: undefined })); }}
-                aria-invalid={Boolean(fieldErrors.scheduledDateTime)} aria-describedby={fieldErrors.scheduledDateTime ? 'scheduledDateTime-error' : undefined}
-                className={`${inputClass('scheduledDateTime', scheduledDateTime)} [min-width:0]`}
-              />
+              <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><MdCalendarToday className="text-blue-600" /> Pickup date and time *</p>
+              <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+                <div className="min-w-0 overflow-hidden">
+                  <label htmlFor="scheduledDate" className="sr-only">Pickup date</label>
+                  <input
+                    id="scheduledDate" type="date" value={scheduledDate}
+                    onChange={(event) => { setScheduledDate(event.target.value); setFieldErrors((current) => ({ ...current, scheduledDateTime: undefined })); }}
+                    aria-invalid={Boolean(fieldErrors.scheduledDateTime)} aria-describedby={fieldErrors.scheduledDateTime ? 'scheduledDateTime-error' : undefined}
+                    className={`${inputClass('scheduledDateTime', scheduledDate)} [min-width:0]`}
+                  />
+                </div>
+                <div className="min-w-0 overflow-hidden">
+                  <label htmlFor="scheduledTime" className="sr-only">Pickup time</label>
+                  <input
+                    id="scheduledTime" type="time" value={scheduledTime}
+                    onChange={(event) => { setScheduledTime(event.target.value); setFieldErrors((current) => ({ ...current, scheduledDateTime: undefined })); }}
+                    aria-invalid={Boolean(fieldErrors.scheduledDateTime)} aria-describedby={fieldErrors.scheduledDateTime ? 'scheduledDateTime-error' : undefined}
+                    className={`${inputClass('scheduledDateTime', scheduledTime)} [min-width:0]`}
+                  />
+                </div>
+              </div>
               {errorText('scheduledDateTime')}
             </div>}
           </div>
