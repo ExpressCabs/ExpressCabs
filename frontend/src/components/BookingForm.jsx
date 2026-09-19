@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState, useCallback, lazy, Suspense } from 'react';
-import { createPortal } from 'react-dom';
 import { MdCalendarToday, MdMyLocation } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
 
@@ -79,7 +78,6 @@ const BookingForm = ({
   const [fieldErrors, setFieldErrors] = useState({});
   const [showExtras, setShowExtras] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [mobileKeyboardOpen, setMobileKeyboardOpen] = useState(false);
   const [mapInitialized, setMapInitialized] = useState(false);
   const [mapsEnabled, setMapsEnabled] = useState(false);
   const [routePreview, setRoutePreview] = useState(null);
@@ -860,11 +858,6 @@ const BookingForm = ({
     event?.preventDefault?.();
     trackBookingStarted();
 
-    if (nextRequirement) {
-      focusNextRequirement();
-      return;
-    }
-
     const errors = {};
     if (!pickupLoc) errors.pickup = 'Choose a pickup address from the suggestions.';
     if (!dropoffLoc) errors.dropoff = 'Choose a destination from the suggestions.';
@@ -1011,7 +1004,7 @@ const BookingForm = ({
   );
 
   const inputClass = (name) => `mt-2 h-12 w-full rounded-xl border bg-white px-3 text-base text-slate-950 outline-none transition focus:ring-2 ${
-    fieldErrors[name] ? 'border-red-500 focus:ring-red-200' : 'border-slate-300 focus:border-slate-700 focus:ring-slate-200'
+    fieldErrors[name] ? 'border-red-500 focus:ring-red-200' : 'border-slate-200 focus:border-blue-600 focus:ring-blue-100'
   }`;
   const updatePassengerDetail = (name, value) => {
     setPassengerDetails((current) => ({ ...current, [name]: value }));
@@ -1020,67 +1013,6 @@ const BookingForm = ({
   const errorText = (name) => fieldErrors[name] ? (
     <p id={`${name}-error`} className="mt-1 text-sm font-medium text-red-700">{fieldErrors[name]}</p>
   ) : null;
-
-  const nextRequirement = !pickupLoc
-    ? { id: 'booking-pickup', label: 'Add pickup address', summary: 'Start with your pickup' }
-    : !dropoffLoc
-    ? { id: 'booking-dropoff', label: 'Add destination', summary: 'Next, choose your destination' }
-    : bookingType === 'later' && !scheduledDateTime
-    ? { id: 'scheduledDateTime', label: 'Choose pickup time', summary: 'Choose when you need the ride' }
-    : !hasSupportedPassengerCount
-    ? { id: 'passenger-count', label: hasPassengerCount ? 'Use 11 or fewer passengers' : 'Add passengers', summary: hasPassengerCount ? 'Choose a supported group size' : 'Tell us your group size' }
-    : !selectedVehicle || !Number.isFinite(Number(fare))
-    ? { id: 'vehicle-options', label: selectedVehicle ? 'Calculating fare…' : 'Choose a vehicle', summary: selectedVehicle ? 'Your fare is being calculated' : 'Select a suitable vehicle' }
-    : !passengerDetails.name.trim()
-    ? { id: 'passenger-name', label: 'Add passenger name', summary: 'Add the passenger contact' }
-    : !passengerDetails.phone.trim()
-    ? { id: 'passenger-phone', label: 'Add mobile number', summary: 'Add a number for the driver' }
-    : null;
-  const bookingReady = !nextRequirement;
-  const selectedFareText = selectedVehicle && Number.isFinite(Number(fare)) ? `$${Number(fare).toFixed(2)}` : null;
-
-  const focusNextRequirement = () => {
-    if (!nextRequirement || nextRequirement.label === 'Calculating fare…') return;
-    const target = document.getElementById(nextRequirement.id);
-    target?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    if (typeof target?.focus === 'function') {
-      window.setTimeout(() => target.focus(), 250);
-    }
-  };
-
-  const handleEditingBlur = () => {
-    window.setTimeout(() => {
-      const active = document.activeElement;
-      const type = active?.type;
-      const editing = active?.tagName === 'TEXTAREA' || (active?.tagName === 'INPUT' && !['radio', 'checkbox', 'button', 'submit'].includes(type));
-      setMobileKeyboardOpen(Boolean(editing));
-    }, 0);
-  };
-
-  const BookingAction = ({ mobile = false }) => (
-    <div className={mobile ? '' : 'flex items-center justify-between gap-4'} aria-live="polite">
-      <div className={mobile ? 'mb-2 flex items-center justify-between gap-3' : 'min-w-0'}>
-        <div className="min-w-0">
-          <p className={`font-extrabold ${mobile ? 'truncate text-sm' : 'text-base'}`}>
-            {bookingReady ? selectedVehicle?.name : nextRequirement?.summary}
-          </p>
-          <p className="truncate text-xs text-slate-600">
-            {bookingReady ? `${Number(passengerCount)} passenger${Number(passengerCount) === 1 ? '' : 's'} · Ready to book` : 'Complete the highlighted next step'}
-          </p>
-        </div>
-        {selectedFareText && <span className="shrink-0 text-lg font-extrabold text-slate-950">{selectedFareText}</span>}
-      </div>
-      <button
-        type={bookingReady ? 'submit' : 'button'}
-        form={bookingReady ? 'booking-form' : undefined}
-        onClick={bookingReady ? undefined : focusNextRequirement}
-        disabled={isSubmitting || nextRequirement?.label === 'Calculating fare…'}
-        className={`${mobile ? 'h-12 w-full' : 'h-12 min-w-[210px]'} rounded-xl bg-slate-950 px-5 text-sm font-extrabold text-white shadow-lg transition hover:bg-black focus:outline-none focus:ring-4 focus:ring-slate-300 disabled:cursor-wait disabled:bg-slate-500`}
-      >
-        {isSubmitting ? 'Booking your ride…' : bookingReady ? 'Book my ride' : nextRequirement?.label}
-      </button>
-    </div>
-  );
 
   const content = step === 4 && OTP_ENABLED ? (
     <Suspense fallback={stepFallback}>
@@ -1096,37 +1028,18 @@ const BookingForm = ({
       id="booking-form"
       onSubmit={handleSingleSubmit}
       noValidate
-      className="pb-[184px] text-slate-900 md:pb-0"
-      onFocusCapture={(event) => {
-        const type = event.target?.type;
-        if (event.target?.tagName === 'TEXTAREA' || (event.target?.tagName === 'INPUT' && !['radio', 'checkbox', 'button', 'submit'].includes(type))) {
-          setMobileKeyboardOpen(true);
-        }
-      }}
-      onBlurCapture={() => {
-        window.setTimeout(() => {
-          const active = document.activeElement;
-          const type = active?.type;
-          const editing = active?.tagName === 'TEXTAREA' || (active?.tagName === 'INPUT' && !['radio', 'checkbox', 'button', 'submit'].includes(type));
-          setMobileKeyboardOpen(Boolean(editing));
-        }, 0);
-      }}
+      className="rounded-[28px] bg-slate-50/95 p-1 text-slate-950"
     >
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="px-2 pb-2 pt-1 md:px-3">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">Fast, secure, 24/7</p>
-          <h2 className="mt-1 text-2xl font-extrabold tracking-tight md:text-3xl">Book your ride</h2>
-          <p className="mt-1 text-sm text-slate-600">One quick form. We’ll confirm your booking straight away.</p>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">Book a private ride</p>
+          <h2 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">Where can we take you?</h2>
+          <p className="mt-1 text-sm text-slate-500">Plan your trip in under a minute.</p>
         </div>
-        <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800">No account needed</span>
       </div>
 
-      <div className="sticky top-24 z-30 mt-5 hidden rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-[0_16px_45px_-25px_rgba(15,23,42,0.45)] backdrop-blur md:block">
-        <BookingAction />
-      </div>
-
-      <fieldset className="mt-6 rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
-        <legend className="px-1 text-base font-extrabold">Your journey</legend>
+      <fieldset className="mt-5 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_-32px_rgba(15,23,42,0.35)] md:p-6">
+        <legend className="flex items-center gap-2 px-1 text-lg font-black"><span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs text-white">1</span>Your journey</legend>
         <div className="relative">
           <label htmlFor="booking-pickup" className="text-sm font-semibold">Pickup address *</label>
           <input
@@ -1140,7 +1053,7 @@ const BookingForm = ({
               setFieldErrors((current) => ({ ...current, pickup: undefined, submit: undefined }));
               if (currentLocationError) setCurrentLocationError('');
             }}
-            onFocus={() => { handleMapIntent(); setMobileKeyboardOpen(true); }} onBlur={handleEditingBlur} onChangeCapture={handleMapIntent}
+            onFocus={handleMapIntent} onChangeCapture={handleMapIntent}
             aria-invalid={Boolean(fieldErrors.pickup)} aria-describedby={fieldErrors.pickup ? 'pickup-error' : undefined}
             className={`${inputClass('pickup')} pr-12`} placeholder="Start typing an address"
           />
@@ -1164,7 +1077,7 @@ const BookingForm = ({
               setFare(null);
               setFieldErrors((current) => ({ ...current, dropoff: undefined, submit: undefined }));
             }}
-            onFocus={() => { handleMapIntent(); setMobileKeyboardOpen(true); }} onBlur={handleEditingBlur} onChangeCapture={handleMapIntent}
+            onFocus={handleMapIntent} onChangeCapture={handleMapIntent}
             aria-invalid={Boolean(fieldErrors.dropoff)} aria-describedby={fieldErrors.dropoff ? 'dropoff-error' : undefined}
             className={inputClass('dropoff')} placeholder="Where are you going?"
           />
@@ -1187,7 +1100,6 @@ const BookingForm = ({
             <label htmlFor="passenger-count" className="text-sm font-semibold">Passengers *</label>
             <input
               id="passenger-count" ref={passengerCountInputRef} type="number" inputMode="numeric" min="1" max="11" value={passengerCount || ''}
-              onFocus={() => setMobileKeyboardOpen(true)} onBlur={handleEditingBlur}
               onChange={(event) => {
                 const value = parseInt(event.target.value, 10);
                 setPassengerCount(Number.isNaN(value) ? '' : value);
@@ -1205,7 +1117,6 @@ const BookingForm = ({
           <label htmlFor="scheduledDateTime" className="flex items-center gap-2 text-sm font-semibold"><MdCalendarToday /> Pickup date and time *</label>
           <input
             id="scheduledDateTime" type="datetime-local" value={scheduledDateTime}
-            onFocus={() => setMobileKeyboardOpen(true)} onBlur={handleEditingBlur}
             onChange={(event) => { setScheduledDateTime(event.target.value); setFieldErrors((current) => ({ ...current, scheduledDateTime: undefined })); }}
             aria-invalid={Boolean(fieldErrors.scheduledDateTime)} aria-describedby={fieldErrors.scheduledDateTime ? 'scheduledDateTime-error' : undefined}
             className={inputClass('scheduledDateTime')}
@@ -1227,9 +1138,9 @@ const BookingForm = ({
         </details>
       </fieldset>
 
-      <fieldset id="vehicle-options" tabIndex="-1" className="mt-5 scroll-mt-32 rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm outline-none focus:ring-2 focus:ring-slate-300">
-        <legend className="px-1 text-base font-extrabold">Choose a vehicle *</legend>
-        <p className="mb-4 text-sm text-slate-600">Options update when your route and passenger count are ready.</p>
+      <fieldset id="vehicle-options" tabIndex="-1" className="mt-4 scroll-mt-32 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_-32px_rgba(15,23,42,0.35)] outline-none focus:ring-2 focus:ring-blue-200 md:p-6">
+        <legend className="flex items-center gap-2 px-1 text-lg font-black"><span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs text-white">2</span>Choose your ride</legend>
+        <p className="mb-4 text-sm text-slate-500">Select a vehicle that comfortably fits your group.</p>
         {canContinueToVehicle ? <Suspense fallback={stepFallback}>
           <VehicleSelection
             pickupLoc={pickupLoc} dropoffLoc={dropoffLoc} pickupSuburb={pickupSuburb} dropoffSuburb={dropoffSuburb}
@@ -1242,18 +1153,18 @@ const BookingForm = ({
         {errorText('vehicle')}
       </fieldset>
 
-      <fieldset className="mt-5 rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm">
-        <legend className="px-1 text-base font-extrabold">Contact details</legend>
-        <p className="mb-4 text-sm text-slate-600">Your driver will use these details for this booking.</p>
+      <fieldset className="mt-4 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_-32px_rgba(15,23,42,0.35)] md:p-6">
+        <legend className="flex items-center gap-2 px-1 text-lg font-black"><span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs text-white">3</span>Who is riding?</legend>
+        <p className="mb-4 text-sm text-slate-500">We’ll share the driver’s details with this passenger.</p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="passenger-name" className="text-sm font-semibold">Full name *</label>
-            <input id="passenger-name" type="text" autoComplete="name" value={passengerDetails.name} onFocus={() => setMobileKeyboardOpen(true)} onBlur={handleEditingBlur} onChange={(event) => updatePassengerDetail('name', event.target.value)} aria-invalid={Boolean(fieldErrors.name)} aria-describedby={fieldErrors.name ? 'name-error' : undefined} className={inputClass('name')} />
+            <input id="passenger-name" type="text" autoComplete="name" value={passengerDetails.name} onChange={(event) => updatePassengerDetail('name', event.target.value)} aria-invalid={Boolean(fieldErrors.name)} aria-describedby={fieldErrors.name ? 'name-error' : undefined} className={inputClass('name')} />
             {errorText('name')}
           </div>
           <div>
             <label htmlFor="passenger-phone" className="text-sm font-semibold">Mobile number *</label>
-            <input id="passenger-phone" type="tel" inputMode="tel" autoComplete="tel" value={passengerDetails.phone} onFocus={() => setMobileKeyboardOpen(true)} onBlur={handleEditingBlur} onChange={(event) => updatePassengerDetail('phone', event.target.value)} aria-invalid={Boolean(fieldErrors.phone)} aria-describedby={fieldErrors.phone ? 'phone-error' : undefined} className={inputClass('phone')} placeholder="04xx xxx xxx" />
+            <input id="passenger-phone" type="tel" inputMode="tel" autoComplete="tel" value={passengerDetails.phone} onChange={(event) => updatePassengerDetail('phone', event.target.value)} aria-invalid={Boolean(fieldErrors.phone)} aria-describedby={fieldErrors.phone ? 'phone-error' : undefined} className={inputClass('phone')} placeholder="04xx xxx xxx" />
             {errorText('phone')}
           </div>
         </div>
@@ -1264,27 +1175,23 @@ const BookingForm = ({
         {showExtras && <div className="mt-4 grid gap-4">
           <div>
             <label htmlFor="passenger-email" className="text-sm font-semibold">Email <span className="font-normal text-slate-500">(optional)</span></label>
-            <input id="passenger-email" type="email" autoComplete="email" value={passengerDetails.email} onFocus={() => setMobileKeyboardOpen(true)} onBlur={handleEditingBlur} onChange={(event) => updatePassengerDetail('email', event.target.value)} aria-invalid={Boolean(fieldErrors.email)} aria-describedby={fieldErrors.email ? 'email-error' : undefined} className={inputClass('email')} placeholder="you@example.com" />
+            <input id="passenger-email" type="email" autoComplete="email" value={passengerDetails.email} onChange={(event) => updatePassengerDetail('email', event.target.value)} aria-invalid={Boolean(fieldErrors.email)} aria-describedby={fieldErrors.email ? 'email-error' : undefined} className={inputClass('email')} placeholder="you@example.com" />
             {errorText('email')}
           </div>
           <div>
             <label htmlFor="passenger-note" className="text-sm font-semibold">Notes for the driver <span className="font-normal text-slate-500">(optional)</span></label>
-            <textarea id="passenger-note" value={passengerDetails.note} onFocus={() => setMobileKeyboardOpen(true)} onBlur={handleEditingBlur} onChange={(event) => updatePassengerDetail('note', event.target.value)} className="mt-2 min-h-24 w-full rounded-xl border border-slate-300 bg-white px-3 py-3 text-base outline-none focus:border-slate-700 focus:ring-2 focus:ring-slate-200" placeholder="Flight number, luggage, child seat or pickup instructions" />
+            <textarea id="passenger-note" value={passengerDetails.note} onChange={(event) => updatePassengerDetail('note', event.target.value)} className="mt-2 min-h-24 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-base outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100" placeholder="Flight number, luggage, child seat or pickup instructions" />
           </div>
         </div>}
       </fieldset>
 
       {fieldErrors.submit && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">{fieldErrors.submit}</p>}
-      <p className="mt-4 text-center text-xs text-slate-500">You’ll receive confirmation after your booking is submitted.</p>
-
-      {!mobileKeyboardOpen && typeof document !== 'undefined' && createPortal(<div
-        className="fixed inset-x-0 z-40 px-3 md:hidden"
-        style={{ bottom: 'calc(84px + env(safe-area-inset-bottom, 0px))' }}
-      >
-        <div className="mx-auto max-w-xl rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-[0_-12px_40px_-18px_rgba(15,23,42,0.45)] backdrop-blur-xl">
-          <BookingAction mobile />
-        </div>
-      </div>, document.body)}
+      <div className="px-1 pb-2 pt-4">
+        <button type="submit" disabled={isSubmitting} className="min-h-12 w-full rounded-xl bg-slate-950 px-5 py-3.5 text-base font-extrabold text-white shadow-lg transition hover:bg-black focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-wait disabled:opacity-60">
+          {isSubmitting ? 'Booking your ride…' : 'Book my ride'}
+        </button>
+        <p className="mt-2 text-center text-xs text-slate-500">You’ll receive confirmation after your booking is submitted.</p>
+      </div>
     </form>
   );
 

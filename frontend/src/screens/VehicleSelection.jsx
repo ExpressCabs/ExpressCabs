@@ -299,8 +299,8 @@ const VehicleSelection = ({
             className={`relative flex min-h-[76px] items-center gap-3 rounded-2xl border px-3 py-2.5 transition ${vehicle.disabled
               ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-55'
               : vehicle.isSelected
-              ? 'cursor-pointer border-slate-950 bg-slate-950 text-white shadow-md ring-2 ring-slate-950/15 ring-offset-2'
-              : 'cursor-pointer border-slate-200 bg-white hover:border-slate-400 hover:bg-slate-50'
+              ? 'cursor-pointer border-blue-600 bg-blue-50 text-slate-950 shadow-sm ring-2 ring-blue-100'
+              : 'cursor-pointer border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/30'
             }`}
           >
             <input
@@ -312,28 +312,23 @@ const VehicleSelection = ({
               onChange={() => handleSelect(vehicle)}
               className="sr-only"
             />
-            <span className={`flex h-14 w-16 shrink-0 items-center justify-center rounded-xl border ${vehicle.isSelected ? 'border-white/20 bg-white' : 'border-slate-200 bg-slate-50'}`}>
+            <span className={`flex h-14 w-16 shrink-0 items-center justify-center rounded-xl border ${vehicle.isSelected ? 'border-blue-100 bg-white' : 'border-blue-50 bg-blue-50/70'}`}>
               <img src={vehicle.image} alt="" aria-hidden="true" className="h-11 w-14 object-contain" />
             </span>
             <span className="min-w-0 flex-1">
-              <span className="flex items-baseline justify-between gap-2">
-                <span className="font-extrabold">{vehicle.name}</span>
-                <span className={`shrink-0 text-base font-extrabold ${vehicle.isSelected ? 'text-white' : 'text-slate-950'}`}>
-                  {vehicle.fare ? `$${vehicle.fare}` : '—'}
-                </span>
-              </span>
-              <span className={`mt-1 block text-xs leading-5 ${vehicle.isSelected ? 'text-white/75' : 'text-slate-600'}`}>
+              <span className="font-extrabold">{vehicle.name}</span>
+              <span className="mt-1 block text-xs leading-5 text-slate-500">
                 Up to {vehicle.seats} passengers · {vehicle.luggage}
               </span>
               {vehicle.disabled && <span className="mt-0.5 block text-xs font-semibold text-red-700">Not suitable for your group</span>}
             </span>
-            <span aria-hidden="true" className={`h-5 w-5 shrink-0 rounded-full border-2 p-1 ${vehicle.isSelected ? 'border-white bg-white ring-2 ring-white/25' : 'border-slate-400'}`}>
-              {vehicle.isSelected && <span className="block h-full w-full rounded-full bg-slate-950" />}
+            <span aria-hidden="true" className={`h-5 w-5 shrink-0 rounded-full border-2 p-1 ${vehicle.isSelected ? 'border-blue-600 bg-blue-600 ring-2 ring-blue-100' : 'border-slate-300'}`}>
+              {vehicle.isSelected && <span className="block h-full w-full rounded-full bg-white" />}
             </span>
           </label>
         ))}
       </div>
-      <p className="mt-2 text-xs text-slate-500">Fares include the selected vehicle and route estimate. Final route conditions may affect metered charges.</p>
+      <p className="mt-2 text-xs text-slate-500">Vehicle availability is confirmed with your booking.</p>
     </div>
   );
 };
