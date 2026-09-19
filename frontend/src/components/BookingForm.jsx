@@ -37,6 +37,7 @@ const BookingForm = ({
   const navigate = useNavigate();
 
   const mapRef = useRef(null);
+  const formTopRef = useRef(null);
   const tripEstimateRef = useRef(null);
   const pickupInputRef = useRef(null);
   const dropoffInputRef = useRef(null);
@@ -1014,6 +1015,35 @@ const BookingForm = ({
     <p id={`${name}-error`} className="mt-1 text-sm font-medium text-red-700">{fieldErrors[name]}</p>
   ) : null;
 
+  const goToStep = (nextStep) => {
+    setStep(nextStep);
+    window.requestAnimationFrame(() => formTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  };
+
+  const continueFromJourney = () => {
+    trackBookingStarted();
+    const errors = {};
+    if (!pickupLoc) errors.pickup = 'Choose a pickup address from the suggestions.';
+    if (!dropoffLoc) errors.dropoff = 'Choose a destination from the suggestions.';
+    if (!hasPassengerCount || Number(passengerCount) > 11) errors.passengerCount = 'Enter between 1 and 11 passengers.';
+    if (bookingType === 'later' && !scheduledDateTime) errors.scheduledDateTime = 'Choose a pickup date and time.';
+    setFieldErrors(errors);
+    if (Object.keys(errors).length) {
+      window.requestAnimationFrame(() => document.querySelector('[aria-invalid="true"]')?.focus());
+      return;
+    }
+    goToStep(2);
+  };
+
+  const continueFromVehicle = () => {
+    if (!selectedVehicle || !Number.isFinite(Number(fare))) {
+      setFieldErrors((current) => ({ ...current, vehicle: 'Select a vehicle before continuing.' }));
+      document.getElementById('vehicle-options')?.focus();
+      return;
+    }
+    goToStep(3);
+  };
+
   const content = step === 4 && OTP_ENABLED ? (
     <Suspense fallback={stepFallback}>
       <OTPVerification
@@ -1025,8 +1055,21 @@ const BookingForm = ({
     </Suspense>
   ) : (
     <form
+      ref={formTopRef}
       id="booking-form"
-      onSubmit={handleSingleSubmit}
+      onSubmit={(event) => {
+        if (step === 1) {
+          event.preventDefault();
+          continueFromJourney();
+          return;
+        }
+        if (step === 2) {
+          event.preventDefault();
+          continueFromVehicle();
+          return;
+        }
+        handleSingleSubmit(event);
+      }}
       noValidate
       className="rounded-[28px] bg-slate-50/95 p-1 text-slate-950"
     >
@@ -1036,9 +1079,25 @@ const BookingForm = ({
           <h2 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">Where can we take you?</h2>
           <p className="mt-1 text-sm text-slate-500">Plan your trip in under a minute.</p>
         </div>
+        <ol className="mt-5 flex items-center" aria-label="Booking progress">
+          {['Journey', 'Vehicle', 'Passenger'].map((label, index) => {
+            const number = index + 1;
+            const complete = step > number;
+            const active = step === number;
+            return <React.Fragment key={label}>
+              <li className="flex items-center gap-2" aria-current={active ? 'step' : undefined}>
+                <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-black ${complete ? 'bg-blue-600 text-white' : active ? 'bg-slate-950 text-white ring-4 ring-slate-200' : 'bg-white text-slate-400'}`}>
+                  {complete ? '✓' : number}
+                </span>
+                <span className={`hidden text-xs font-bold sm:inline ${active ? 'text-slate-950' : 'text-slate-400'}`}>{label}</span>
+              </li>
+              {index < 2 && <span className={`mx-3 h-px flex-1 ${step > number ? 'bg-blue-600' : 'bg-slate-200'}`} aria-hidden="true" />}
+            </React.Fragment>;
+          })}
+        </ol>
       </div>
 
-      <fieldset className="mt-5 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_-32px_rgba(15,23,42,0.35)] md:p-6">
+      <fieldset className={`${step === 1 ? 'block' : 'hidden'} mt-5 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_-32px_rgba(15,23,42,0.35)] md:p-6`}>
         <legend className="flex items-center gap-2 px-1 text-lg font-black"><span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs text-white">1</span>Your journey</legend>
         <div className="relative">
           <label htmlFor="booking-pickup" className="text-sm font-semibold">Pickup address *</label>
@@ -1136,9 +1195,14 @@ const BookingForm = ({
             <div ref={mapRef} className={`${mapsReady && mapInitialized ? 'block' : 'hidden'} mt-3 h-56 overflow-hidden rounded-xl border border-slate-200`} aria-label="Route map" />
           </div>
         </details>
+        <div className="mt-6 border-t border-slate-100 pt-4">
+          <button type="button" onClick={continueFromJourney} className="min-h-12 w-full rounded-xl bg-slate-950 px-5 py-3 text-sm font-extrabold text-white shadow-lg transition hover:bg-black focus:outline-none focus:ring-4 focus:ring-blue-100">
+            Choose a vehicle <span aria-hidden="true">→</span>
+          </button>
+        </div>
       </fieldset>
 
-      <fieldset id="vehicle-options" tabIndex="-1" className="mt-4 scroll-mt-32 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_-32px_rgba(15,23,42,0.35)] outline-none focus:ring-2 focus:ring-blue-200 md:p-6">
+      <fieldset id="vehicle-options" tabIndex="-1" className={`${step === 2 ? 'block' : 'hidden'} mt-4 scroll-mt-32 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_-32px_rgba(15,23,42,0.35)] outline-none focus:ring-2 focus:ring-blue-200 md:p-6`}>
         <legend className="flex items-center gap-2 px-1 text-lg font-black"><span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs text-white">2</span>Choose your ride</legend>
         <p className="mb-4 text-sm text-slate-500">Select a vehicle that comfortably fits your group.</p>
         {canContinueToVehicle ? <Suspense fallback={stepFallback}>
@@ -1151,9 +1215,13 @@ const BookingForm = ({
           />
         </Suspense> : <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-600">Add your journey details above to see suitable vehicles.</p>}
         {errorText('vehicle')}
+        <div className="mt-6 grid grid-cols-[auto_1fr] gap-3 border-t border-slate-100 pt-4">
+          <button type="button" onClick={() => goToStep(1)} className="min-h-12 rounded-xl px-4 text-sm font-bold text-slate-600 hover:bg-slate-50">← Back</button>
+          <button type="button" onClick={continueFromVehicle} className="min-h-12 rounded-xl bg-slate-950 px-5 text-sm font-extrabold text-white shadow-lg transition hover:bg-black focus:outline-none focus:ring-4 focus:ring-blue-100">Passenger details <span aria-hidden="true">→</span></button>
+        </div>
       </fieldset>
 
-      <fieldset className="mt-4 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_-32px_rgba(15,23,42,0.35)] md:p-6">
+      <fieldset className={`${step === 3 ? 'block' : 'hidden'} mt-4 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_-32px_rgba(15,23,42,0.35)] md:p-6`}>
         <legend className="flex items-center gap-2 px-1 text-lg font-black"><span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs text-white">3</span>Who is riding?</legend>
         <p className="mb-4 text-sm text-slate-500">We’ll share the driver’s details with this passenger.</p>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -1185,13 +1253,16 @@ const BookingForm = ({
         </div>}
       </fieldset>
 
-      {fieldErrors.submit && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">{fieldErrors.submit}</p>}
-      <div className="px-1 pb-2 pt-4">
-        <button type="submit" disabled={isSubmitting} className="min-h-12 w-full rounded-xl bg-slate-950 px-5 py-3.5 text-base font-extrabold text-white shadow-lg transition hover:bg-black focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-wait disabled:opacity-60">
-          {isSubmitting ? 'Booking your ride…' : 'Book my ride'}
-        </button>
-        <p className="mt-2 text-center text-xs text-slate-500">You’ll receive confirmation after your booking is submitted.</p>
-      </div>
+      {step === 3 && <>
+        {fieldErrors.submit && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">{fieldErrors.submit}</p>}
+        <div className="grid grid-cols-[auto_1fr] gap-3 px-1 pb-2 pt-4">
+          <button type="button" onClick={() => goToStep(2)} className="min-h-12 rounded-xl px-4 text-sm font-bold text-slate-600 hover:bg-white">← Back</button>
+          <button type="submit" disabled={isSubmitting} className="min-h-12 rounded-xl bg-slate-950 px-5 py-3.5 text-base font-extrabold text-white shadow-lg transition hover:bg-black focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-wait disabled:opacity-60">
+            {isSubmitting ? 'Booking your ride…' : 'Book my ride'}
+          </button>
+        </div>
+        <p className="mb-2 text-center text-xs text-slate-500">You’ll receive confirmation after your booking is submitted.</p>
+      </>}
     </form>
   );
 
