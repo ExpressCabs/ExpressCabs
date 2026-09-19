@@ -1,5 +1,9 @@
 import React, { useEffect, useRef, useState, useCallback, lazy, Suspense } from 'react';
 import { MdCalendarToday, MdMyLocation } from 'react-icons/md';
+import {
+  FiArrowLeft, FiArrowRight, FiBriefcase, FiCheck, FiClock, FiInfo,
+  FiMail, FiMap, FiMapPin, FiNavigation, FiPhone, FiUser, FiUsers,
+} from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 
 import { fireBookingConversion } from '../lib/adsTracking';
@@ -1004,8 +1008,8 @@ const BookingForm = ({
     </div>
   );
 
-  const inputClass = (name) => `mt-2 h-12 w-full rounded-xl border bg-white px-3 text-base text-slate-950 outline-none transition focus:ring-2 ${
-    fieldErrors[name] ? 'border-red-500 focus:ring-red-200' : 'border-slate-200 focus:border-blue-600 focus:ring-blue-100'
+  const inputClass = (name) => `mt-2 h-12 w-full rounded-xl border bg-white px-4 text-base text-slate-950 outline-none transition focus:ring-2 ${
+    fieldErrors[name] ? 'border-red-500 focus:ring-red-200' : 'border-slate-300 focus:border-blue-600 focus:ring-blue-100'
   }`;
   const updatePassengerDetail = (name, value) => {
     setPassengerDetails((current) => ({ ...current, [name]: value }));
@@ -1071,23 +1075,23 @@ const BookingForm = ({
         handleSingleSubmit(event);
       }}
       noValidate
-      className="rounded-[28px] bg-slate-50/95 p-1 text-slate-950"
+      className="rounded-[28px] bg-[#f4f7fc] p-3 text-slate-950 sm:p-5"
     >
-      <div className="px-2 pb-2 pt-1 md:px-3">
+      <div className="px-1 pb-2 pt-1 sm:px-0">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">Book a private ride</p>
-          <h2 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">Where can we take you?</h2>
+          <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-600"><FiNavigation aria-hidden="true" /> Book a Prime Cabs ride</p>
+          <h2 className="mt-2 text-[2rem] font-black leading-tight tracking-tight md:text-4xl">Where can we take you?</h2>
           <p className="mt-1 text-sm text-slate-500">Plan your trip in under a minute.</p>
         </div>
-        <ol className="mt-5 flex items-center" aria-label="Booking progress">
+        <ol className="mt-6 flex max-w-sm items-center" aria-label="Booking progress">
           {['Journey', 'Vehicle', 'Passenger'].map((label, index) => {
             const number = index + 1;
             const complete = step > number;
             const active = step === number;
             return <React.Fragment key={label}>
               <li className="flex items-center gap-2" aria-current={active ? 'step' : undefined}>
-                <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-black ${complete ? 'bg-blue-600 text-white' : active ? 'bg-slate-950 text-white ring-4 ring-slate-200' : 'bg-white text-slate-400'}`}>
-                  {complete ? '✓' : number}
+                <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-xs font-black ${complete ? 'bg-blue-600 text-white' : active ? 'bg-slate-950 text-white ring-4 ring-slate-200' : 'bg-transparent text-slate-400'}`}>
+                  {complete ? <FiCheck size={16} strokeWidth={3} aria-hidden="true" /> : number}
                 </span>
                 <span className={`hidden text-xs font-bold sm:inline ${active ? 'text-slate-950' : 'text-slate-400'}`}>{label}</span>
               </li>
@@ -1097,10 +1101,11 @@ const BookingForm = ({
         </ol>
       </div>
 
-      <fieldset className={`${step === 1 ? 'block' : 'hidden'} mt-5 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_-32px_rgba(15,23,42,0.35)] md:p-6`}>
-        <legend className="flex items-center gap-2 px-1 text-lg font-black"><span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs text-white">1</span>Your journey</legend>
+      <fieldset className={`${step === 1 ? 'block' : 'hidden'} mt-6 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_50px_-36px_rgba(15,23,42,0.4)] md:p-6`}>
+        <legend className="px-1 text-xl font-black">Tell us about your trip</legend>
+        <p className="mb-6 text-sm text-slate-500">We’ll use this to find the best available ride.</p>
         <div className="relative">
-          <label htmlFor="booking-pickup" className="text-sm font-semibold">Pickup address *</label>
+          <label htmlFor="booking-pickup" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><FiMapPin className="text-blue-600" aria-hidden="true" /> Pickup location *</label>
           <input
             id="booking-pickup" ref={pickupInputRef} type="text" autoComplete="street-address"
             value={pickupAddress}
@@ -1126,7 +1131,7 @@ const BookingForm = ({
         </div>
 
         <div className="mt-4">
-          <label htmlFor="booking-dropoff" className="text-sm font-semibold">Destination *</label>
+          <label htmlFor="booking-dropoff" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><FiNavigation className="text-blue-600" aria-hidden="true" /> Drop-off location *</label>
           <input
             id="booking-dropoff" ref={dropoffInputRef} type="text" autoComplete="off" value={dropoffAddress}
             onChange={(event) => {
@@ -1145,7 +1150,7 @@ const BookingForm = ({
 
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>
-            <span className="text-sm font-semibold">Pickup time *</span>
+            <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><FiClock className="text-blue-600" aria-hidden="true" /> Pickup time *</span>
             <div className="mt-2 grid grid-cols-2 rounded-xl bg-slate-100 p-1" role="radiogroup" aria-label="Pickup time">
               {['now', 'later'].map((value) => (
                 <label key={value} className={`cursor-pointer rounded-lg px-2 py-2 text-center text-sm font-semibold ${bookingType === value ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-600'}`}>
@@ -1156,7 +1161,7 @@ const BookingForm = ({
             </div>
           </div>
           <div>
-            <label htmlFor="passenger-count" className="text-sm font-semibold">Passengers *</label>
+            <label htmlFor="passenger-count" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><FiUsers className="text-blue-600" aria-hidden="true" /> Passengers *</label>
             <input
               id="passenger-count" ref={passengerCountInputRef} type="number" inputMode="numeric" min="1" max="11" value={passengerCount || ''}
               onChange={(event) => {
@@ -1173,7 +1178,7 @@ const BookingForm = ({
         </div>
 
         {bookingType === 'later' && <div className="mt-4">
-          <label htmlFor="scheduledDateTime" className="flex items-center gap-2 text-sm font-semibold"><MdCalendarToday /> Pickup date and time *</label>
+          <label htmlFor="scheduledDateTime" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><MdCalendarToday className="text-blue-600" /> Pickup date and time *</label>
           <input
             id="scheduledDateTime" type="datetime-local" value={scheduledDateTime}
             onChange={(event) => { setScheduledDateTime(event.target.value); setFieldErrors((current) => ({ ...current, scheduledDateTime: undefined })); }}
@@ -1189,7 +1194,7 @@ const BookingForm = ({
         </div>}
 
         <details className="mt-4 rounded-xl border border-slate-200 bg-slate-50">
-          <summary className="cursor-pointer px-3 py-2 text-sm font-semibold text-slate-700">Preview route map</summary>
+          <summary className="flex cursor-pointer items-center gap-2 px-3 py-3 text-sm font-semibold text-slate-700"><FiMap className="text-blue-600" aria-hidden="true" /> Preview route map</summary>
           <div className="px-3 pb-3">
             {!mapsReady || !mapInitialized ? <MapPlaceholder /> : null}
             <div ref={mapRef} className={`${mapsReady && mapInitialized ? 'block' : 'hidden'} mt-3 h-56 overflow-hidden rounded-xl border border-slate-200`} aria-label="Route map" />
@@ -1197,14 +1202,14 @@ const BookingForm = ({
         </details>
         <div className="mt-6 border-t border-slate-100 pt-4">
           <button type="button" onClick={continueFromJourney} className="min-h-12 w-full rounded-xl bg-slate-950 px-5 py-3 text-sm font-extrabold text-white shadow-lg transition hover:bg-black focus:outline-none focus:ring-4 focus:ring-blue-100">
-            Choose a vehicle <span aria-hidden="true">→</span>
+            Choose a vehicle <FiArrowRight className="ml-2 inline" aria-hidden="true" />
           </button>
         </div>
       </fieldset>
 
-      <fieldset id="vehicle-options" tabIndex="-1" className={`${step === 2 ? 'block' : 'hidden'} mt-4 scroll-mt-32 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_-32px_rgba(15,23,42,0.35)] outline-none focus:ring-2 focus:ring-blue-200 md:p-6`}>
-        <legend className="flex items-center gap-2 px-1 text-lg font-black"><span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs text-white">2</span>Choose your ride</legend>
-        <p className="mb-4 text-sm text-slate-500">Select a vehicle that comfortably fits your group.</p>
+      <fieldset id="vehicle-options" tabIndex="-1" className={`${step === 2 ? 'block' : 'hidden'} mt-6 scroll-mt-32 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_50px_-36px_rgba(15,23,42,0.4)] outline-none focus:ring-2 focus:ring-blue-200 md:p-6`}>
+        <legend className="px-1 text-xl font-black">Choose your ride</legend>
+        <p className="mb-5 text-sm text-slate-500">All rides include a professional local driver.</p>
         {canContinueToVehicle ? <Suspense fallback={stepFallback}>
           <VehicleSelection
             pickupLoc={pickupLoc} dropoffLoc={dropoffLoc} pickupSuburb={pickupSuburb} dropoffSuburb={dropoffSuburb}
@@ -1216,22 +1221,22 @@ const BookingForm = ({
         </Suspense> : <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-600">Add your journey details above to see suitable vehicles.</p>}
         {errorText('vehicle')}
         <div className="mt-6 grid grid-cols-[auto_1fr] gap-3 border-t border-slate-100 pt-4">
-          <button type="button" onClick={() => goToStep(1)} className="min-h-12 rounded-xl px-4 text-sm font-bold text-slate-600 hover:bg-slate-50">← Back</button>
-          <button type="button" onClick={continueFromVehicle} className="min-h-12 rounded-xl bg-slate-950 px-5 text-sm font-extrabold text-white shadow-lg transition hover:bg-black focus:outline-none focus:ring-4 focus:ring-blue-100">Passenger details <span aria-hidden="true">→</span></button>
+          <button type="button" onClick={() => goToStep(1)} className="min-h-12 rounded-xl px-4 text-sm font-bold text-slate-600 hover:bg-slate-50"><FiArrowLeft className="mr-2 inline" aria-hidden="true" /> Back</button>
+          <button type="button" onClick={continueFromVehicle} className="min-h-12 rounded-xl bg-slate-950 px-5 text-sm font-extrabold text-white shadow-lg transition hover:bg-black focus:outline-none focus:ring-4 focus:ring-blue-100">Continue <FiArrowRight className="ml-2 inline" aria-hidden="true" /></button>
         </div>
       </fieldset>
 
-      <fieldset className={`${step === 3 ? 'block' : 'hidden'} mt-4 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_16px_40px_-32px_rgba(15,23,42,0.35)] md:p-6`}>
-        <legend className="flex items-center gap-2 px-1 text-lg font-black"><span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-blue-600 text-xs text-white">3</span>Who is riding?</legend>
-        <p className="mb-4 text-sm text-slate-500">We’ll share the driver’s details with this passenger.</p>
+      <fieldset className={`${step === 3 ? 'block' : 'hidden'} mt-6 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_50px_-36px_rgba(15,23,42,0.4)] md:p-6`}>
+        <legend className="px-1 text-xl font-black">Who is riding?</legend>
+        <p className="mb-6 text-sm text-slate-500">We’ll share the driver’s details with this passenger.</p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <label htmlFor="passenger-name" className="text-sm font-semibold">Full name *</label>
+            <label htmlFor="passenger-name" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><FiUser className="text-blue-600" aria-hidden="true" /> Full name *</label>
             <input id="passenger-name" type="text" autoComplete="name" value={passengerDetails.name} onChange={(event) => updatePassengerDetail('name', event.target.value)} aria-invalid={Boolean(fieldErrors.name)} aria-describedby={fieldErrors.name ? 'name-error' : undefined} className={inputClass('name')} />
             {errorText('name')}
           </div>
           <div>
-            <label htmlFor="passenger-phone" className="text-sm font-semibold">Mobile number *</label>
+            <label htmlFor="passenger-phone" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><FiPhone className="text-blue-600" aria-hidden="true" /> Mobile number *</label>
             <input id="passenger-phone" type="tel" inputMode="tel" autoComplete="tel" value={passengerDetails.phone} onChange={(event) => updatePassengerDetail('phone', event.target.value)} aria-invalid={Boolean(fieldErrors.phone)} aria-describedby={fieldErrors.phone ? 'phone-error' : undefined} className={inputClass('phone')} placeholder="04xx xxx xxx" />
             {errorText('phone')}
           </div>
@@ -1242,12 +1247,12 @@ const BookingForm = ({
         </button>
         {showExtras && <div className="mt-4 grid gap-4">
           <div>
-            <label htmlFor="passenger-email" className="text-sm font-semibold">Email <span className="font-normal text-slate-500">(optional)</span></label>
+            <label htmlFor="passenger-email" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><FiMail className="text-blue-600" aria-hidden="true" /> Email <span className="font-normal normal-case tracking-normal">(optional)</span></label>
             <input id="passenger-email" type="email" autoComplete="email" value={passengerDetails.email} onChange={(event) => updatePassengerDetail('email', event.target.value)} aria-invalid={Boolean(fieldErrors.email)} aria-describedby={fieldErrors.email ? 'email-error' : undefined} className={inputClass('email')} placeholder="you@example.com" />
             {errorText('email')}
           </div>
           <div>
-            <label htmlFor="passenger-note" className="text-sm font-semibold">Notes for the driver <span className="font-normal text-slate-500">(optional)</span></label>
+            <label htmlFor="passenger-note" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><FiBriefcase className="text-blue-600" aria-hidden="true" /> Notes for the driver <span className="font-normal normal-case tracking-normal">(optional)</span></label>
             <textarea id="passenger-note" value={passengerDetails.note} onChange={(event) => updatePassengerDetail('note', event.target.value)} className="mt-2 min-h-24 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-base outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100" placeholder="Flight number, luggage, child seat or pickup instructions" />
           </div>
         </div>}
@@ -1256,12 +1261,12 @@ const BookingForm = ({
       {step === 3 && <>
         {fieldErrors.submit && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800">{fieldErrors.submit}</p>}
         <div className="grid grid-cols-[auto_1fr] gap-3 px-1 pb-2 pt-4">
-          <button type="button" onClick={() => goToStep(2)} className="min-h-12 rounded-xl px-4 text-sm font-bold text-slate-600 hover:bg-white">← Back</button>
+          <button type="button" onClick={() => goToStep(2)} className="min-h-12 rounded-xl px-4 text-sm font-bold text-slate-600 hover:bg-white"><FiArrowLeft className="mr-2 inline" aria-hidden="true" /> Back</button>
           <button type="submit" disabled={isSubmitting} className="min-h-12 rounded-xl bg-slate-950 px-5 py-3.5 text-base font-extrabold text-white shadow-lg transition hover:bg-black focus:outline-none focus:ring-4 focus:ring-blue-200 disabled:cursor-wait disabled:opacity-60">
             {isSubmitting ? 'Booking your ride…' : 'Book my ride'}
           </button>
         </div>
-        <p className="mb-2 text-center text-xs text-slate-500">You’ll receive confirmation after your booking is submitted.</p>
+        <p className="mb-2 flex items-center justify-center gap-1.5 text-center text-xs text-slate-500"><FiInfo aria-hidden="true" /> You’ll receive confirmation after your booking is submitted.</p>
       </>}
     </form>
   );

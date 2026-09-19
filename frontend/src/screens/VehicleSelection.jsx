@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { FiBriefcase, FiCheck, FiChevronDown, FiChevronUp, FiUsers } from 'react-icons/fi';
 import sedanImg from '/assets/vehicles/sedan-modern.png';
 import suvImg from '/assets/vehicles/suv-modern.png';
 import vanImg from '/assets/vehicles/van-modern.png';
@@ -109,6 +110,7 @@ const VehicleSelection = ({
   const [hasTolls, setHasTolls] = useState(false);
   const [fares, setFares] = useState({});
   const [selectedId, setSelectedId] = useState(selectedVehicleId || null);
+  const [expandedId, setExpandedId] = useState(null);
 
   useEffect(() => {
     setSelectedId(selectedVehicleId || null);
@@ -292,40 +294,44 @@ const VehicleSelection = ({
         {hasTolls && <span className="rounded-full bg-amber-50 px-2 py-1 font-semibold text-amber-800">Tolls likely</span>}
       </div>
 
-      <div className="grid gap-2" role="radiogroup" aria-label="Vehicle options">
+      <div className="grid gap-3" role="radiogroup" aria-label="Vehicle options">
         {vehicleStates.map((vehicle) => (
-          <label
-            key={vehicle.id}
-            className={`relative flex min-h-[76px] items-center gap-3 rounded-2xl border px-3 py-2.5 transition ${vehicle.disabled
-              ? 'cursor-not-allowed border-slate-200 bg-slate-50 opacity-55'
-              : vehicle.isSelected
-              ? 'cursor-pointer border-blue-600 bg-blue-50 text-slate-950 shadow-sm ring-2 ring-blue-100'
-              : 'cursor-pointer border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/30'
-            }`}
-          >
-            <input
-              type="radio"
-              name="booking-vehicle"
-              value={vehicle.id}
-              checked={vehicle.isSelected}
-              disabled={vehicle.disabled}
-              onChange={() => handleSelect(vehicle)}
-              className="sr-only"
-            />
-            <span className={`flex h-14 w-16 shrink-0 items-center justify-center rounded-xl border ${vehicle.isSelected ? 'border-blue-100 bg-white' : 'border-blue-50 bg-blue-50/70'}`}>
-              <img src={vehicle.image} alt="" aria-hidden="true" className="h-11 w-14 object-contain" />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="font-extrabold">{vehicle.name}</span>
-              <span className="mt-1 block text-xs leading-5 text-slate-500">
-                Up to {vehicle.seats} passengers · {vehicle.luggage}
+          <div key={vehicle.id} className={`overflow-hidden rounded-2xl border transition ${vehicle.disabled
+            ? 'border-slate-200 bg-slate-50 opacity-60'
+            : vehicle.isSelected
+            ? 'border-blue-600 bg-blue-50/60 shadow-sm ring-1 ring-blue-600'
+            : 'border-slate-200 bg-white hover:border-blue-300'
+          }`}>
+            <label className={`relative flex min-h-[92px] items-center gap-3 px-3 py-3 sm:px-4 ${vehicle.disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+              <input type="radio" name="booking-vehicle" value={vehicle.id} checked={vehicle.isSelected}
+                disabled={vehicle.disabled} onChange={() => handleSelect(vehicle)} className="peer sr-only" />
+              <span className={`flex h-16 w-[76px] shrink-0 items-center justify-center rounded-xl ${vehicle.isSelected ? 'bg-white' : 'bg-blue-50'}`}>
+                <img src={vehicle.image} alt="" aria-hidden="true" className="h-12 w-[68px] object-contain" />
               </span>
-              {vehicle.disabled && <span className="mt-0.5 block text-xs font-semibold text-red-700">Not suitable for your group</span>}
-            </span>
-            <span aria-hidden="true" className={`h-5 w-5 shrink-0 rounded-full border-2 p-1 ${vehicle.isSelected ? 'border-blue-600 bg-blue-600 ring-2 ring-blue-100' : 'border-slate-300'}`}>
-              {vehicle.isSelected && <span className="block h-full w-full rounded-full bg-white" />}
-            </span>
-          </label>
+              <span className="min-w-0 flex-1">
+                <span className="flex flex-wrap items-baseline gap-x-2">
+                  <span className="text-base font-black text-slate-950">{vehicle.name}</span>
+                  <span className="text-xs font-medium text-slate-500">1–{vehicle.seats} passengers</span>
+                </span>
+                <span className="mt-1 block text-xs leading-5 text-slate-600">{vehicle.summary}</span>
+                {vehicle.disabled && <span className="mt-1 block text-xs font-bold text-red-700">Not suitable for your group</span>}
+              </span>
+              <span aria-hidden="true" className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 ${vehicle.isSelected ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300 bg-white'}`}>
+                {vehicle.isSelected && <FiCheck size={14} strokeWidth={3} />}
+              </span>
+            </label>
+            <button type="button" onClick={() => setExpandedId((current) => current === vehicle.id ? null : vehicle.id)}
+              className="flex min-h-11 w-full items-center justify-between border-t border-slate-100 px-4 text-left text-xs font-bold text-slate-600 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+              aria-expanded={expandedId === vehicle.id} aria-controls={`vehicle-details-${vehicle.id}`}>
+              <span>Vehicle details</span>
+              {expandedId === vehicle.id ? <FiChevronUp aria-hidden="true" /> : <FiChevronDown aria-hidden="true" />}
+            </button>
+            {expandedId === vehicle.id && <div id={`vehicle-details-${vehicle.id}`} className="grid gap-2 border-t border-slate-100 bg-white px-4 py-3 text-xs text-slate-600 sm:grid-cols-2">
+              <span className="flex items-center gap-2"><FiUsers className="text-blue-600" aria-hidden="true" />{vehicle.fitLabel}</span>
+              <span className="flex items-center gap-2"><FiBriefcase className="text-blue-600" aria-hidden="true" />{vehicle.luggage}</span>
+              <span>{vehicle.comfort}</span><span>{vehicle.idealFor}</span>
+            </div>}
+          </div>
         ))}
       </div>
       <p className="mt-2 text-xs text-slate-500">Vehicle availability is confirmed with your booking.</p>
