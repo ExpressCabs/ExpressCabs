@@ -1075,9 +1075,9 @@ const BookingForm = ({
         handleSingleSubmit(event);
       }}
       noValidate
-      className="rounded-[28px] bg-[#f4f7fc] p-3 text-slate-950 sm:p-5"
+      className="w-full text-slate-950"
     >
-      <div className="px-1 pb-2 pt-1 sm:px-0">
+      <div className="pb-2 pt-1">
         <div>
           <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-blue-600"><FiNavigation aria-hidden="true" /> Book a Prime Cabs ride</p>
           <h2 className="mt-2 text-[2rem] font-black leading-tight tracking-tight md:text-4xl">Where can we take you?</h2>

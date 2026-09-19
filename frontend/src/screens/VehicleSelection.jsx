@@ -302,7 +302,7 @@ const VehicleSelection = ({
             ? 'border-blue-600 bg-blue-50/60 shadow-sm ring-1 ring-blue-600'
             : 'border-slate-200 bg-white hover:border-blue-300'
           }`}>
-            <label className={`relative flex min-h-[92px] items-center gap-3 px-3 py-3 sm:px-4 ${vehicle.disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+            <label className={`relative flex h-[124px] items-center gap-3 px-3 py-3 sm:px-4 ${vehicle.disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
               <input type="radio" name="booking-vehicle" value={vehicle.id} checked={vehicle.isSelected}
                 disabled={vehicle.disabled} onChange={() => handleSelect(vehicle)} className="peer sr-only" />
               <span className={`flex h-16 w-[76px] shrink-0 items-center justify-center rounded-xl ${vehicle.isSelected ? 'bg-white' : 'bg-blue-50'}`}>
@@ -313,7 +313,7 @@ const VehicleSelection = ({
                   <span className="text-base font-black text-slate-950">{vehicle.name}</span>
                   <span className="text-xs font-medium text-slate-500">1–{vehicle.seats} passengers</span>
                 </span>
-                <span className="mt-1 block text-xs leading-5 text-slate-600">{vehicle.summary}</span>
+                <span className="mt-1 block min-h-10 text-xs leading-5 text-slate-600">{vehicle.summary}</span>
                 {vehicle.disabled && <span className="mt-1 block text-xs font-bold text-red-700">Not suitable for your group</span>}
               </span>
               <span aria-hidden="true" className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 ${vehicle.isSelected ? 'border-blue-600 bg-blue-600 text-white' : 'border-slate-300 bg-white'}`}>
