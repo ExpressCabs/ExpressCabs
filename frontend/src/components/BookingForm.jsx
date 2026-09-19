@@ -43,6 +43,7 @@ const BookingForm = ({
   const mapRef = useRef(null);
   const formTopRef = useRef(null);
   const tripEstimateRef = useRef(null);
+  const vehicleActionsRef = useRef(null);
   const pickupInputRef = useRef(null);
   const dropoffInputRef = useRef(null);
   const passengerCountInputRef = useRef(null);
@@ -56,6 +57,7 @@ const BookingForm = ({
   const dropoffTrackedRef = useRef('');
   const fareTrackedRef = useRef('');
   const vehicleTrackedRef = useRef('');
+  const lastScrolledVehicleRef = useRef(null);
   const submitAttemptTrackedRef = useRef(false);
   const submitSuccessTrackedRef = useRef(false);
   const pickupAddressSyncRef = useRef({ value: '', source: 'idle' });
@@ -937,6 +939,7 @@ const BookingForm = ({
 
   useEffect(() => {
     if (!selectedVehicle?.id || !Number.isFinite(Number(fare))) {
+      if (!selectedVehicle?.id) lastScrolledVehicleRef.current = null;
       return;
     }
 
@@ -981,6 +984,16 @@ const BookingForm = ({
     passengerCount,
   ]);
 
+  useEffect(() => {
+    if (step !== 2 || !selectedVehicle?.id || !Number.isFinite(Number(fare))) return;
+    if (lastScrolledVehicleRef.current === selectedVehicle.id) return;
+
+    lastScrolledVehicleRef.current = selectedVehicle.id;
+    window.requestAnimationFrame(() => {
+      vehicleActionsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  }, [fare, selectedVehicle?.id, step]);
+
   const MapPlaceholder = () => (
     <button
       type="button"
@@ -1007,9 +1020,16 @@ const BookingForm = ({
     </div>
   );
 
-  const inputClass = (name) => `mt-2 h-12 w-full rounded-xl border bg-white px-4 text-base text-slate-950 outline-none transition focus:ring-2 ${
-    fieldErrors[name] ? 'border-red-500 focus:ring-red-200' : 'border-slate-300 focus:border-blue-600 focus:ring-blue-100'
-  }`;
+  const inputClass = (name, value) => {
+    const populated = value !== null && value !== undefined && String(value).trim() !== '';
+    const stateClass = fieldErrors[name]
+      ? 'border-red-500 bg-red-50/50 focus:ring-red-200'
+      : populated
+        ? 'border-blue-200 bg-blue-50/60 focus:border-blue-600 focus:bg-white focus:ring-blue-100'
+        : 'border-slate-300 bg-white focus:border-blue-600 focus:ring-blue-100';
+
+    return `mt-2 block h-12 w-full min-w-0 max-w-full rounded-xl border px-4 text-base text-slate-950 outline-none transition-colors focus:ring-2 ${stateClass}`;
+  };
   const updatePassengerDetail = (name, value) => {
     setPassengerDetails((current) => ({ ...current, [name]: value }));
     setFieldErrors((current) => ({ ...current, [name]: undefined, submit: undefined }));
@@ -1074,7 +1094,7 @@ const BookingForm = ({
         handleSingleSubmit(event);
       }}
       noValidate
-      className="w-full text-slate-950"
+      className="w-full min-w-0 overflow-x-hidden text-slate-950"
     >
       <div className="pb-2 pt-1">
         <div>
@@ -1100,8 +1120,9 @@ const BookingForm = ({
         </ol>
       </div>
 
-      <fieldset className={`${step === 1 ? 'block' : 'hidden'} mt-6 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_50px_-36px_rgba(15,23,42,0.4)] md:p-6`}>
-        <legend className="px-1 text-xl font-black">Tell us about your trip</legend>
+      <fieldset aria-labelledby="journey-step-title" className={`${step === 1 ? 'block' : 'hidden'} mt-6 min-w-0 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_50px_-36px_rgba(15,23,42,0.4)] md:p-6`}>
+        <legend className="sr-only">Journey details</legend>
+        <h3 id="journey-step-title" className="text-xl font-black">Tell us about your trip</h3>
         <p className="mb-6 text-sm text-slate-500">We’ll use this to find the best available ride.</p>
         <div className="relative">
           <label htmlFor="booking-pickup" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><FiMapPin className="text-blue-600" aria-hidden="true" /> Pickup location *</label>
@@ -1118,7 +1139,7 @@ const BookingForm = ({
             }}
             onFocus={handleMapIntent} onChangeCapture={handleMapIntent}
             aria-invalid={Boolean(fieldErrors.pickup)} aria-describedby={fieldErrors.pickup ? 'pickup-error' : undefined}
-            className={`${inputClass('pickup')} pr-12`} placeholder="Start typing an address"
+            className={`${inputClass('pickup', pickupAddress)} pr-12`} placeholder="Start typing an address"
           />
           <button
             type="button" onClick={handleUseCurrentLocation} disabled={isResolvingCurrentLocation}
@@ -1142,13 +1163,13 @@ const BookingForm = ({
             }}
             onFocus={handleMapIntent} onChangeCapture={handleMapIntent}
             aria-invalid={Boolean(fieldErrors.dropoff)} aria-describedby={fieldErrors.dropoff ? 'dropoff-error' : undefined}
-            className={inputClass('dropoff')} placeholder="Where are you going?"
+            className={inputClass('dropoff', dropoffAddress)} placeholder="Where are you going?"
           />
           {errorText('dropoff')}
         </div>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div>
+        <div className="mt-4 grid min-w-0 gap-4 sm:grid-cols-2">
+          <div className="min-w-0">
             <span className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><FiClock className="text-blue-600" aria-hidden="true" /> Pickup time *</span>
             <div className="mt-2 grid grid-cols-2 rounded-xl bg-slate-100 p-1" role="radiogroup" aria-label="Pickup time">
               {['now', 'later'].map((value) => (
@@ -1158,18 +1179,18 @@ const BookingForm = ({
                 </label>
               ))}
             </div>
-            {bookingType === 'later' && <div className="mt-4">
+            {bookingType === 'later' && <div className="mt-4 min-w-0 overflow-hidden">
               <label htmlFor="scheduledDateTime" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><MdCalendarToday className="text-blue-600" /> Pickup date and time *</label>
               <input
                 id="scheduledDateTime" type="datetime-local" value={scheduledDateTime}
                 onChange={(event) => { setScheduledDateTime(event.target.value); setFieldErrors((current) => ({ ...current, scheduledDateTime: undefined })); }}
                 aria-invalid={Boolean(fieldErrors.scheduledDateTime)} aria-describedby={fieldErrors.scheduledDateTime ? 'scheduledDateTime-error' : undefined}
-                className={inputClass('scheduledDateTime')}
+                className={`${inputClass('scheduledDateTime', scheduledDateTime)} [min-width:0]`}
               />
               {errorText('scheduledDateTime')}
             </div>}
           </div>
-          <div>
+          <div className="min-w-0">
             <label htmlFor="passenger-count" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><FiUsers className="text-blue-600" aria-hidden="true" /> Passengers *</label>
             <input
               id="passenger-count" ref={passengerCountInputRef} type="number" inputMode="numeric" min="1" max="11" value={passengerCount || ''}
@@ -1180,7 +1201,7 @@ const BookingForm = ({
                 setFieldErrors((current) => ({ ...current, passengerCount: undefined, vehicle: undefined }));
               }}
               aria-invalid={Boolean(fieldErrors.passengerCount)} aria-describedby={fieldErrors.passengerCount ? 'passengerCount-error' : undefined}
-              className={inputClass('passengerCount')} placeholder="e.g. 2"
+              className={inputClass('passengerCount', passengerCount)} placeholder="e.g. 2"
             />
             {errorText('passengerCount')}
           </div>
@@ -1205,8 +1226,9 @@ const BookingForm = ({
         </div>
       </fieldset>
 
-      <fieldset id="vehicle-options" tabIndex="-1" className={`${step === 2 ? 'block' : 'hidden'} mt-6 scroll-mt-32 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_50px_-36px_rgba(15,23,42,0.4)] outline-none focus:ring-2 focus:ring-blue-200 md:p-6`}>
-        <legend className="px-1 text-xl font-black">Choose your ride</legend>
+      <fieldset id="vehicle-options" aria-labelledby="vehicle-step-title" tabIndex="-1" className={`${step === 2 ? 'block' : 'hidden'} mt-6 min-w-0 scroll-mt-32 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_50px_-36px_rgba(15,23,42,0.4)] outline-none focus:ring-2 focus:ring-blue-200 md:p-6`}>
+        <legend className="sr-only">Vehicle selection</legend>
+        <h3 id="vehicle-step-title" className="text-xl font-black">Choose your ride</h3>
         <p className="mb-5 text-sm text-slate-500">All rides include a professional local driver.</p>
         {canContinueToVehicle ? <Suspense fallback={stepFallback}>
           <VehicleSelection
@@ -1218,24 +1240,25 @@ const BookingForm = ({
           />
         </Suspense> : <p className="rounded-xl bg-slate-50 p-4 text-sm text-slate-600">Add your journey details above to see suitable vehicles.</p>}
         {errorText('vehicle')}
-        <div className="mt-6 grid grid-cols-[auto_1fr] gap-3 border-t border-slate-100 pt-4">
+        <div ref={vehicleActionsRef} className="mt-6 grid scroll-mt-24 grid-cols-[auto_1fr] gap-3 border-t border-slate-100 pt-4">
           <button type="button" onClick={() => goToStep(1)} className="min-h-12 rounded-xl px-4 text-sm font-bold text-slate-600 hover:bg-slate-50"><FiArrowLeft className="mr-2 inline" aria-hidden="true" /> Back</button>
           <button type="button" onClick={continueFromVehicle} className="min-h-12 rounded-xl bg-slate-950 px-5 text-sm font-extrabold text-white shadow-lg transition hover:bg-black focus:outline-none focus:ring-4 focus:ring-blue-100">Continue <FiArrowRight className="ml-2 inline" aria-hidden="true" /></button>
         </div>
       </fieldset>
 
-      <fieldset className={`${step === 3 ? 'block' : 'hidden'} mt-6 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_50px_-36px_rgba(15,23,42,0.4)] md:p-6`}>
-        <legend className="px-1 text-xl font-black">Who is riding?</legend>
+      <fieldset aria-labelledby="passenger-step-title" className={`${step === 3 ? 'block' : 'hidden'} mt-6 min-w-0 rounded-[24px] border border-slate-200 bg-white p-5 shadow-[0_18px_50px_-36px_rgba(15,23,42,0.4)] md:p-6`}>
+        <legend className="sr-only">Passenger details</legend>
+        <h3 id="passenger-step-title" className="text-xl font-black">Who is riding?</h3>
         <p className="mb-6 text-sm text-slate-500">We’ll share the driver’s details with this passenger.</p>
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="passenger-name" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><FiUser className="text-blue-600" aria-hidden="true" /> Full name *</label>
-            <input id="passenger-name" type="text" autoComplete="name" value={passengerDetails.name} onChange={(event) => updatePassengerDetail('name', event.target.value)} aria-invalid={Boolean(fieldErrors.name)} aria-describedby={fieldErrors.name ? 'name-error' : undefined} className={inputClass('name')} />
+            <input id="passenger-name" type="text" autoComplete="name" value={passengerDetails.name} onChange={(event) => updatePassengerDetail('name', event.target.value)} aria-invalid={Boolean(fieldErrors.name)} aria-describedby={fieldErrors.name ? 'name-error' : undefined} className={inputClass('name', passengerDetails.name)} />
             {errorText('name')}
           </div>
           <div>
             <label htmlFor="passenger-phone" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><FiPhone className="text-blue-600" aria-hidden="true" /> Mobile number *</label>
-            <input id="passenger-phone" type="tel" inputMode="tel" autoComplete="tel" value={passengerDetails.phone} onChange={(event) => updatePassengerDetail('phone', event.target.value)} aria-invalid={Boolean(fieldErrors.phone)} aria-describedby={fieldErrors.phone ? 'phone-error' : undefined} className={inputClass('phone')} placeholder="04xx xxx xxx" />
+            <input id="passenger-phone" type="tel" inputMode="tel" autoComplete="tel" value={passengerDetails.phone} onChange={(event) => updatePassengerDetail('phone', event.target.value)} aria-invalid={Boolean(fieldErrors.phone)} aria-describedby={fieldErrors.phone ? 'phone-error' : undefined} className={inputClass('phone', passengerDetails.phone)} placeholder="04xx xxx xxx" />
             {errorText('phone')}
           </div>
         </div>
@@ -1243,12 +1266,12 @@ const BookingForm = ({
         <div className="mt-4 grid gap-4">
           <div>
             <label htmlFor="passenger-email" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><FiMail className="text-blue-600" aria-hidden="true" /> Email <span className="font-normal normal-case tracking-normal">(optional)</span></label>
-            <input id="passenger-email" type="email" autoComplete="email" value={passengerDetails.email} onChange={(event) => updatePassengerDetail('email', event.target.value)} aria-invalid={Boolean(fieldErrors.email)} aria-describedby={fieldErrors.email ? 'email-error' : undefined} className={inputClass('email')} placeholder="you@example.com" />
+            <input id="passenger-email" type="email" autoComplete="email" value={passengerDetails.email} onChange={(event) => updatePassengerDetail('email', event.target.value)} aria-invalid={Boolean(fieldErrors.email)} aria-describedby={fieldErrors.email ? 'email-error' : undefined} className={inputClass('email', passengerDetails.email)} placeholder="you@example.com" />
             {errorText('email')}
           </div>
           <div>
             <label htmlFor="passenger-note" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><FiBriefcase className="text-blue-600" aria-hidden="true" /> Notes for the driver <span className="font-normal normal-case tracking-normal">(optional)</span></label>
-            <textarea id="passenger-note" value={passengerDetails.note} onChange={(event) => updatePassengerDetail('note', event.target.value)} className="mt-2 min-h-24 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-base outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100" placeholder="Flight number, luggage, child seat or pickup instructions" />
+            <textarea id="passenger-note" value={passengerDetails.note} onChange={(event) => updatePassengerDetail('note', event.target.value)} className={`mt-2 min-h-24 w-full rounded-xl border px-3 py-3 text-base outline-none transition-colors focus:border-blue-600 focus:bg-white focus:ring-2 focus:ring-blue-100 ${passengerDetails.note.trim() ? 'border-blue-200 bg-blue-50/60' : 'border-slate-200 bg-white'}`} placeholder="Flight number, luggage, child seat or pickup instructions" />
           </div>
         </div>
       </fieldset>

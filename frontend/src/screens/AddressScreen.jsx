@@ -314,26 +314,16 @@ export default function AddressScreen({ loggedInUser }) {
                     loggedInUser={loggedInUser}
                   />
                 </div>
-                <div className="mt-5 rounded-3xl border border-white/12 bg-black/25 px-4 py-4 text-white backdrop-blur-sm shadow-[0_24px_60px_-34px_rgba(0,0,0,0.75)]">
-                  <div className="flex flex-wrap gap-2">
+                <div className="mt-4 rounded-2xl border border-white/12 bg-black/25 px-4 py-3 text-white backdrop-blur-sm">
+                  <div className="flex flex-wrap gap-1.5">
                     {['Trusted by Melbourne travellers', 'No surprise surge pricing', 'Fast online booking'].map((item) => (
-                      <span key={item} className="rounded-full border border-white/12 bg-white/8 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/85">
+                      <span key={item} className="rounded-full border border-white/12 bg-white/8 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-white/85">
                         {item}
                       </span>
                     ))}
                   </div>
-                  <p className="mt-3 text-sm leading-6 text-white/82 md:text-[15px]">
-                    Book in a few steps and travel with confidence, whether you are heading to the airport, arriving late, or planning an early pickup.
-                  </p>
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {['24/7 Available', 'Fixed Upfront Quotes', 'Airport Specialists', 'Clean Vehicles'].map((item) => (
-                      <span key={item} className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs text-white/90 md:text-sm">
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                  <p className="mt-4 text-sm font-semibold text-white/85">
-                    One streamlined form — journey, vehicle and contact details together.
+                  <p className="mt-2 text-xs font-medium leading-5 text-white/80">
+                    24/7 availability <span aria-hidden="true">•</span> Fixed upfront quotes <span aria-hidden="true">•</span> Airport specialists <span aria-hidden="true">•</span> Clean vehicles
                   </p>
                 </div>
               </motion.div>
