@@ -4,9 +4,6 @@
     <loc>https://www.primecabsmelbourne.com.au/api/sitemaps/static.xml</loc>
   </sitemap>
   <sitemap>
-    <loc>https://www.primecabsmelbourne.com.au/api/sitemaps/suburbs.xml</loc>
-  </sitemap>
-  <sitemap>
     <loc>https://www.primecabsmelbourne.com.au/api/sitemaps/blogs.xml</loc>
   </sitemap>
 </sitemapindex>

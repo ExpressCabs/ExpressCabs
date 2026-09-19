@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPhoneAlt, FaWhatsapp, FaMapMarkerAlt, FaEnvelope, FaClock } from 'react-icons/fa';
 import logo from '/assets/images/logo.png';
@@ -20,17 +20,13 @@ export default function HeaderFooter({ mode, setMode, loggedInDriver, loggedInUs
     navigate('/');
   };
 
-  const goTo = (path, newMode) => {
-    if (newMode) setMode(newMode);
-    navigate(path);
-  };
-
   const navItems = useMemo(() => {
     return [
       {
         key: 'passenger',
         label: 'Book Ride',
-        onClick: () => handleSetMode('passenger'),
+        path: '/',
+        onClick: () => setMode('passenger'),
       },
       {
         key: loggedInDriver ? 'driverdashboard' : 'driverlogin',
@@ -40,12 +36,14 @@ export default function HeaderFooter({ mode, setMode, loggedInDriver, loggedInUs
       {
         key: 'services',
         label: 'Services',
-        onClick: () => goTo('/services', 'services'),
+        path: '/services',
+        onClick: () => setMode('services'),
       },
       {
         key: 'contact',
         label: 'Contact Us',
-        onClick: () => goTo('/contact', 'contact'),
+        path: '/contact',
+        onClick: () => setMode('contact'),
       },
       loggedInUser
         ? {
@@ -94,33 +92,38 @@ export default function HeaderFooter({ mode, setMode, loggedInDriver, loggedInUs
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <div className="mt-3 rounded-2xl border border-[var(--border-soft)] bg-[var(--surface)] backdrop-blur-xl shadow-[0_18px_60px_-28px_rgba(0,0,0,0.3)]">
             <div className="flex items-center justify-between px-4 sm:px-5 py-3">
-              <button
-                onClick={() => handleSetMode('passenger')}
+              <Link
+                to="/"
+                onClick={() => setMode('passenger')}
                 className="flex items-center gap-2 text-left"
                 aria-label="Go to homepage"
               >
-                <img src={logo} alt="Prime Cabs Logo" className="h-9 w-auto" />
+                <img src={logo} alt="Prime Cabs Logo" width="500" height="500" className="h-9 w-auto" />
                 <div className="leading-tight">
                   <div className="text-base sm:text-lg font-extrabold tracking-tight text-slate-900">Prime Cabs</div>
                   <div className="text-[11px] sm:text-xs text-slate-500 -mt-0.5">Melbourne Airport Transfers</div>
                 </div>
-              </button>
+              </Link>
 
               <nav className="hidden md:flex items-center gap-2">
-                {navItems.map((item) => (
-                  <button
-                    key={item.key}
-                    onClick={item.onClick}
-                    className={[
-                      'px-4 py-2 rounded-full text-sm font-semibold transition border',
-                      isActive(item.key)
-                        ? 'bg-gray-900 text-white border-gray-900'
-                        : 'bg-[var(--surface-solid)] text-slate-700 border-[var(--border-soft)] hover:bg-slate-50',
-                    ].join(' ')}
-                  >
-                    {item.label}
-                  </button>
-                ))}
+                {navItems.map((item) => {
+                  const className = [
+                    'px-4 py-2 rounded-full text-sm font-semibold transition border',
+                    isActive(item.key)
+                      ? 'bg-gray-900 text-white border-gray-900'
+                      : 'bg-[var(--surface-solid)] text-slate-700 border-[var(--border-soft)] hover:bg-slate-50',
+                  ].join(' ');
+
+                  return item.path ? (
+                    <Link key={item.key} to={item.path} onClick={item.onClick} className={className}>
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <button key={item.key} onClick={item.onClick} className={className}>
+                      {item.label}
+                    </button>
+                  );
+                })}
               </nav>
 
               <div className="flex items-center gap-2">
@@ -168,7 +171,7 @@ export default function HeaderFooter({ mode, setMode, loggedInDriver, loggedInUs
               >
                 <div className="p-5 border-b border-[var(--border-soft)]">
                   <div className="flex items-center gap-2">
-                    <img src={logo} alt="Prime Cabs Logo" className="h-8 w-auto" />
+                    <img src={logo} alt="Prime Cabs Logo" width="500" height="500" className="h-8 w-auto" />
                     <div>
                       <div className="font-extrabold text-slate-900">Prime Cabs</div>
                       <div className="text-xs text-slate-500">Quick navigation</div>
@@ -177,23 +180,28 @@ export default function HeaderFooter({ mode, setMode, loggedInDriver, loggedInUs
                 </div>
 
                 <div className="p-4 space-y-2">
-                  {navItems.map((item) => (
-                    <button
-                      key={item.key}
-                      onClick={() => {
-                        item.onClick();
-                        setMenuOpen(false);
-                      }}
-                      className={[
-                        'w-full text-left px-4 py-3 rounded-2xl border text-sm font-semibold transition',
-                        isActive(item.key)
-                          ? 'bg-gray-900 text-white border-gray-900'
-                          : 'bg-[var(--surface-solid)] text-slate-800 border-[var(--border-soft)] hover:bg-slate-50',
-                      ].join(' ')}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
+                  {navItems.map((item) => {
+                    const onClick = () => {
+                      item.onClick();
+                      setMenuOpen(false);
+                    };
+                    const className = [
+                      'block w-full text-left px-4 py-3 rounded-2xl border text-sm font-semibold transition',
+                      isActive(item.key)
+                        ? 'bg-gray-900 text-white border-gray-900'
+                        : 'bg-[var(--surface-solid)] text-slate-800 border-[var(--border-soft)] hover:bg-slate-50',
+                    ].join(' ');
+
+                    return item.path ? (
+                      <Link key={item.key} to={item.path} onClick={onClick} className={className}>
+                        {item.label}
+                      </Link>
+                    ) : (
+                      <button key={item.key} onClick={onClick} className={className}>
+                        {item.label}
+                      </button>
+                    );
+                  })}
 
                   <div className="mt-6 rounded-2xl border border-[var(--border-soft)] bg-slate-50 p-4">
                     <p className="text-xs font-semibold text-slate-700">Need help now?</p>
@@ -229,13 +237,12 @@ export default function HeaderFooter({ mode, setMode, loggedInDriver, loggedInUs
 }
 
 export function SiteFooter({ setMode }) {
-  const navigate = useNavigate();
-
   const footerLinks = [
-    { label: 'Book Ride', onClick: () => { setMode?.('passenger'); navigate('/'); } },
-    { label: 'Services', onClick: () => { setMode?.('services'); navigate('/services'); } },
-    { label: 'Contact', onClick: () => { setMode?.('contact'); navigate('/contact'); } },
-    { label: 'Airport Taxi Melbourne', onClick: () => navigate('/airport-taxi-melbourne') },
+    { label: 'Book Ride', path: '/', onClick: () => setMode?.('passenger') },
+    { label: 'Services', path: '/services', onClick: () => setMode?.('services') },
+    { label: 'Contact', path: '/contact', onClick: () => setMode?.('contact') },
+    { label: 'Airport Taxi Melbourne', path: '/airport-taxi-melbourne' },
+    { label: 'Travel Guides', path: '/blogs' },
   ];
 
   return (
@@ -246,7 +253,7 @@ export function SiteFooter({ setMode }) {
             <div className="grid gap-0 lg:grid-cols-[1.2fr_0.8fr_1fr]">
               <div className="p-6 sm:p-8 border-b lg:border-b-0 lg:border-r border-white/10 bg-[linear-gradient(145deg,rgba(255,255,255,0.06)_0%,rgba(255,255,255,0.02)_100%)]">
                 <div className="flex items-center gap-3">
-                  <img src={logo} alt="Prime Cabs Logo" className="h-11 w-auto" />
+                  <img src={logo} alt="Prime Cabs Logo" width="500" height="500" loading="lazy" className="h-11 w-auto" />
                   <div>
                     <p className="text-lg font-extrabold text-white">Prime Cabs</p>
                     <p className="text-sm text-white/70">Melbourne airport transfers, fixed-fare bookings, and 24/7 support.</p>
@@ -290,14 +297,15 @@ export function SiteFooter({ setMode }) {
                 <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-white/45">Quick Links</p>
                 <div className="mt-5 grid gap-2">
                   {footerLinks.map((link) => (
-                    <button
+                    <Link
                       key={link.label}
+                      to={link.path}
                       onClick={link.onClick}
                       className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/6 px-4 py-3 text-left text-sm font-semibold text-white/85 hover:bg-white/10 transition"
                     >
                       <span>{link.label}</span>
                       <span className="text-white/35">+</span>
-                    </button>
+                    </Link>
                   ))}
                 </div>
               </div>

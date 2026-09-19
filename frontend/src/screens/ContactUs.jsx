@@ -105,6 +105,18 @@ export default function ContactUs({ showMap = true }) {
           content="Contact Prime Cabs for reliable Melbourne airport taxi bookings. 24/7 support for Tullamarine, Avalon, and Melbourne suburbs. Fast response and affordable fixed fare quotes."
         />
         <link rel="canonical" href="https://www.primecabsmelbourne.com.au/contact" />
+        <meta name="robots" content="index, follow" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Prime Cabs Melbourne" />
+        <meta property="og:locale" content="en_AU" />
+        <meta property="og:url" content="https://www.primecabsmelbourne.com.au/contact" />
+        <meta property="og:title" content="Contact Prime Cabs Melbourne | Airport Taxi Booking Support" />
+        <meta property="og:description" content="Contact Prime Cabs Melbourne for airport taxi bookings, trip questions and fare quotes." />
+        <meta property="og:image" content="https://www.primecabsmelbourne.com.au/assets/images/prime-cabs-og.webp" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Contact Prime Cabs Melbourne" />
+        <meta name="twitter:description" content="Contact Prime Cabs Melbourne for airport taxi bookings, trip questions and fare quotes." />
+        <meta name="twitter:image" content="https://www.primecabsmelbourne.com.au/assets/images/prime-cabs-og.webp" />
       </Helmet>
 
       <section className="relative overflow-hidden">

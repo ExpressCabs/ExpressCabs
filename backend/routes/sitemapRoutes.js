@@ -12,7 +12,14 @@ const STATIC_URLS = [
   { path: '/services', changefreq: 'weekly', priority: '0.8' },
   { path: '/contact', changefreq: 'monthly', priority: '0.7' },
   { path: '/airport-transfer/melbourne', changefreq: 'weekly', priority: '0.9' },
+  { path: '/blogs', changefreq: 'weekly', priority: '0.7' },
 ];
+
+// Generated suburb pages stay accessible to customers, but are excluded from
+// search sitemaps until their content has been individually reviewed.
+const INDEXABLE_SUBURBS = suburbs.filter(
+  (suburb) => suburb?.slug && suburb?.seo?.indexable === true
+);
 
 function escapeXml(value) {
   return String(value || '')
@@ -29,22 +36,27 @@ function toAbsoluteUrl(pathname) {
 }
 
 function formatIso(value) {
+  if (!value) return null;
   const date = value instanceof Date ? value : new Date(value);
-  return Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function xmlElement(name, value, indent = '    ') {
+  return value ? `${indent}<${name}>${escapeXml(value)}</${name}>` : '';
 }
 
 function buildUrlset(items) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${items
-  .map(
-    (item) => `  <url>
-    <loc>${escapeXml(item.loc)}</loc>
-    <lastmod>${escapeXml(item.lastmod)}</lastmod>
-    <changefreq>${escapeXml(item.changefreq)}</changefreq>
-    <priority>${escapeXml(item.priority)}</priority>
-  </url>`
-  )
+  .map((item) => [
+    '  <url>',
+    xmlElement('loc', item.loc),
+    xmlElement('lastmod', item.lastmod),
+    xmlElement('changefreq', item.changefreq),
+    xmlElement('priority', item.priority),
+    '  </url>',
+  ].filter(Boolean).join('\n'))
   .join('\n')}
 </urlset>`;
 }
@@ -53,12 +65,12 @@ function buildSitemapIndex(items) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${items
-  .map(
-    (item) => `  <sitemap>
-    <loc>${escapeXml(item.loc)}</loc>
-    <lastmod>${escapeXml(item.lastmod)}</lastmod>
-  </sitemap>`
-  )
+  .map((item) => [
+    '  <sitemap>',
+    xmlElement('loc', item.loc),
+    xmlElement('lastmod', item.lastmod),
+    '  </sitemap>',
+  ].filter(Boolean).join('\n'))
   .join('\n')}
 </sitemapindex>`;
 }
@@ -74,14 +86,16 @@ router.get(['/sitemap.xml', '/api/sitemap.xml'], async (req, res) => {
       },
     });
 
-    const latestBlogDate = latestBlog?.updatedAt || latestBlog?.createdAt || new Date();
-    const now = new Date();
-
-    const sitemap = buildSitemapIndex([
-      { loc: toAbsoluteUrl('/api/sitemaps/static.xml'), lastmod: formatIso(now) },
-      { loc: toAbsoluteUrl('/api/sitemaps/suburbs.xml'), lastmod: formatIso(now) },
+    const latestBlogDate = latestBlog?.updatedAt || latestBlog?.createdAt;
+    const sitemapEntries = [
+      { loc: toAbsoluteUrl('/api/sitemaps/static.xml') },
       { loc: toAbsoluteUrl('/api/sitemaps/blogs.xml'), lastmod: formatIso(latestBlogDate) },
-    ]);
+    ];
+    if (INDEXABLE_SUBURBS.length) {
+      sitemapEntries.splice(1, 0, { loc: toAbsoluteUrl('/api/sitemaps/suburbs.xml') });
+    }
+
+    const sitemap = buildSitemapIndex(sitemapEntries);
 
     res.set('Content-Type', 'application/xml; charset=utf-8');
     res.set('Cache-Control', 'public, max-age=3600');
@@ -94,11 +108,9 @@ router.get(['/sitemap.xml', '/api/sitemap.xml'], async (req, res) => {
 
 router.get('/sitemaps/static.xml', async (req, res) => {
   try {
-    const lastmod = formatIso(new Date());
     const sitemap = buildUrlset(
       STATIC_URLS.map((item) => ({
         loc: toAbsoluteUrl(item.path),
-        lastmod,
         changefreq: item.changefreq,
         priority: item.priority,
       }))
@@ -115,13 +127,11 @@ router.get('/sitemaps/static.xml', async (req, res) => {
 
 router.get('/sitemaps/suburbs.xml', async (req, res) => {
   try {
-    const lastmod = formatIso(new Date());
     const sitemap = buildUrlset(
-      suburbs
-        .filter((suburb) => suburb?.slug)
+      INDEXABLE_SUBURBS
         .map((suburb) => ({
           loc: toAbsoluteUrl(`/airport-transfer/melbourne/${suburb.slug}`),
-          lastmod,
+          lastmod: formatIso(suburb?.seo?.lastModified),
           changefreq: 'weekly',
           priority: '0.8',
         }))

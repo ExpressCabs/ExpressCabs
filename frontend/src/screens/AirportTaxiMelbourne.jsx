@@ -128,7 +128,7 @@ export default function AirportTaxiMelbourne({ loggedInUser }) {
         name: 'Prime Cabs Melbourne',
         url: 'https://www.primecabsmelbourne.com.au',
         image: 'https://www.primecabsmelbourne.com.au/favicon_io/android-chrome-512x512.png',
-        telephone: '+61482038902',
+        telephone: '+61488797233',
         address: {
           '@type': 'PostalAddress',
           addressRegion: 'VIC',
@@ -150,22 +150,6 @@ export default function AirportTaxiMelbourne({ loggedInUser }) {
     []
   );
 
-  const faqSchema = useMemo(
-    () => ({
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      mainEntity: faqs.map((item) => ({
-        '@type': 'Question',
-        name: item.q,
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: item.a,
-        },
-      })),
-    }),
-    []
-  );
-
   const scrollToBooking = () => {
     bookingRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
@@ -181,14 +165,20 @@ export default function AirportTaxiMelbourne({ loggedInUser }) {
         <link rel="canonical" href="https://www.primecabsmelbourne.com.au/airport-taxi-melbourne" />
         <meta name="robots" content="index, follow" />
         <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Prime Cabs Melbourne" />
+        <meta property="og:locale" content="en_AU" />
+        <meta property="og:url" content="https://www.primecabsmelbourne.com.au/airport-taxi-melbourne" />
         <meta property="og:title" content="Melbourne Airport Taxi Transfers | Prime Cabs Melbourne" />
         <meta
           property="og:description"
           content="Premium Melbourne airport transfers with fixed quotes, clean vehicles, and dependable airport-focused service."
         />
         <meta property="og:image" content="https://www.primecabsmelbourne.com.au/assets/images/airport-hero.webp" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Melbourne Airport Taxi Transfers | Prime Cabs Melbourne" />
+        <meta name="twitter:description" content="Melbourne airport transfers with fixed quotes and vehicle options for solo travellers, families and groups." />
+        <meta name="twitter:image" content="https://www.primecabsmelbourne.com.au/assets/images/airport-hero.webp" />
         <script type="application/ld+json">{JSON.stringify(serviceSchema)}</script>
-        <script type="application/ld+json">{JSON.stringify(faqSchema)}</script>
       </Helmet>
 
       <section className="relative overflow-hidden">

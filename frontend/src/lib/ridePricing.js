@@ -1,4 +1,4 @@
-import suburbsData from '../data/melbourneSuburbs.json';
+import suburbRegionPairs from 'virtual:suburb-regions';
 
 const VEHICLES = [
   { id: 'sedan', seats: 4, multiplier: 1.0 },
@@ -22,9 +22,10 @@ export const GOVERNMENT_LEVY = 1.2;
 export const HIGH_OCCUPANCY_FEE = 17.8;
 
 const suburbRegionMap = new Map(
-  suburbsData
-    .filter((suburb) => suburb && suburb.name)
-    .map((suburb) => [String(suburb.name).toLowerCase().trim(), String(suburb.region || '').trim()])
+  suburbRegionPairs.map(([name, region]) => [
+    String(name).toLowerCase().trim(),
+    String(region || '').trim(),
+  ])
 );
 
 function normalizeSuburbName(suburb) {

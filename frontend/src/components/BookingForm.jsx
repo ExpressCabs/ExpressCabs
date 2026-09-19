@@ -740,6 +740,7 @@ const BookingForm = ({
       dropoffLat: dropoffLoc?.lat?.() ?? null,
       dropoffLng: dropoffLoc?.lng?.() ?? null,
       rideDate,
+      bookingType,
       vehicleType: selectedVehicle?.id ?? null,
       fare: fare ?? null,
       fareType,

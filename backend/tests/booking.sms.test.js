@@ -156,3 +156,21 @@ test('bookRide keeps existing notification behavior when passenger email is abse
   assert.equal(mailRequests.length, 1);
   assert.equal(mailRequests[0].subject, '-- New Ride Booking Received --');
 });
+
+test('bookRide prominently marks ASAP bookings in business and passenger emails', async (t) => {
+  const mailRequests = [];
+  const bookRide = loadBookRide(t, {
+    mailRequests,
+    smsSend: async () => ({ success: true, provider: 'clicksend', status: 'SUCCESS' }),
+  });
+
+  const res = createRes();
+  await bookRide({ body: { ...bookingBody, bookingType: 'now' } }, res);
+
+  assert.equal(res.statusCode, 201);
+  assert.equal(mailRequests.length, 2);
+  assert.equal(mailRequests[0].subject, '[ASAP] -- New Ride Booking Received --');
+  assert.match(mailRequests[0].html, /ASAP PICKUP/);
+  assert.match(mailRequests[1].subject, /^ASAP - Booking confirmed #1001/);
+  assert.match(mailRequests[1].text, /Pickup timing: ASAP/);
+});

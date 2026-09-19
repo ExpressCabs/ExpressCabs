@@ -16,6 +16,7 @@ export default function NearbySuburbs({ suburb }) {
             <Link
               key={s.slug}
               to={`/airport-transfer/melbourne/${s.slug}`}
+              rel={s?.seo?.indexable === true ? undefined : "nofollow"}
               className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200"
             >
               {s.name} ({s.postcode})

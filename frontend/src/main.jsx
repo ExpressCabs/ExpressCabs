@@ -11,7 +11,7 @@ import {
   useLocation,
 } from "react-router-dom";
 
-import { HelmetProvider } from "react-helmet-async";
+import { Helmet, HelmetProvider } from "react-helmet-async";
 
 import HeaderFooter, { SiteFooter } from "./components/HeaderFooter";
 import ScrollToTop from "./components/ScrollToTop";
@@ -25,14 +25,6 @@ import {
 import { initializeAnalyticsTracking, trackAnalyticsEvent } from "./lib/tracking/events";
 import { shouldSkipAnalyticsTracking } from "./lib/tracking/adminExclusion";
 
-// Keep these as direct imports if they are used immediately on homepage/mode switching
-import DriverDashboard from "./components/DriverDashboard";
-import DriverLoginScreen from "./components/DriverLoginScreen";
-import UserLoginScreen from "./components/UserLoginScreen";
-import UserRegisterScreen from "./components/UserRegisterScreen";
-import UserRidesScreen from "./components/UserRidesScreen";
-import RideSuccessScreen from "./components/RideSuccessScreen";
-
 // AddressScreen is used in Home() in your file, but it was not imported in the upload.
 // If it lives elsewhere, update this import path to the correct file.
 import AddressScreen from "./screens/AddressScreen";
@@ -41,6 +33,13 @@ import AddressScreen from "./screens/AddressScreen";
 const AirportTaxiMelbourne = lazy(() => import("./screens/AirportTaxiMelbourne"));
 const ContactUs = lazy(() => import("./screens/ContactUs"));
 const OurServices = lazy(() => import("./screens/OurServices"));
+const DriverDashboard = lazy(() => import("./components/DriverDashboard"));
+const DriverLoginScreen = lazy(() => import("./components/DriverLoginScreen"));
+const UserLoginScreen = lazy(() => import("./components/UserLoginScreen"));
+const UserRegisterScreen = lazy(() => import("./components/UserRegisterScreen"));
+const UserRidesScreen = lazy(() => import("./components/UserRidesScreen"));
+const RideSuccessScreen = lazy(() => import("./components/RideSuccessScreen"));
+const NotFoundPage = lazy(() => import("./components/NotFoundPage"));
 const DriverRegister = lazy(() => import("./screens/DriverRegister"));
 const BlogSlug = lazy(() => import("./screens/blogslug"));
 const AllBlogs = lazy(() => import("./screens/AllBlogs"));
@@ -360,8 +359,16 @@ const App = () => {
 
           <Route path="/blog/:slug" element={<BlogSlug />} />
           <Route path="/blogs" element={<AllBlogs />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
+
+      {import.meta.env.VITE_IS_PREVIEW ? (
+        <Helmet>
+          <meta name="robots" content="noindex,nofollow,noarchive" />
+          <meta name="googlebot" content="noindex,nofollow,noarchive" />
+        </Helmet>
+      ) : null}
 
       <SiteFooter setMode={setMode} />
     </>

@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { formatMelbourneDate } from '../lib/time';
 
 function formatDate(dateLike) {
@@ -165,13 +165,12 @@ export default function AllBlogs() {
                   </div>
 
                   <div className="mt-6 flex flex-wrap gap-3">
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/blog/${featuredBlog.slug}`)}
+                    <Link
+                      to={`/blog/${featuredBlog.slug}`}
                       className="inline-flex items-center justify-center rounded-full bg-gray-900 px-5 py-3 font-semibold text-white transition hover:bg-black"
                     >
                       Read article
-                    </button>
+                    </Link>
                     <button
                       type="button"
                       onClick={() => navigate('/', { state: { nextMode: 'passenger' } })}
@@ -216,13 +215,12 @@ export default function AllBlogs() {
                       </p>
 
                       <div className="mt-5 flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/blog/${blog.slug}`)}
+                        <Link
+                          to={`/blog/${blog.slug}`}
                           className="inline-flex flex-1 items-center justify-center rounded-full bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-black"
                         >
                           Read
-                        </button>
+                        </Link>
                         <button
                           type="button"
                           onClick={() => navigate('/', { state: { nextMode: 'passenger' } })}

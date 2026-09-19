@@ -8,8 +8,10 @@ export const routeInventory = {
     '/blogs',
   ],
   dynamicIndexable: [
-    '/airport-transfer/melbourne/:suburbSlug',
     '/blog/:slug',
+  ],
+  dynamicNoindexUntilReviewed: [
+    '/airport-transfer/melbourne/:suburbSlug',
   ],
   noindex: [
     '/register',

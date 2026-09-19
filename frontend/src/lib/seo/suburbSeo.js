@@ -1,7 +1,6 @@
 import { buildMeta } from './buildMeta';
 import {
   buildBreadcrumbSchema,
-  buildFaqSchema,
   buildTaxiServiceSchema,
   buildWebsiteSchema,
 } from './schemas';
@@ -21,6 +20,9 @@ export function buildSuburbSeo(suburb) {
     title,
     description,
     canonicalPath,
+    robots: suburb?.seo?.indexable === true
+      ? 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'
+      : 'noindex,follow',
     ogImage: suburb?.seo?.ogImage || '/assets/images/prime-cabs-og.webp',
   });
 
@@ -39,9 +41,6 @@ export function buildSuburbSeo(suburb) {
       { name: `${suburb.name} ${suburb.postcode}`, item: canonicalUrl },
     ]),
   ];
-
-  const faqSchema = buildFaqSchema(suburb?.content?.faqs || []);
-  if (faqSchema) schemas.push(faqSchema);
 
   return { meta, canonicalPath, canonicalUrl, schemas };
 }

@@ -232,23 +232,7 @@ export default function AirportTransferSuburb() {
 
   const canonicalUrl = seo.canonicalUrl;
 
-  // FAQ schema JSON-LD
   const faqs = suburb?.content?.faqs || [];
-  const faqSchema =
-    Array.isArray(faqs) && faqs.length
-      ? {
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          mainEntity: faqs.map((f) => ({
-            "@type": "Question",
-            name: f.q,
-            acceptedAnswer: {
-              "@type": "Answer",
-              text: f.a,
-            },
-          })),
-        }
-      : null;
 
   const mapsKey = import.meta.env.VITE_GOOGLE_MAPS_BROWSER_KEY;
 
@@ -278,6 +262,7 @@ export default function AirportTransferSuburb() {
     const brand = "Prime Cabs Melbourne";
     const siteUrl = CANONICAL_BASE;
     const pageUrl = canonicalUrl;
+    const robots = seo.meta.robots;
 
     // Core SEO text
     const primaryKeyword = `Melbourne Airport transfers from ${suburb.name}`;
@@ -292,16 +277,7 @@ export default function AirportTransferSuburb() {
     // OG image (use your real image if you have one)
     const ogImage =
       suburb?.seo?.ogImage ||
-      `${siteUrl}/images/og/airport-transfer.jpg`;
-
-    // Optional: keywords (not used for ranking by Google, but harmless)
-    const keywords = [
-      `airport transfer ${suburb.name}`,
-      `Melbourne airport taxi ${suburb.name}`,
-      `Tullamarine transfers ${suburb.name}`,
-      `fixed price airport transfers ${suburb.name}`,
-      `taxi to Melbourne Airport from ${suburb.name}`,
-    ].join(", ");
+      `${siteUrl}/assets/images/prime-cabs-og.webp`;
 
     // JSON-LD schemas
     const areaServedName = `${suburb.name} VIC ${suburb.postcode}`;
@@ -374,7 +350,6 @@ export default function AirportTransferSuburb() {
       webPageSchema,
       serviceSchema,
       breadcrumbSchema,
-      ...(faqSchema ? [faqSchema] : []),
     ];
 
     return (
@@ -387,12 +362,10 @@ export default function AirportTransferSuburb() {
         {/* Indexing / snippets */}
         <meta
           name="robots"
-          content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
+          content={robots}
         />
-        <meta name="googlebot" content="index,follow" />
+        <meta name="googlebot" content={robots} />
 
-        {/* Optional */}
-        <meta name="keywords" content={keywords} />
         <meta name="theme-color" content="#0b1220" />
 
         {/* Geo (helps local relevance; harmless) */}
@@ -438,6 +411,15 @@ export default function AirportTransferSuburb() {
         <div className="absolute -bottom-24 -right-24 h-80 w-80 rounded-full bg-emerald-400/25 blur-3xl" />
 
         <div className="relative max-w-6xl mx-auto px-6 pt-16 pb-24">
+          <nav aria-label="Breadcrumb" className="mb-8 flex flex-wrap items-center justify-center gap-2 text-sm text-white/70">
+            <Link to="/" className="rounded px-1 py-1 hover:text-white">Home</Link>
+            <span aria-hidden="true">/</span>
+            <Link to="/airport-transfer/melbourne" className="rounded px-1 py-1 hover:text-white">
+              Airport transfers
+            </Link>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page" className="px-1 py-1 text-white">{suburb.name}</span>
+          </nav>
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}

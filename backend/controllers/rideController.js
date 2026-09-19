@@ -81,6 +81,7 @@ const bookRide = async (req, res) => {
       dropoffLat,
       dropoffLng,
       rideDate,
+      bookingType,
       passengerCount,
       vehicleType,
       fare,
@@ -158,22 +159,26 @@ const bookRide = async (req, res) => {
     const passengerEmail = typeof email === 'string' && EMAIL_PATTERN.test(email.trim())
       ? email.trim()
       : null;
+    const isAsapBooking = bookingType === 'now';
     const siteName = getSiteName(normalizedSiteKey);
-    const bookingSubject = `Booking confirmed #${ride.id}: ${pickup} to ${dropoff}`;
+    const urgencyLabel = isAsapBooking ? 'ASAP - ' : '';
+    const bookingSubject = `${urgencyLabel}Booking confirmed #${ride.id}: ${pickup} to ${dropoff}`;
 
     notificationTasks.push(
       getMailTransporter().sendMail({
         from: `"Express Cabs" <${process.env.EMAIL_USER}>`,
         to: businessEmail,
-        subject: '-- New Ride Booking Received --',
+        subject: isAsapBooking ? '[ASAP] -- New Ride Booking Received --' : '-- New Ride Booking Received --',
         html: `
           <h2>New Ride Booking</h2>
+          ${isAsapBooking ? '<div style="margin: 16px 0; padding: 14px; border-radius: 8px; background: #fff3cd; color: #7a4b00; font-size: 18px; font-weight: 700;">ASAP PICKUP — please review and arrange this booking quickly.</div>' : ''}
           <p><strong>Name:</strong> ${name}</p>
           <p><strong>Phone:</strong> ${phone}</p>
           <p><strong>Email:</strong> ${email || 'N/A'}</p>
           <p><strong>Pickup:</strong> ${pickup}</p>
           <p><strong>Dropoff:</strong> ${dropoff}</p>
           <p><strong>Date & Time:</strong> ${formatMelbourneTime(parsedRideDate)}</p>
+          <p><strong>Pickup timing:</strong> ${isAsapBooking ? 'ASAP / as soon as possible' : 'Scheduled'}</p>
           <p><strong>Passengers:</strong> ${parsedPassengerCount}</p>
           <p><strong>Vehicle:</strong> ${vehicleType}</p>
           ${/* <p><strong>Fare:</strong> $${parsedFare.toFixed(2)} (${fareType})</p> */ ''}
@@ -194,6 +199,7 @@ const bookRide = async (req, res) => {
             '',
             `Your booking with ${siteName} is confirmed.`,
             `Booking reference: #${ride.id}`,
+            `Pickup timing: ${isAsapBooking ? 'ASAP / as soon as possible' : 'Scheduled'}`,
             `Pickup: ${pickup}`,
             `Drop-off: ${dropoff}`,
             `Date and time: ${formatMelbourneTime(parsedRideDate)}`,
@@ -208,6 +214,7 @@ const bookRide = async (req, res) => {
             <p>Hi ${escapeHtml(name)},</p>
             <p>Your booking with ${escapeHtml(siteName)} is confirmed.</p>
             <p><strong>Booking reference:</strong> #${ride.id}</p>
+            <p><strong>Pickup timing:</strong> ${isAsapBooking ? 'ASAP / as soon as possible' : 'Scheduled'}</p>
             <p><strong>Pickup:</strong> ${escapeHtml(pickup)}</p>
             <p><strong>Drop-off:</strong> ${escapeHtml(dropoff)}</p>
             <p><strong>Date &amp; time:</strong> ${escapeHtml(formatMelbourneTime(parsedRideDate))}</p>

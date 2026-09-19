@@ -12,10 +12,13 @@ export function buildWebsiteSchema() {
 export function buildLocalBusinessSchema() {
   return {
     '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
+    '@type': 'TaxiService',
     name: 'Prime Cabs Melbourne',
     url: buildCanonicalUrl('/'),
+    logo: buildCanonicalUrl('/favicon_io/android-chrome-512x512.png'),
     telephone: '+61488797233',
+    email: 'bookmelbourneairporttaxis@gmail.com',
+    areaServed: 'Melbourne, Victoria, Australia',
     address: {
       '@type': 'PostalAddress',
       addressRegion: 'VIC',

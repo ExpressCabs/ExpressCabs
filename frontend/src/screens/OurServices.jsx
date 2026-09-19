@@ -46,6 +46,17 @@ export default function OurServices() {
         />
         <link rel="canonical" href="https://www.primecabsmelbourne.com.au/services" />
         <meta name="robots" content="index, follow" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Prime Cabs Melbourne" />
+        <meta property="og:locale" content="en_AU" />
+        <meta property="og:url" content="https://www.primecabsmelbourne.com.au/services" />
+        <meta property="og:title" content="Our Taxi Services | Prime Cabs Melbourne" />
+        <meta property="og:description" content="Explore Prime Cabs Melbourne transport services for airport, hotel, business and group travel." />
+        <meta property="og:image" content="https://www.primecabsmelbourne.com.au/assets/images/prime-cabs-og.webp" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Our Taxi Services | Prime Cabs Melbourne" />
+        <meta name="twitter:description" content="Explore Prime Cabs Melbourne transport services for airport, hotel, business and group travel." />
+        <meta name="twitter:image" content="https://www.primecabsmelbourne.com.au/assets/images/prime-cabs-og.webp" />
 
         <script type="application/ld+json">
           {JSON.stringify({
@@ -56,7 +67,7 @@ export default function OurServices() {
               "@type": "LocalBusiness",
               "name": "Prime Cabs Melbourne",
               "url": "https://www.primecabsmelbourne.com.au",
-              "telephone": "+61482038902",
+              "telephone": "+61488797233",
               "address": {
                 "@type": "PostalAddress",
                 "addressRegion": "VIC",

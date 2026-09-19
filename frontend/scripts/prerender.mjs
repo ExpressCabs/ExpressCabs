@@ -13,7 +13,7 @@ const baseUrl = String(
   process.env.VITE_CANONICAL_BASE_URL || 'https://www.primecabsmelbourne.com.au'
 ).replace(/\/+$/, '');
 const apiBaseUrl = String(process.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
-const NOW_ISO = new Date().toISOString();
+const isPreview = process.env.VERCEL_ENV === 'preview';
 
 function escapeHtml(value = '') {
   return String(value)
@@ -59,7 +59,7 @@ async function loadSuburbs() {
 }
 
 function injectHtmlDocument(shellHtml, { headMarkup, bodyMarkup, dataScript = '' }) {
-  let output = shellHtml;
+  let output = shellHtml.replace(/\s*<title>[\s\S]*?<\/title>/i, '');
   output = output.replace('</head>', `${headMarkup}\n${dataScript}\n  </head>`);
   output = output.replace('<div id="root"></div>', `<div id="root">${bodyMarkup}</div>`);
   return output;
@@ -79,16 +79,29 @@ function formatPublishedDate(value) {
 
 function buildMetaTags({ title, description, canonicalUrl, ogImage, type = 'website', schema, robots }) {
   const image = absoluteUrl(ogImage);
+  const effectiveRobots = isPreview
+    ? 'noindex,nofollow,noarchive'
+    : (robots || 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1');
+  const canonicalMarkup = !isPreview && canonicalUrl
+    ? `<link rel="canonical" href="${escapeHtml(canonicalUrl)}" />`
+    : '';
+  const ogUrlMarkup = !isPreview && canonicalUrl
+    ? `<meta property="og:url" content="${escapeHtml(canonicalUrl)}" />`
+    : '';
+  const schemaMarkup = schema && !isPreview
+    ? `<script type="application/ld+json">${JSON.stringify(schema)}</script>`
+    : '';
+
   return `
     <title>${escapeHtml(title)}</title>
     <meta name="description" content="${escapeHtml(description)}" />
-    <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
-    <meta name="robots" content="${escapeHtml(
-      robots || 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'
-    )}" />
+    ${canonicalMarkup}
+    <meta name="robots" content="${escapeHtml(effectiveRobots)}" />
+    <meta name="googlebot" content="${escapeHtml(effectiveRobots)}" />
     <meta property="og:type" content="${escapeHtml(type)}" />
     <meta property="og:site_name" content="Prime Cabs Melbourne" />
-    <meta property="og:url" content="${escapeHtml(canonicalUrl)}" />
+    <meta property="og:locale" content="en_AU" />
+    ${ogUrlMarkup}
     <meta property="og:title" content="${escapeHtml(title)}" />
     <meta property="og:description" content="${escapeHtml(description)}" />
     <meta property="og:image" content="${escapeHtml(image)}" />
@@ -96,7 +109,7 @@ function buildMetaTags({ title, description, canonicalUrl, ogImage, type = 'webs
     <meta name="twitter:title" content="${escapeHtml(title)}" />
     <meta name="twitter:description" content="${escapeHtml(description)}" />
     <meta name="twitter:image" content="${escapeHtml(image)}" />
-    <script type="application/ld+json">${JSON.stringify(schema)}</script>`;
+    ${schemaMarkup}`;
 }
 
 function buildDataScript(payload) {
@@ -147,10 +160,13 @@ function renderShellPage({ eyebrow, title, description, bullets = [], ctaLabel =
 function buildOrganizationSchema() {
   return {
     '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
+    '@type': 'TaxiService',
     name: 'Prime Cabs Melbourne',
     url: `${baseUrl}/`,
+    logo: absoluteUrl('/favicon_io/android-chrome-512x512.png'),
     telephone: '+61488797233',
+    email: 'bookmelbourneairporttaxis@gmail.com',
+    areaServed: 'Melbourne, Victoria, Australia',
     address: {
       '@type': 'PostalAddress',
       addressRegion: 'VIC',
@@ -160,13 +176,13 @@ function buildOrganizationSchema() {
 }
 
 function buildBlogSchema(blog, canonicalUrl) {
-  return {
+  const schema = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: blog.metaTitle || blog.title,
     description: blog.metaDescription || blog.excerpt || blog.subtitle || '',
-    datePublished: blog.publishedAt || blog.createdAt || NOW_ISO,
-    dateModified: blog.updatedAt || blog.publishedAt || blog.createdAt || NOW_ISO,
+    datePublished: blog.publishedAt || blog.createdAt || undefined,
+    dateModified: blog.updatedAt || blog.publishedAt || blog.createdAt || undefined,
     author: {
       '@type': 'Person',
       name: blog.authorName || 'Prime Cabs Melbourne',
@@ -174,6 +190,8 @@ function buildBlogSchema(blog, canonicalUrl) {
     image: [absoluteUrl(blog.ogImage || blog.image1)].filter(Boolean),
     mainEntityOfPage: canonicalUrl,
   };
+
+  return schema;
 }
 
 function buildBlogBody(blog) {
@@ -394,6 +412,27 @@ function buildStaticRoutes() {
         ctaHref: '/contact',
       }),
     },
+    {
+      routePath: '/blogs',
+      title: 'Melbourne Airport Transfer Guides | Prime Cabs Melbourne',
+      description:
+        'Browse Prime Cabs Melbourne airport transfer guides, booking advice and practical travel information.',
+      ogImage: '/assets/images/prime-cabs-og.webp',
+      schema: {
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Prime Cabs Melbourne travel guides',
+        url: `${baseUrl}/blogs`,
+      },
+      bodyMarkup: renderShellPage({
+        eyebrow: 'Travel guides',
+        title: 'Melbourne airport transfer guides and booking advice',
+        description:
+          'Read practical articles about planning Melbourne airport transfers and preparing for your booking.',
+        ctaLabel: 'Book a ride',
+        ctaHref: '/',
+      }),
+    },
   ];
 }
 
@@ -517,6 +556,7 @@ async function prerenderSuburbs(shellHtml) {
     const description =
       suburb?.seo?.metaDescription ||
       `Book a reliable taxi for Melbourne Airport transfers from ${suburb.name} (${suburb.postcode}). Fixed prices, 24/7 service, flight tracking, professional drivers.`;
+    const isIndexable = suburb?.seo?.indexable === true;
 
     const html = injectHtmlDocument(shellHtml, {
       headMarkup: buildMetaTags({
@@ -524,7 +564,10 @@ async function prerenderSuburbs(shellHtml) {
         description,
         canonicalUrl,
         ogImage: suburb?.seo?.ogImage || '/assets/images/prime-cabs-og.webp',
-        schema: buildSuburbSchema(suburb, canonicalUrl, description),
+        schema: isIndexable ? buildSuburbSchema(suburb, canonicalUrl, description) : undefined,
+        robots: isIndexable
+          ? 'index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1'
+          : 'noindex,follow',
       }),
       bodyMarkup: buildSuburbBody(suburb),
       dataScript: buildDataScript({
@@ -541,11 +584,32 @@ async function prerenderSuburbs(shellHtml) {
   console.log(`[prerender] Generated ${count} suburb route snapshots.`);
 }
 
+async function prerenderNotFound(shellHtml) {
+  const html = injectHtmlDocument(shellHtml, {
+    headMarkup: buildMetaTags({
+      title: 'Page Not Found | Prime Cabs Melbourne',
+      description: 'The requested Prime Cabs Melbourne page could not be found.',
+      ogImage: '/assets/images/prime-cabs-og.webp',
+      robots: 'noindex,nofollow,noarchive',
+    }),
+    bodyMarkup: renderShellPage({
+      eyebrow: '404',
+      title: 'We could not find that page',
+      description: 'The address may be outdated or mistyped. Return to booking or browse our taxi services.',
+      ctaLabel: 'Book a ride',
+      ctaHref: '/',
+    }),
+  });
+
+  await fs.writeFile(path.join(distDir, '404.html'), html, 'utf8');
+}
+
 async function main() {
   const shellHtml = await loadShellTemplate();
   await prerenderStaticRoutes(shellHtml);
   await prerenderSuburbs(shellHtml);
   await prerenderBlogs(shellHtml);
+  await prerenderNotFound(shellHtml);
 }
 
 main().catch((error) => {
