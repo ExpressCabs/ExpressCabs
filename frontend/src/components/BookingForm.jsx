@@ -1032,6 +1032,24 @@ const BookingForm = ({
 
     return `mt-2 block h-12 w-full min-w-0 max-w-full rounded-xl border px-4 text-base text-slate-950 outline-none transition-colors focus:ring-2 ${stateClass}`;
   };
+  const scheduleControlClass = (value) => `relative mt-2 flex h-12 min-w-0 w-full items-center overflow-hidden rounded-xl border px-3 transition-colors focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 ${
+    fieldErrors.scheduledDateTime
+      ? 'border-red-500 bg-red-50/50'
+      : value
+        ? 'border-blue-200 bg-blue-50/60'
+        : 'border-slate-300 bg-white'
+  }`;
+  const formatScheduledDate = (value) => {
+    if (!value) return 'Select date';
+    const [year, month, day] = value.split('-');
+    return `${day}/${month}/${year}`;
+  };
+  const formatScheduledTime = (value) => {
+    if (!value) return 'Select time';
+    const [hours, minutes] = value.split(':').map(Number);
+    const suffix = hours >= 12 ? 'pm' : 'am';
+    return `${hours % 12 || 12}:${String(minutes).padStart(2, '0')} ${suffix}`;
+  };
   const updatePassengerDetail = (name, value) => {
     setPassengerDetails((current) => ({ ...current, [name]: value }));
     setFieldErrors((current) => ({ ...current, [name]: undefined, submit: undefined }));
@@ -1189,25 +1207,27 @@ const BookingForm = ({
             </div>
             {bookingType === 'later' && <div className="mt-4 min-w-0 overflow-hidden">
               <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><MdCalendarToday className="text-blue-600" /> Pickup date and time *</p>
-              <div className="grid min-w-0 gap-3 sm:grid-cols-2">
-                <div className="min-w-0 overflow-hidden">
-                  <label htmlFor="scheduledDate" className="sr-only">Pickup date</label>
+              <div className="grid min-w-0 grid-cols-2 gap-2">
+                <label htmlFor="scheduledDate" className={scheduleControlClass(scheduledDate)}>
+                  <span className={`pointer-events-none truncate text-sm font-semibold ${scheduledDate ? 'text-slate-950' : 'text-slate-500'}`}>{formatScheduledDate(scheduledDate)}</span>
                   <input
                     id="scheduledDate" type="date" value={scheduledDate}
                     onChange={(event) => { setScheduledDate(event.target.value); setFieldErrors((current) => ({ ...current, scheduledDateTime: undefined })); }}
                     aria-invalid={Boolean(fieldErrors.scheduledDateTime)} aria-describedby={fieldErrors.scheduledDateTime ? 'scheduledDateTime-error' : undefined}
-                    className={`${inputClass('scheduledDateTime', scheduledDate)} [min-width:0]`}
+                    className="absolute inset-0 h-full w-full min-w-0 max-w-full cursor-pointer opacity-0"
                   />
-                </div>
-                <div className="min-w-0 overflow-hidden">
-                  <label htmlFor="scheduledTime" className="sr-only">Pickup time</label>
+                  <span className="sr-only">Pickup date</span>
+                </label>
+                <label htmlFor="scheduledTime" className={scheduleControlClass(scheduledTime)}>
+                  <span className={`pointer-events-none truncate text-sm font-semibold ${scheduledTime ? 'text-slate-950' : 'text-slate-500'}`}>{formatScheduledTime(scheduledTime)}</span>
                   <input
                     id="scheduledTime" type="time" value={scheduledTime}
                     onChange={(event) => { setScheduledTime(event.target.value); setFieldErrors((current) => ({ ...current, scheduledDateTime: undefined })); }}
                     aria-invalid={Boolean(fieldErrors.scheduledDateTime)} aria-describedby={fieldErrors.scheduledDateTime ? 'scheduledDateTime-error' : undefined}
-                    className={`${inputClass('scheduledDateTime', scheduledTime)} [min-width:0]`}
+                    className="absolute inset-0 h-full w-full min-w-0 max-w-full cursor-pointer opacity-0"
                   />
-                </div>
+                  <span className="sr-only">Pickup time</span>
+                </label>
               </div>
               {errorText('scheduledDateTime')}
             </div>}
