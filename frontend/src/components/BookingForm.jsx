@@ -81,7 +81,6 @@ const BookingForm = ({
     note: '',
   });
   const [fieldErrors, setFieldErrors] = useState({});
-  const [showExtras, setShowExtras] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [mapInitialized, setMapInitialized] = useState(false);
   const [mapsEnabled, setMapsEnabled] = useState(false);
@@ -1159,6 +1158,16 @@ const BookingForm = ({
                 </label>
               ))}
             </div>
+            {bookingType === 'later' && <div className="mt-4">
+              <label htmlFor="scheduledDateTime" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><MdCalendarToday className="text-blue-600" /> Pickup date and time *</label>
+              <input
+                id="scheduledDateTime" type="datetime-local" value={scheduledDateTime}
+                onChange={(event) => { setScheduledDateTime(event.target.value); setFieldErrors((current) => ({ ...current, scheduledDateTime: undefined })); }}
+                aria-invalid={Boolean(fieldErrors.scheduledDateTime)} aria-describedby={fieldErrors.scheduledDateTime ? 'scheduledDateTime-error' : undefined}
+                className={inputClass('scheduledDateTime')}
+              />
+              {errorText('scheduledDateTime')}
+            </div>}
           </div>
           <div>
             <label htmlFor="passenger-count" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><FiUsers className="text-blue-600" aria-hidden="true" /> Passengers *</label>
@@ -1176,17 +1185,6 @@ const BookingForm = ({
             {errorText('passengerCount')}
           </div>
         </div>
-
-        {bookingType === 'later' && <div className="mt-4">
-          <label htmlFor="scheduledDateTime" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><MdCalendarToday className="text-blue-600" /> Pickup date and time *</label>
-          <input
-            id="scheduledDateTime" type="datetime-local" value={scheduledDateTime}
-            onChange={(event) => { setScheduledDateTime(event.target.value); setFieldErrors((current) => ({ ...current, scheduledDateTime: undefined })); }}
-            aria-invalid={Boolean(fieldErrors.scheduledDateTime)} aria-describedby={fieldErrors.scheduledDateTime ? 'scheduledDateTime-error' : undefined}
-            className={inputClass('scheduledDateTime')}
-          />
-          {errorText('scheduledDateTime')}
-        </div>}
 
         {routePreview && <div ref={tripEstimateRef} className="mt-4 flex flex-wrap gap-2 rounded-xl bg-slate-50 p-3 text-sm text-slate-700" aria-live="polite">
           <span className="font-bold text-slate-950">Trip estimate</span>
@@ -1242,10 +1240,7 @@ const BookingForm = ({
           </div>
         </div>
 
-        <button type="button" onClick={() => setShowExtras((value) => !value)} aria-expanded={showExtras} className="mt-4 text-sm font-bold text-slate-700 underline decoration-slate-300 underline-offset-4">
-          {showExtras ? 'Hide optional details' : 'Add email or booking notes'}
-        </button>
-        {showExtras && <div className="mt-4 grid gap-4">
+        <div className="mt-4 grid gap-4">
           <div>
             <label htmlFor="passenger-email" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><FiMail className="text-blue-600" aria-hidden="true" /> Email <span className="font-normal normal-case tracking-normal">(optional)</span></label>
             <input id="passenger-email" type="email" autoComplete="email" value={passengerDetails.email} onChange={(event) => updatePassengerDetail('email', event.target.value)} aria-invalid={Boolean(fieldErrors.email)} aria-describedby={fieldErrors.email ? 'email-error' : undefined} className={inputClass('email')} placeholder="you@example.com" />
@@ -1255,7 +1250,7 @@ const BookingForm = ({
             <label htmlFor="passenger-note" className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-slate-500"><FiBriefcase className="text-blue-600" aria-hidden="true" /> Notes for the driver <span className="font-normal normal-case tracking-normal">(optional)</span></label>
             <textarea id="passenger-note" value={passengerDetails.note} onChange={(event) => updatePassengerDetail('note', event.target.value)} className="mt-2 min-h-24 w-full rounded-xl border border-slate-200 bg-white px-3 py-3 text-base outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100" placeholder="Flight number, luggage, child seat or pickup instructions" />
           </div>
-        </div>}
+        </div>
       </fieldset>
 
       {step === 3 && <>

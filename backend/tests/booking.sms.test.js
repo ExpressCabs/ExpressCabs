@@ -41,7 +41,7 @@ const bookingBody = {
   siteKey: 'prime_cabs_melbourne',
 };
 
-const loadBookRide = (t, { smsSend }) => {
+const loadBookRide = (t, { smsSend, mailRequests = [] }) => {
   const fakeRide = {
     id: 1001,
     createdAt: new Date('2026-08-22T00:00:00.000Z'),
@@ -66,7 +66,12 @@ const loadBookRide = (t, { smsSend }) => {
     id: mailerModulePath,
     filename: mailerModulePath,
     loaded: true,
-    exports: { getMailTransporter: () => ({ sendMail: async () => ({ accepted: ['ops@example.com'] }) }) },
+    exports: { getMailTransporter: () => ({
+      sendMail: async (request) => {
+        mailRequests.push(request);
+        return { accepted: [request.to] };
+      },
+    }) },
   };
   require.cache[smsServicePath] = {
     id: smsServicePath,
@@ -117,4 +122,37 @@ test('bookRide still succeeds when booking confirmation SMS fails', async (t) =>
 
   assert.equal(res.statusCode, 201);
   assert.equal(res.body.id, 1001);
+});
+
+test('bookRide emails the passenger when an email address is provided', async (t) => {
+  const mailRequests = [];
+  const bookRide = loadBookRide(t, {
+    mailRequests,
+    smsSend: async () => ({ success: true, provider: 'clicksend', status: 'SUCCESS' }),
+  });
+
+  const res = createRes();
+  await bookRide({ body: bookingBody }, res);
+
+  assert.equal(res.statusCode, 201);
+  assert.equal(mailRequests.length, 2);
+  assert.equal(mailRequests[1].to, 'rider@example.com');
+  assert.equal(mailRequests[1].replyTo, process.env.EMAIL_USER);
+  assert.match(mailRequests[1].subject, /Booking confirmed #1001/);
+  assert.equal(mailRequests[1].headers['X-Booking-ID'], '1001');
+});
+
+test('bookRide keeps existing notification behavior when passenger email is absent', async (t) => {
+  const mailRequests = [];
+  const bookRide = loadBookRide(t, {
+    mailRequests,
+    smsSend: async () => ({ success: true, provider: 'clicksend', status: 'SUCCESS' }),
+  });
+
+  const res = createRes();
+  await bookRide({ body: { ...bookingBody, email: '' } }, res);
+
+  assert.equal(res.statusCode, 201);
+  assert.equal(mailRequests.length, 1);
+  assert.equal(mailRequests[0].subject, '-- New Ride Booking Received --');
 });

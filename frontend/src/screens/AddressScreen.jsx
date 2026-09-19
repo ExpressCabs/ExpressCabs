@@ -278,7 +278,7 @@ export default function AddressScreen({ loggedInUser }) {
         </div>
 
         <div className="relative z-10 min-h-[100vh] flex items-center justify-center px-4 py-12">
-          <div className="w-full max-w-6xl mx-auto grid lg:grid-cols-12 gap-10 items-center">
+          <div className="w-full max-w-6xl mx-auto grid lg:grid-cols-12 gap-8 lg:gap-10 items-start">
             <motion.div
               className="lg:col-span-6 text-white"
               initial={{ opacity: 0, y: 10 }}
@@ -297,36 +297,6 @@ export default function AddressScreen({ loggedInUser }) {
                 Professional Melbourne airport transfers with fixed fares, clean vehicles, and quick online booking.
               </p>
 
-              <div className="mt-6 max-w-xl rounded-3xl border border-white/12 bg-black/20 px-4 py-4 backdrop-blur-sm shadow-[0_24px_60px_-34px_rgba(0,0,0,0.75)]">
-                <div className="flex flex-wrap gap-2">
-                  {['Trusted by Melbourne travellers', 'No surprise surge pricing', 'Fast online booking'].map((item) => (
-                    <span
-                      key={item}
-                      className="rounded-full border border-white/12 bg-white/8 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/85"
-                    >
-                      {item}
-                    </span>
-                  ))}
-                </div>
-                <p className="mt-3 text-sm leading-6 text-white/82 md:text-[15px]">
-                  Book in a few steps and travel with confidence, whether you are heading to the airport, arriving late, or planning an early pickup.
-                </p>
-              </div>
-
-              <div className="mt-7 flex flex-wrap gap-2">
-                {['24/7 Available', 'Fixed Upfront Quotes', 'Airport Specialists', 'Clean Vehicles'].map((t) => (
-                  <span
-                    key={t}
-                    className="text-xs md:text-sm px-3 py-1.5 rounded-full bg-white/10 border border-white/15 text-white/90 backdrop-blur"
-                  >
-                    {t}
-                  </span>
-                ))}
-              </div>
-
-              <p className="mt-10 text-sm font-semibold text-white/85">
-                One streamlined form — journey, vehicle and contact details together.
-              </p>
             </motion.div>
 
             <div className="lg:col-span-6">
@@ -343,6 +313,28 @@ export default function AddressScreen({ loggedInUser }) {
                     embedded
                     loggedInUser={loggedInUser}
                   />
+                </div>
+                <div className="mt-5 rounded-3xl border border-white/12 bg-black/25 px-4 py-4 text-white backdrop-blur-sm shadow-[0_24px_60px_-34px_rgba(0,0,0,0.75)]">
+                  <div className="flex flex-wrap gap-2">
+                    {['Trusted by Melbourne travellers', 'No surprise surge pricing', 'Fast online booking'].map((item) => (
+                      <span key={item} className="rounded-full border border-white/12 bg-white/8 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-white/85">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-white/82 md:text-[15px]">
+                    Book in a few steps and travel with confidence, whether you are heading to the airport, arriving late, or planning an early pickup.
+                  </p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {['24/7 Available', 'Fixed Upfront Quotes', 'Airport Specialists', 'Clean Vehicles'].map((item) => (
+                      <span key={item} className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs text-white/90 md:text-sm">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="mt-4 text-sm font-semibold text-white/85">
+                    One streamlined form — journey, vehicle and contact details together.
+                  </p>
                 </div>
               </motion.div>
             </div>

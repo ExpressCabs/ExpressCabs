@@ -7,6 +7,14 @@ const smsService = require('../services/sms/smsService');
 const { SMS_MESSAGE_TYPES } = require('../services/sms/smsTemplates');
 const VALID_RIDE_STATUSES = new Set(['upcoming', 'completed', 'cancelled']);
 const LOCAL_TAXI_BOOKING_EMAIL = 'localtaxi2707@gmail.com';
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const escapeHtml = (value) => String(value ?? '')
+  .replaceAll('&', '&amp;')
+  .replaceAll('<', '&lt;')
+  .replaceAll('>', '&gt;')
+  .replaceAll('"', '&quot;')
+  .replaceAll("'", '&#039;');
 
 const formatMelbourneTime = (dateInput) => {
   const d = new Date(dateInput);
@@ -28,6 +36,12 @@ const getRideNotificationEmail = (siteKey) => {
   }
   return process.env.EMAIL_USER;
 };
+
+const getSiteName = (siteKey) => (
+  normalizeSiteKey(siteKey) === SITE_KEYS.LOCAL_TAXI_MELBOURNE
+    ? 'Local Taxi Melbourne'
+    : 'Prime Cabs Melbourne'
+);
 
 const sendAssignmentEmailNotification = async ({ ride, driver }) => {
   try {
@@ -140,11 +154,17 @@ const bookRide = async (req, res) => {
     }
 
     const notificationTasks = [];
+    const businessEmail = getRideNotificationEmail(normalizedSiteKey);
+    const passengerEmail = typeof email === 'string' && EMAIL_PATTERN.test(email.trim())
+      ? email.trim()
+      : null;
+    const siteName = getSiteName(normalizedSiteKey);
+    const bookingSubject = `Booking confirmed #${ride.id}: ${pickup} to ${dropoff}`;
 
     notificationTasks.push(
       getMailTransporter().sendMail({
         from: `"Express Cabs" <${process.env.EMAIL_USER}>`,
-        to: getRideNotificationEmail(normalizedSiteKey),
+        to: businessEmail,
         subject: '-- New Ride Booking Received --',
         html: `
           <h2>New Ride Booking</h2>
@@ -161,6 +181,47 @@ const bookRide = async (req, res) => {
         `,
       })
     );
+
+    if (passengerEmail) {
+      notificationTasks.push(
+        getMailTransporter().sendMail({
+          from: `"${siteName}" <${process.env.EMAIL_USER}>`,
+          to: passengerEmail,
+          replyTo: businessEmail,
+          subject: bookingSubject,
+          text: [
+            `Hi ${name},`,
+            '',
+            `Your booking with ${siteName} is confirmed.`,
+            `Booking reference: #${ride.id}`,
+            `Pickup: ${pickup}`,
+            `Drop-off: ${dropoff}`,
+            `Date and time: ${formatMelbourneTime(parsedRideDate)}`,
+            `Passengers: ${parsedPassengerCount}`,
+            `Vehicle: ${vehicleType}`,
+            note ? `Notes: ${note}` : null,
+            '',
+            'Reply to this email if you need to update your booking.',
+          ].filter((line) => line !== null).join('\n'),
+          html: `
+            <h2>Your ride is confirmed</h2>
+            <p>Hi ${escapeHtml(name)},</p>
+            <p>Your booking with ${escapeHtml(siteName)} is confirmed.</p>
+            <p><strong>Booking reference:</strong> #${ride.id}</p>
+            <p><strong>Pickup:</strong> ${escapeHtml(pickup)}</p>
+            <p><strong>Drop-off:</strong> ${escapeHtml(dropoff)}</p>
+            <p><strong>Date &amp; time:</strong> ${escapeHtml(formatMelbourneTime(parsedRideDate))}</p>
+            <p><strong>Passengers:</strong> ${parsedPassengerCount}</p>
+            <p><strong>Vehicle:</strong> ${escapeHtml(vehicleType)}</p>
+            ${note ? `<p><strong>Notes:</strong> ${escapeHtml(note)}</p>` : ''}
+            <p>Reply to this email if you need to update your booking. Keeping the subject unchanged will preserve the conversation thread.</p>
+          `,
+          headers: {
+            'X-Booking-ID': String(ride.id),
+          },
+        })
+      );
+    }
 
     notificationTasks.push(
       smsService.send({
@@ -183,10 +244,15 @@ const bookRide = async (req, res) => {
     if (notificationResults[0].status === 'rejected') {
       console.error('Failed to send booking email:', notificationResults[0].reason);
     }
-    if (notificationResults[1].status === 'rejected') {
-      console.error('Failed to send booking SMS:', notificationResults[1].reason);
-    } else if (!notificationResults[1].value?.success) {
-      console.error('Failed to send booking SMS:', notificationResults[1].value?.error);
+    const passengerEmailResultIndex = passengerEmail ? 1 : -1;
+    const smsResultIndex = passengerEmail ? 2 : 1;
+    if (passengerEmailResultIndex >= 0 && notificationResults[passengerEmailResultIndex].status === 'rejected') {
+      console.error('Failed to send passenger confirmation email:', notificationResults[passengerEmailResultIndex].reason);
+    }
+    if (notificationResults[smsResultIndex].status === 'rejected') {
+      console.error('Failed to send booking SMS:', notificationResults[smsResultIndex].reason);
+    } else if (!notificationResults[smsResultIndex].value?.success) {
+      console.error('Failed to send booking SMS:', notificationResults[smsResultIndex].value?.error);
     }
 
     res.status(201).json(ride);
